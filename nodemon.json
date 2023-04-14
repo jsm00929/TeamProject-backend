@@ -1,0 +1,6 @@
+{
+    "ext": "js,json,ts",
+    "execMap": {
+        "ts": "node --require ts-node/register"
+    }
+}

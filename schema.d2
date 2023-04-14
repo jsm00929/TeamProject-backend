@@ -1,0 +1,81 @@
+user: {
+  shape: sql_table
+  id: int {constraint: primary_key}
+  google_id: varchar(21) null {constraint: unique}
+  username: varchar(20) {constraint: unique}
+  name: varchar(20)
+  email: varchar(255) {constraint: unique}
+  password: varchar(100)
+  avatar_url: varchar(255) null
+  created_at: timestamp
+  updated_at: timestamp
+  deleted_at: timestamp null
+}
+
+movie: {
+  shape: sql_table
+  id: int {constraint: primary_key}
+  title: varchar(50)
+  overview: text
+  poster_url: varchar(255) null
+  vote_count: int
+  vote_average: int
+  popularity: int
+  released_at: timestamp
+  created_at: timestamp
+  updated_at: timestamp
+  deleted_at: timestamp null
+}
+
+review: {
+  shape: sql_table
+  id: int {constraint: primary_key}
+  author_id: int {constraint: foreign_key}
+  title: varchar(50)
+  content: text
+  created_at: timestamp
+  updated_at: timestamp
+  deleted_at: timestamp null
+}
+
+review.user_id -> user.id
+
+comment: {
+  shape: sql_table
+  id: int {constraint: primary_key}
+  movie_id: int {constraint: foreign_key}
+  author_id: int {constraint: foreign_key}
+  content: text
+  created_at: timestamp
+  updated_at: timestamp
+  deleted_at: timestamp null
+}
+
+comment.movie_id -> movie.id
+comment.author_id -> user.id
+
+user_favorite_movie: {
+  shape: sql_table
+  id: int {constraint: primary_key}
+  movie_id: int {constraint: foreign_key}
+  user_id: int {constraint: foreign_key}
+  created_at: timestamp
+  updated_at: timestamp
+  deleted_at: timestamp null
+}
+
+user_favorite_movie.movie_id -> movie.id
+user_favorite_movie.user_id -> user.id
+
+user_recently_viewed_movie: {
+  shape: sql_table
+  id: int {constraint: primary_key}
+  movie_id: int {constraint: foreign_key}
+  user_id: int {constraint: foreign_key}
+  created_at: timestamp
+  updated_at: timestamp
+  deleted_at: timestamp null
+}
+
+user_recently_viewed_movie.movie_id -> movie.id
+user_recently_viewed_movie.user_id -> user.id
