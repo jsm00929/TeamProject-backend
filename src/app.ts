@@ -1,8 +1,15 @@
 import express, { Router, Express } from 'express';
-import { usersRouter } from './users/users.router';
+import usersRouter from './users/users.router';
 import { Config } from './config/env';
-import { handleErrors } from './middlewares/handleErrors';
-import { handleNotFoundError } from './middlewares/handleNotFoundError';
+import { handleErrors } from './core/middlewares/handle_errors';
+import { handleNotFoundError } from './core/middlewares/handle_not_found_error';
+import { logger } from './utils/logger/logger';
+import cookieParser from 'cookie-parser';
+import authRouter from './auth/auth.router';
+import moviesRouter from './movies/movies.router';
+import swaggerUi from 'swagger-ui-express';
+import { parseSwaggerDoc } from './utils/parser/parse_swagger_doc';
+import reviewsRouter from './reviews/reviews.router';
 
 // Singleton App instance
 export class App {
@@ -12,19 +19,33 @@ export class App {
   private static instance?: App;
 
   // 설정 정보 로드
-  private async loadConfig() {
-    await Config.init();
-    this.config = Config.getInstance();
+  private loadConfig() {
+    Config.init();
+    this.config = Config.env;
   }
 
   // api router 포함 모든 하위 router 로드
   private setApi() {
     const apiRouter = Router();
+    this.app.use('/api', apiRouter);
+    apiRouter.use('/auth', authRouter);
     apiRouter.use('/users', usersRouter);
+    apiRouter.use('/movies', moviesRouter);
+    apiRouter.use('/reviews', reviewsRouter);
+    // apiRouter.use('/comments', moviesRouter);
+
+    if (this.config.env === 'dev') {
+      this.app.use(
+        '/swagger',
+        swaggerUi.serve,
+        swaggerUi.setup(parseSwaggerDoc()),
+      );
+    }
   }
 
   // http request 파싱을 위한 모든 parser 로드
   private setRequestParsers() {
+    this.app.use(cookieParser(this.config.cookieSecret));
     this.app.use(express.json());
   }
 
@@ -35,8 +56,8 @@ export class App {
   }
 
   // 서버 구동에 필요한 모든 설정 정보 및 미들웨어 순차적 로드
-  private async init() {
-    await this.loadConfig();
+  private init() {
+    this.loadConfig();
     this.app = express();
     this.setRequestParsers();
     this.setApi();
@@ -45,19 +66,17 @@ export class App {
 
   // 서버는 인스턴스 생성 및 앞서 설정한 모든 정보 로드
   // 1회만 실행 가능하며, 재실행 시 오류 발생
-  static async start() {
-    if (this.instance !== null) {
+  static start() {
+    if (this.instance) {
       throw new Error(
         `❌server is already running at port ${this.instance.config.port}`,
       );
     }
     this.instance = new App();
-    await this.instance.init();
+    this.instance.init();
     this.instance.app.listen(this.instance.config.port, () => {
-      console.log(
-        `[🚀${new Date().toISOString()}] ✅server is running at port ${
-          this.instance.config.port
-        }😊`,
+      logger.info(
+        `✅server is running at port ${this.instance!.config.port}😊`,
       );
     });
   }

@@ -1,6 +1,15 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// 사용할 api
+// [최신 영화] https://developers.themoviedb.org/3/movies/get-movie-details
+// [현재 상영] https://developers.themoviedb.org/3/movies/get-now-playing
+// [popular] https://developers.themoviedb.org/3/movies/get-popular-movies
+// [평점순] https://developers.themoviedb.org/3/movies/get-top-rated-movies
+// [영화 상세] https://developers.themoviedb.org/3/movies/get-movie-details
+// [비슷한 영화] https://developers.themoviedb.org/3/movies/get-similar-movies
+// [번역] https://developers.themoviedb.org/3/movies/get-movie-translations
+// [영화 추천] https://developers.themoviedb.org/3/movies/get-movie-recommendations
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,20 +20,104 @@ datasource db {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  googleId  String?   @unique @db.Char(21)
-  username  String    @unique @db.VarChar(20)
-  name      String    @db.VarChar(20)
-  email     String    @unique @db.VarChar(255)
-  password  String    @db.VarChar(100)
-  avatarUrl String?   @db.VarChar(255)
-  createdAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
-  updatedAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
-  deletedAt DateTime? @db.Timestamp()
+  id        Int         @id @default(autoincrement())
+  googleId  String?     @unique @db.Char(21)
+  username  String      @unique @db.VarChar(20)
+  name      String      @db.VarChar(20)
+  email     String      @unique @db.VarChar(255)
+  password  String      @db.VarChar(100)
+  avatarUrl String?     @db.VarChar(255)
+  createdAt DateTime    @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
+  updatedAt DateTime    @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
+  deletedAt DateTime?   @db.Timestamp()
+  movies    UserMovie[]
+  comments  Comment[]
+  reviews   Review[]
+
+  @@index([googleId], name: "googleId")
+  @@index([email], name: "email")
+  @@index([username], name: "username")
+  @@index([deletedAt], name: "deletedAt")
+}
+
+model UserMovie {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie      Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  userId     Int
+  movieId    Int
+  viewedAt   DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
+  isFavorite Boolean  @default(false)
+
+  @@index([userId, movieId])
 }
 
 model Movie {
-  id       Int    @id @default(autoincrement())
-  title    String @db.VarChar(50)
-  overview String @db.Text
+  id          Int         @id // tmdb의 id를 따름
+  title       String      @db.VarChar(100)
+  titleKo     String?     @db.VarChar(100)
+  overview    String      @db.Text
+  overviewKo  String?     @db.Text
+  adult       Boolean
+  popularity  Float
+  voteCount   Int
+  voteAverage Float
+  // revenue              Int
+  // runtime              Int
+  // status               String
+  backdropUrl String?
+  posterUrl   String?
+  lang        String // 사용 언어
+  releaseDate DateTime?   @db.Date
+  // User                 User?                     @relation(fields: [userId], references: [id])
+  genres      Genre[]
+  users       UserMovie[]
 }
+
+// automatically created [many to many] relation
+model Genre {
+  id     Int     @id // tmdb의 id를 따름
+  name   String  @unique
+  movies Movie[]
+
+  @@index([name], name: "name")
+}
+
+model Review {
+  id        Int       @id @default(autoincrement())
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title     String    @db.VarChar(100)
+  overview  String    @db.VarChar(100)
+  content   String    @db.Text
+  rating    Float     @default(0.0) @db.Float
+  comments  Comment[]
+  authorId  Int
+  createdAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
+  updatedAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
+  deletedAt DateTime? @db.Timestamp()
+
+  @@index([authorId, deletedAt], name: "authorIdDeletedAt")
+}
+
+model Comment {
+  id        Int       @id @default(autoincrement())
+  content   String    @db.VarChar(500)
+  reviewId  Int
+  authorId  Int
+  review    Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
+  updatedAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
+  deletedAt DateTime? @db.Timestamp()
+
+  @@index([reviewId], name: "reviewId")
+  @@index([authorId, deletedAt], name: "authorIdDeletedAt")
+}
+
+// model MovieGenre {
+//   id      Int   @id @default(autoincrement())
+//   genreId Int
+//   movieId Int
+//   genre   Genre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+//   movie   Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+// }

@@ -1,17 +1,38 @@
-import { Response } from 'express';
-import { CreateUserDto } from './dtos/create-user.dto';
-import { RequestWith } from '../types/RequestWith';
-import { LoginDto } from './dtos/login-dto';
-import { AuthRequest } from '../types/AuthRequest';
+import { HandlerResponse } from '../core/middlewares/handle_response';
+import usersService from './users.service';
+import { UpdateUserAvatarUrlInput } from './dtos/inputs/update_user_avatar_url.input';
+import { AuthRequest, AuthRequestWith } from '../core/types';
 
-export const usersController = {
-  async signUp(req: RequestWith<CreateUserDto>, res: Response) {
-    const createUserDto = req.unwrap();
+async function me(req: AuthRequest): Promise<HandlerResponse> {
+  const userId = req.userId;
+  const me = await usersService.getMySimpleInfo(userId);
 
-    console.log(createUserDto);
-    res.json(createUserDto);
-  },
-  async login(req: RequestWith<LoginDto>, res: Response) {},
+  return { body: me };
+}
 
-  async user(req: AuthRequest, res: Response) {},
+async function meDetail(req: AuthRequest): Promise<HandlerResponse> {
+  const userId = req.userId;
+  const meDetail = await usersService.getMyDetailInfo(userId);
+
+  return { body: meDetail };
+}
+
+async function update(req: AuthRequestWith<UpdateUserAvatarUrlInput>) {
+  const userId = req.userId;
+  const updateUserInput = req.unwrap();
+
+  await usersService.updateMyInfo(userId, updateUserInput);
+}
+
+async function withdraw(req: AuthRequest) {
+  const userId = req.userId;
+
+  await usersService.withdraw(userId);
+}
+
+export default {
+  me,
+  meDetail,
+  update,
+  withdraw,
 };

@@ -1,10 +1,42 @@
 import { Router } from 'express';
-import { usersController } from './users.controller';
-import { CreateUserDto } from './dtos/create-user.dto';
-import { mustValid } from '../middlewares/mustValid';
-import { LoginDto } from './dtos/login-dto';
+import usersController from './users.controller';
+import { handle, handleResponse } from '../core/middlewares/handle_response';
+import { mustAuth } from '../auth/middlewares/must_auth';
+import { UpdateUserAvatarUrlInput } from './dtos/inputs/update_user_avatar_url.input';
 
-export const usersRouter = Router();
+const usersRouter = Router();
 
-usersRouter.post('/signup', mustValid(CreateUserDto), usersController.signUp);
-usersRouter.post('/login', mustValid(LoginDto), usersController.login);
+usersRouter.get(
+  '/me',
+  handle({
+    authLevel: 'must',
+    controller: usersController.me,
+  }),
+);
+
+usersRouter.get(
+  '/me/detail',
+  handle({
+    authLevel: 'must',
+    controller: usersController.meDetail,
+  }),
+);
+
+usersRouter.patch(
+  '/me',
+  handle({
+    authLevel: 'must',
+    bodyCls: UpdateUserAvatarUrlInput,
+    controller: usersController.update,
+  }),
+);
+
+usersRouter.delete(
+  '/me',
+  handle({
+    authLevel: 'must',
+    controller: usersController.withdraw,
+  }),
+);
+
+export default usersRouter;
