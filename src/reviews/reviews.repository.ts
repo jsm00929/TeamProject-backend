@@ -1,9 +1,12 @@
 import { PaginationQuery } from '../core/dtos/inputs/pagination.query';
 import { prisma } from '../config/db';
-import { CreateReviewInput } from './dtos/create_review.input';
-import { EditReviewInput } from './dtos/edit_review.input';
+import { CreateMovieReviewBody } from './dtos/create_movie_review.body';
+import { EditMovieReviewBody } from './dtos/edit_review.body';
 import { ReviewOverviewOutput } from './dtos/review_overview.output';
 
+/**
+ * 조회(Fetch)
+ */
 async function getReviewOverviewsByUserId(
   userId: number,
   { skip, take }: PaginationQuery,
@@ -36,9 +39,26 @@ async function getReviewOverviewsByUserId(
   });
 }
 
+async function findById(reviewId: number) {
+  return prisma.review.findUnique({ where: { id: reviewId } });
+}
+
+async function exists(reviewId: number) {
+  const review = await findById(reviewId);
+  return review !== null && review.deletedAt === null;
+}
+
+async function isAuthor(userId: number, reviewId: number) {
+  const review = await findById(reviewId);
+  return review !== null && review.authorId === userId;
+}
+
+/**
+ * 생성 및 수정(Mutation)
+ */
 async function create(
   userId: number,
-  { title, content, rating }: CreateReviewInput,
+  { title, content, rating }: CreateMovieReviewBody,
 ) {
   const { id } = await prisma.review.create({
     data: {
@@ -55,7 +75,7 @@ async function create(
   return id;
 }
 
-async function update(reviewId: number, editReviewInput: EditReviewInput) {
+async function update(reviewId: number, editReviewInput: EditMovieReviewBody) {
   await prisma.review.update({
     where: {
       id: reviewId,
@@ -69,14 +89,6 @@ async function update(reviewId: number, editReviewInput: EditReviewInput) {
     },
     select: { id: true },
   });
-}
-
-async function isAuthor(userId: number, reviewId: number) {
-  const exists = await prisma.review.findFirst({
-    where: { authorId: userId, id: reviewId },
-    select: { id: true },
-  });
-  return !!exists;
 }
 
 async function remove(reviewId: number) {
@@ -94,9 +106,11 @@ async function remove(reviewId: number) {
 }
 
 export default {
+  findById,
   getReviewOverviewsByUserId,
+  exists,
+  isAuthor,
   create,
   update,
   remove,
-  isAuthor,
 };

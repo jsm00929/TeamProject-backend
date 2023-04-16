@@ -17,83 +17,39 @@ paths:
         - 'Auth'
       summary: '회원 가입'
       description: '새로운 사용자를 등록합니다.'
-      consumes:
-        - 'application/json'
-      produces:
-        - 'application/json'
       parameters:
         - in: 'body'
-          name: 'SignupInput'
+          name: 'SignupBody'
           description: '등록할 사용자 정보'
           required: true
           schema:
-            type: object
-            properties:
-              username:
-                type: string
-                example: 'graalvung'
-                minLength: 4
-                maxLength: 20
-              password:
-                type: string
-                example: '1234haha'
-                minLength: 4
-                maxLength: 100
-              email:
-                type: string
-                example: 'johndoe@example.com'
-                format: 유효한 이메일 형식이어야 됨..
-                maxLength: 255
-              name:
-                type: string
-                example: '물방개세마리'
-                minLength: 1
-                maxLength: 20
+            $ref: '#/components/schemas/SignupBody'
 
       responses:
         201:
           description: '성공적으로 회원 가입한 경우'
           schema:
-            type: object
-            properties:
-              userId:
-                type: number
-                example: 1234
+            $ref: '#/components/schemas/SignupOutput'
 
         400:
           description: '입력 값 검증 실패한 경우..(body의 model 펼쳐서 참조)'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '입력 값이 구데긴대요?'
+            $ref: '#/components/schemas/InvalidRequestBodyError'
 
-        409(1):
+        409:
           description: '아이디(username)가 중복되면 안 됨...'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '이미 존재하는 사용자인대요?'
+            $ref: '#/components/schemas/DuplicateUserError'
 
         409(2):
           description: '이메일도 중복되면 안 됨...'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '이미 존재하는 이매일인대요?'
+            $ref: '#/components/schemas/DuplicateEmailError'
+
         500:
           description: '서버 오류가 발생한 경우'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '알 수 없는 오류인대요?'
+            $ref: '#/components/schemas/InternalServerError'
 
   /auth/login:
     post:
@@ -101,69 +57,38 @@ paths:
         - 'Auth'
       summary: '로그인'
       description: '등록된 사용자로 로그인합니다.'
-      consumes:
-        - 'application/json'
-      produces:
-        - 'application/json'
+
       parameters:
         - in: 'body'
-          name: 'LoginInput'
+          name: 'LoginBody'
           description: '로그인할 사용자 정보'
           required: true
           schema:
-            type: object
-            properties:
-              username:
-                type: string
-                example: 'johndoe'
-              password:
-                type: string
-                example: 'mypassword'
+            $ref: '#/components/schemas/LoginBody'
+
       responses:
         200:
           description: '성공적으로 로그인한 경우(응답 body 없음)'
+
         400:
-          description: '요청이 잘못된 경우'
+          description: '입력 Body 오류'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '유효하지 않은 사용자 이름 또는 비밀번호입니다.'
-        401(1):
+            $ref: '#/components/schemas/InvalidRequestBodyError'
+
+        401:
+          description: '비밀번호 일치 안함'
+          schema:
+            $ref: '#/components/schemas/InvalidPasswordError'
+
+        404:
           description: '존재하지 않는 계정'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '가입을 한 적이 없내요? 가입부터 하새요'
-
-        401(2):
-          description: '비밀번호 일치 않함'
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '비번이 틀리내요??'
-        401(3):
-          description: '유효하지 않은 AccessToken'
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '말 같지도 않은 토큰을 주셨내요?'
+            $ref: '#/components/schemas/UserNotFoundError'
 
         500:
           description: '서버 오류가 발생한 경우'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '알 수 없는 오류인대요?'
+            $ref: '#/components/schemas/InternalServerError'
 
   /auth/refresh-token:
     patch:
@@ -171,35 +96,29 @@ paths:
         - 'Auth'
       summary: 'Access Token 갱신'
       description: 'Refresh Token을 이용하여 새로운 Access Token을 발급합니다.'
-      produces:
-        - 'application/json'
+
       parameters:
         - in: 'cookie'
           name: 'refreshToken'
           description: 'Refresh Token'
           required: true
           type: string
+
       responses:
         200:
           description: '성공적으로 Access Token을 발급한 경우(응답 body 없음)'
           set-cookie:
             - access_token={{accessToken}}; Path=/; HttpOnly; Secure
+
         400:
-          description: '요청이 잘못된 경우'
+          description: 'Refresh Token 만료된 경우'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: 'Refresh Token이 유효하지 않습니다.'
+            $ref: '#/components/schemas/ExpiredRefreshTokenError'
+
         500:
           description: '서버 오류가 발생한 경우'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '알 수 없는 오류인대요?'
+            $ref: '#/components/schemas/InternalServerError'
 
   /auth/logout:
     post:
@@ -207,20 +126,45 @@ paths:
         - 'Auth'
       summary: '로그아웃'
       description: '현재 사용자를 로그아웃합니다. 클라이언트에 존재하는 AccessToken, RefreshToken 쿠키가 모조리 지워집니다. 없으면 아무 일도 일어나지 않습니다.'
-      # parameters:
-      #   - in: 'cookie'
-      #     name: 'accessToken'
-      #     description: 'Access Token'
-      #     required: true
-      #     type: string
-      #   - in: 'cookie'
-      #     name: 'refreshToken'
-      #     description: 'Refresh Token'
-      #     required: true
-      #     type: string
+
       responses:
         200:
           description: '로그아웃 성공(응답 body 읎음)'
+
+        500:
+          description: '서버 오류가 발생한 경우'
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+
+  /users/{userId}:
+    get:
+      tags:
+        - 'Users'
+      summary: '사용자 정보 가져오기'
+      description: 'userId와 일치하는 사용자의 정보를 가져옵니다.'
+      produces:
+        - 'application/json'
+      parameters:
+        - in: 'params'
+          name: 'userId'
+          description: '사용자 정보 가져오기'
+          required: true
+          type: string
+      responses:
+        200:
+          description: '사용자 정보 가져오기 성공'
+          schema:
+            $ref: '#/components/schemas/UserSimpleInfoOutput'
+
+        404:
+          description: 해당 사용자를 찾을 수 없습니다.
+          schema:
+            $ref: '#/components/schemas/UserNotFoundError'
+
+        500:
+          description: '서버 오류가 발생한 경우'
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
 
   /users/me:
     get:
@@ -228,234 +172,157 @@ paths:
         - 'Users'
       summary: '내 정보 가져오기'
       description: '현재 로그인한 사용자의 정보를 가져옵니다.'
-      produces:
-        - 'application/json'
       parameters:
-        - in: 'cookie'
-          name: 'accessToken'
-          description: 'Access Token'
-          required: true
-          type: string
+        - $ref: '#/components/parameters/AccessTokenCookie'
+
       responses:
         200:
           description: '내 정보 가져오기 성공'
           schema:
-            type: object
-            properties:
-              id:
-                type: integer
-                example: 3
-              username:
-                type: string
-                example: 'abcd2'
-              name:
-                type: string
-                example: 'adad'
-              email:
-                type: string
-                example: 'abc2@gmail.com'
-              avatarUrl:
-                type: string
-                nullable: true
-                example: null
+            $ref: '#/components/schemas/UserSimpleInfoOutput'
+
         401:
-          description: 'AccessToken 없거나 만료거나 조작된 경우'
+          description: 'AccessToken이 유효하지 않은 경우'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '로그인 꼮 하새요?'
+            $ref: '#/components/schemas/InvalidTokenError'
+
+        401(2):
+          description: 'AccessToken이 만료된 경우'
+          schema:
+            $ref: '#/components/schemas/ExpiredAccessTokenError'
 
         404:
           description: 해당 사용자를 찾을 수 없습니다.
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '가입을 한 적이 없내요? 가입부터 하새요'
+            $ref: '#/components/schemas/UserNotFoundError'
 
         500:
           description: '서버 오류가 발생한 경우'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '알 수 없는 오류인대요?'
+            $ref: '#/components/schemas/InternalServerError'
+
+  /users/me/detail:
+    get:
+      summary: 내 상세 정보 가져오기(현재 로그인 된 사용자)
+      tags:
+        - Users
+      parameters:
+        - $ref: '#/components/parameters/AccessTokenCookie'
+
+      responses:
+        '200':
+          description: 사용자 상세 정보 잘 온 경우
+          schema:
+            $ref: '#/components/schemas/UserDetailInfoOutput'
+
+        401:
+          description: 'AccessToken이 유효하지 않은 경우'
+          schema:
+            $ref: '#/components/schemas/InvalidTokenError'
+
+        401(2):
+          description: 'AccessToken이 만료된 경우'
+          schema:
+            $ref: '#/components/schemas/ExpiredAccessTokenError'
+
+        404:
+          description: 해당 사용자를 찾을 수 없습니다.
+          schema:
+            $ref: '#/components/schemas/UserNotFoundError'
+
+        500:
+          description: '서버 오류가 발생한 경우'
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
 
     patch:
       tags:
         - 'Users'
       summary: 현재 사용자 정보 수정
       parameters:
-        - in: 'cookie'
-          name: 'accessToken'
-          description: 'Access Token'
-          required: true
-          type: string
-        - name: UpdateUserInput
+        - $ref: '#/components/parameters/AccessTokenCookie'
+
+        - name: UpdateUserInfoBody
           in: body
           required: true
           schema:
-            type: object
-            properties:
-              name:
-                type: string
-                nullable: true
-                minLength: 4
-                maxLength: 20
-              password:
-                type: string
-                nullable: true
-                minLength: 4
-                maxLength: 100
-              avatarUrl:
-                type: string
-                nullable: true
+            $ref: '#/components/schemas/UpdateUserInfoBody'
+
       responses:
         200:
           description: 성공적으로 사용자 정보가 업데이트됨(응답 body 읎음)
         400:
           description: '입력 값 검증 실패한 경우..(body의 model 펼쳐서 참조)'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '입력 값이 구데긴대요?'
+            $ref: '#/components/schemas/InvalidRequestBodyError'
         401:
-          description: 'AccessToken 없거나 만료거나 조작된 경우'
+          description: 'AccessToken이 유효하지 않은 경우'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '로그인 꼮 하새요?'
+            $ref: '#/components/schemas/InvalidTokenError'
+
+        401(2):
+          description: 'AccessToken이 만료된 경우'
+          schema:
+            $ref: '#/components/schemas/ExpiredAccessTokenError'
+
         404:
           description: 해당 사용자를 찾을 수 없습니다.
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '가입을 한 적이 없내요? 가입부터 하새요'
+            $ref: '#/components/schemas/UserNotFoundError'
 
         500:
           description: '서버 오류가 발생한 경우'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '알 수 없는 오류인대요?'
+            $ref: '#/components/schemas/InternalServerError'
+
     delete:
       tags:
         - 'Users'
       summary: 회원 탈티
       parameters:
-        - in: 'cookie'
-          name: 'accessToken'
-          description: 'Access Token'
-          required: true
-          type: string
+        - $ref: '#/components/parameters/AccessTokenCookie'
+
       responses:
         200:
           description: 회원 탈티 성공
+
         401:
-          description: 'AccessToken 없거나 만료거나 조작된 경우'
+          description: 'AccessToken이 유효하지 않은 경우'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '로그인 꼮 하새요?'
+            $ref: '#/components/schemas/InvalidTokenError'
+
+        401(2):
+          description: 'AccessToken이 만료된 경우'
+          schema:
+            $ref: '#/components/schemas/ExpiredAccessTokenError'
+
         404:
           description: 해당 사용자를 찾을 수 없습니다.
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '가입을 한 적이 없내요? 가입부터 하새요'
+            $ref: '#/components/schemas/UserNotFoundError'
 
         500:
           description: '서버 오류가 발생한 경우'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '알 수 없는 오류인대요?'
+            $ref: '#/components/schemas/InternalServerError'
 
   /movies/popular:
     get:
       tags:
         - Movies
       summary: 유명한 영화 순번대로 가져옴니다
-      description: 기본 20개씩 가져와요.
+      # description: 기본 20개씩 가져와요.
       parameters:
-        - name: skip
-          in: query
-          description: $skip개 이후 가져오기
-          required: false
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-        - name: take
-          in: query
-          description: $skip개 이후 $take개 가져오기(최소 10)
-          required: false
-          schema:
-            type: integer
-            minimum: 10
-            maximum: 100
-            default: 20
+        - $ref: '#/components/parameters/SkipQuery'
+        - $ref: '#/components/parameters/TakeQuery'
+
       responses:
         200:
           schema:
             type: array
             items:
-              type: object
-              properties:
-                id:
-                  type: integer
-                title:
-                  type: string
-                titleKo:
-                  type: string
-                overview:
-                  type: string
-                overviewKo:
-                  type: string
-                adult:
-                  type: boolean
-                popularity:
-                  type: number
-                voteCount:
-                  type: integer
-                voteAverage:
-                  type: number
-                backdropUrl:
-                  type: string
-                posterUrl:
-                  type: string
-                lang:
-                  type: string
-                releaseDate:
-                  type: string
-                  format: date-time
-                genres:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                      name:
-                        type: string
+              $ref: '#/components/schemas/MovieOutput'
+
         400:
           description: 'take, skip 범위 벗어난 경우..(query의 model 펼쳐서 참조)'
           schema:
@@ -468,11 +335,7 @@ paths:
         500:
           description: '서버 오류가 발생한 경우'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '알 수 없는 오류인대요?'
+            $ref: '#/components/schemas/InternalServerError'
 
   /movies/detail/{movieId}:
     get:
@@ -485,6 +348,7 @@ paths:
           description: 가져올 movie의 id
           required: true
           type: integer
+
       responses:
         '200(2)':
           description: movieId로 조회한 영화가 DB에 없는 경우..
@@ -492,64 +356,16 @@ paths:
             type: null
             example: null
             nullable: true
-        '200(1)':
+
+        200:
           description: 잘 가져온 경우
           schema:
-            type: object
-            properties:
-              id:
-                type: integer
-                example: 502356
-              title:
-                type: string
-                example: The Super Mario Bros. Movie
-              overview:
-                type: string
-                example: While working underground to fix a water main, Brooklyn plumbers—and brothers—Mario and Luigi are transported down a mysterious pipe and wander into a magical new world. But when the brothers are separated, Mario embarks on an epic quest to find Luigi.
-              adult:
-                type: boolean
-                example: false
-              popularity:
-                type: number
-                example: 9032.947
-              voteCount:
-                type: integer
-                example: 756
-              voteAverage:
-                type: number
-                example: 7.5
-              backdropUrl:
-                type: string
-                example: https://image.tmdb.org/t/p/original/9n2tJBplPbgR2ca05hS5CKXwP2c.jpg
-              posterUrl:
-                type: string
-                example: https://image.tmdb.org/t/p/original/qNBAXBIQlnOThrVvA6mA2B5ggV6.jpg
-              lang:
-                type: string
-                example: en
-              releaseDate:
-                type: string
-                example: '2023-04-05T00:00:00.000Z'
-              genres:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                      example: 12
-                    name:
-                      type: string
-                      example: Adventure
+            $ref: '#/components/schemas/MovieOutput'
 
         500:
           description: '서버 오류가 발생한 경우'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '알 수 없는 오류인대요?'
+            $ref: '#/components/schemas/InternalServerError'
 
   /reviews:
     post:
@@ -559,32 +375,14 @@ paths:
       description: 영화 리뷰는 제목과 내용과 평점으로 구성되어 있아요
       parameters:
         - in: 'body'
-          name: 'CreateReviewInput'
+          name: 'CreateReviewBody'
           description: '등록할 리뷰 정보'
           required: true
           schema:
-            type: object
-            properties:
-              title:
-                type: string
-                description: 리뷰의 제목
-                maxLength: 100
-                example: 내 평생 이렇게 잠 잘 오는 영화는 처음입니다.
-              content:
-                type: string
-                description: 리뷰의 내용
-                maxLength: 1000
-                example: 꿀잠을 자서 내일 출근하는데 매우 큰 도움이 될듯 싶습니다.
-              rating:
-                type: number
-                description: 영화 평점(0.0~5.0)
-                minimum: 0.0
-                maximum: 5.0
-                example: 5.0
-            required:
-              - title
-              - content
-              - rating
+            $ref: '#/components/schemas/CreateReviewBody'
+
+        - $ref: '#/components/parameters/AccessTokenCookie'
+
       responses:
         201:
           description: 리뷰 만들어짐
@@ -596,107 +394,524 @@ paths:
                 example: 101
 
         401:
-          description: 'AccessToken 없거나 만료거나 조작된 경우'
+          description: 'AccessToken이 유효하지 않은 경우'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '로그인 꼮 하새요?'
+            $ref: '#/components/schemas/InvalidTokenError'
+
+        401(2):
+          description: 'AccessToken이 만료된 경우'
+          schema:
+            $ref: '#/components/schemas/ExpiredAccessTokenError'
 
         500:
           description: '서버 오류가 발생한 경우'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '알 수 없는 오류인대요?'
+            $ref: '#/components/schemas/InternalServerError'
+
+  /users/me/reviews:
     get:
       summary: 내가 작성한 리뷰 전부 보기
       tags:
-        - Reviews
+        - Users
+        - Users and Reviews
       parameters:
-        - name: skip
-          in: query
-          description: $skip개 이후 가져오기
-          required: false
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-        - name: take
-          in: query
-          description: $skip개 이후 $take개 가져오기(최소 10)
-          required: false
-          schema:
-            type: integer
-            minimum: 10
-            maximum: 100
-            default: 20
+        - $ref: '#/components/parameters/SkipQuery'
+        - $ref: '#/components/parameters/TakeQuery'
+        - $ref: '#/components/parameters/AccessTokenCookie'
+
       responses:
-        '200(1)':
-          description: 정상 응답 - ReviewOverviewOutput[]
+        200:
+          description: 정상 응답
           schema:
             type: array
             items:
-              type: object
-              properties:
-                id:
-                  type: integer
-                  format: int64
-                  example: 3
-                title:
-                  type: string
-                  example: '리뷰입니다..'
-                overview:
-                  type: string
-                  example: '맛없어요 영화'
-                rating:
-                  type: float
-                  format: float64
-                  example: 0.1
-                createdAt:
-                  type: string
-                  format: date-time
-                  example: '2023-04-16T01:41:43.000Z'
-                updatedAt:
-                  type: string
-                  format: date-time
-                  example: '2023-04-15T16:41:44.000Z'
-                author:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                      format: int64
-                      example: 3
-                    name:
-                      type: string
-                      example: 'abc'
-                    avatarUrl:
-                      type: string
-                      example: '/imgs/avatar/apassa21.png'
+              $ref: '#/components/schemas/ReviewOverviewOutput'
 
         '200(2)':
           description: 작성한 리뷰가 한개도 없는 경우, 빈 배열
           schema:
             type: array
             example: []
+
         401:
-          description: 'AccessToken 없거나 만료거나 조작된 경우'
+          description: 'AccessToken이 유효하지 않은 경우'
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: '로그인 꼮 하새요?'
+            $ref: '#/components/schemas/InvalidTokenError'
+
+        401(2):
+          description: 'AccessToken이 만료된 경우'
+          schema:
+            $ref: '#/components/schemas/ExpiredAccessTokenError'
 
         500:
           description: '서버 오류가 발생한 경우'
           schema:
+            $ref: '#/components/schemas/InternalServerError'
+
+  /reviews/{reviewId}:
+    patch:
+      summary: 리뷰 수정하기
+      tags:
+        - Reviews
+      parameters:
+        - name: reviewId
+          in: path
+          description: 수정할 리뷰의 id
+          required: true
+          schema:
+            type: integer
+            format: int64
+
+        - $ref: '#/components/parameters/AccessTokenCookie'
+
+        - name: UpdateReviewBody
+          in: body
+          description: 수정할 리뷰 데이터
+          required: true
+          schema:
+            $ref: '#/components/schemas/UpdateReviewBody'
+
+      responses:
+        200:
+          description: 리뷰 수정 성공(반환 body 없음)
+
+        401:
+          description: 'AccessToken이 유효하지 않은 경우'
+          schema:
+            $ref: '#/components/schemas/InvalidTokenError'
+
+        401(2):
+          description: 'AccessToken이 만료된 경우'
+          schema:
+            $ref: '#/components/schemas/ExpiredAccessTokenError'
+
+        404:
+          description: '리뷰가 이미 삭제된 경우'
+          schema:
+            $ref: '#/components/schemas/NotFoundError'
+
+        500:
+          description: '서버 오류가 발생한 경우'
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+
+    delete:
+      summary: 리뷰 삭제하기
+      tags:
+        - Reviews
+      parameters:
+        - name: reviewId
+          in: path
+          description: 수정할 리뷰의 id
+          required: true
+          schema:
+            type: integer
+            format: int64
+
+        - $ref: '#/components/parameters/AccessTokenCookie'
+
+      responses:
+        200:
+          description: 리뷰 삭제 성공(반환 body 없음)
+
+        401:
+          description: 'AccessToken이 유효하지 않은 경우'
+          schema:
+            $ref: '#/components/schemas/InvalidTokenError'
+
+        401(2):
+          description: 'AccessToken이 만료된 경우'
+          schema:
+            $ref: '#/components/schemas/ExpiredAccessTokenError'
+
+        404:
+          description: '리뷰가 이미 삭제된 경우'
+          schema:
+            $ref: '#/components/schemas/NotFoundError'
+
+        500:
+          description: '서버 오류가 발생한 경우'
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+
+components:
+  parameters:
+    AccessTokenCookie:
+      in: cookie
+      name: AccessToken
+      description: 로그인 된 사용자 식별을 위해 AccessToken 필요
+      required: true
+      schema:
+        type: string
+
+    OptionalAccessTokenCookie:
+      in: cookie
+      name: AccessToken
+      description: 로그인 된 사용자 식별을 위해 AccessToken 필요(옵션)
+      required: false
+      schema:
+        type: string
+
+    RefreshTokenCookie:
+      in: cookie
+      name: RefreshToken
+      description: AccessToken 재발급을 위해 RefreshToken 필요
+      required: true
+      schema:
+        type: string
+
+    SkipQuery:
+      in: query
+      name: skip
+      description: $skip개 이후 가져오기
+      required: false
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    TakeQuery:
+      in: query
+      name: take
+      description: $skip개 이후 $take개 가져오기(최소 10)
+      required: false
+      schema:
+        type: integer
+        minimum: 10
+        maximum: 100
+        default: 20
+
+  schemas:
+    InvalidRequestBodyError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '입력 값이 구데긴대요?'
+
+    InvalidRequestQueryError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '입력 query가 구데긴대요?'
+
+    InvalidRequestParamsError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '입력 params가 구데긴대요?'
+
+    NotFoundError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '자원을 찾을 수 없습니다?'
+
+    InternalServerError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '알 수 없는 오류인대요?'
+
+    InvalidTokenError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '말 같지도 않은 토큰을 주셨내요?'
+
+    UnauthorizedUserError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '로그인 꼮 하새요?'
+
+    DuplicateUserError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '이미 존재하는 사용자인대요?'
+
+    DuplicateEmailError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '이미 존재하는 이매일인대요?'
+
+    UserNotFoundError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '가입을 한 적이 없내요? 가입부터 하새요'
+
+    InvalidPasswordError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '비번이 틀리내요??'
+
+    ExpiredAccessTokenError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '토큰 만료 기간 지납'
+
+    ExpiredRefreshTokenError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '토큰 리프래시불가능'
+
+    PermissionDeniedError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '이 걸 할 권한이 없느내요?'
+
+    UserSimpleInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 3
+        username:
+          type: string
+          example: 'abcd2'
+        name:
+          type: string
+          example: 'adad'
+        email:
+          type: string
+          example: 'abc2@gmail.com'
+        avatarUrl:
+          type: string
+          nullable: true
+          example: null
+
+    SignupBody:
+      type: object
+      properties:
+        username:
+          type: string
+          example: 'johndoe'
+        password:
+          type: string
+          example: 'mypassword'
+
+    LoginBody:
+      type: object
+      properties:
+        username:
+          type: string
+          example: 'johndoe'
+        password:
+          type: string
+          example: 'mypassword'
+
+    UserSimpleInfoOutput:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 3
+        username:
+          type: string
+          example: 'abcd2'
+        name:
+          type: string
+          example: 'adad'
+        email:
+          type: string
+          example: 'abc2@gmail.com'
+        avatarUrl:
+          type: string
+          nullable: true
+          example: null
+
+    UserDetailInfoOutput:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The unique identifier for the user.
+        username:
+          type: string
+          description: The username of the user.
+        email:
+          type: string
+          format: email
+          description: The email address of the user.
+        googleId:
+          type: string
+          nullable: true
+          description: The Google ID associated with the user (if signed up via Google).
+        name:
+          type: string
+          description: The name of the user.
+        avatarUrl:
+          type: string
+          nullable: true
+          description: The URL of the user's avatar (if provided).
+        createdAt:
+          type: string
+          format: date-time
+          description: The date and time that the user account was created.
+        updatedAt:
+          type: string
+          format: date-time
+          description: The date and time that the user account was last updated.
+
+    SignupOutput:
+      type: object
+      properties:
+        userId:
+          type: number
+          example: 1234
+
+    UpdateUserInfoBody:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+          minLength: 4
+          maxLength: 20
+        password:
+          type: string
+          nullable: true
+          minLength: 4
+          maxLength: 100
+        avatarUrl:
+          type: string
+          nullable: true
+
+    UpdateReviewBody:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 100
+          required: false
+        content:
+          type: string
+          maxLength: 1000
+          required: false
+        rating:
+          type: number
+          minimum: 0.0
+          maximum: 5.0
+          required: false
+
+    CreateReviewBody:
+      type: object
+      properties:
+        title:
+          type: string
+          description: 리뷰의 제목
+          maxLength: 100
+          example: 내 평생 이렇게 잠 잘 오는 영화는 처음입니다.
+        content:
+          type: string
+          description: 리뷰의 내용
+          maxLength: 1000
+          example: 꿀잠을 자서 내일 출근하는데 매우 큰 도움이 될듯 싶습니다.
+        rating:
+          type: number
+          description: 영화 평점(0.0~5.0)
+          minimum: 0.0
+          maximum: 5.0
+          example: 5.0
+      required:
+        - title
+        - content
+        - rating
+
+    MovieOutput:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        titleKo:
+          type: string
+        overview:
+          type: string
+        overviewKo:
+          type: string
+        adult:
+          type: boolean
+        popularity:
+          type: number
+        voteCount:
+          type: integer
+        voteAverage:
+          type: number
+        backdropUrl:
+          type: string
+        posterUrl:
+          type: string
+        lang:
+          type: string
+        releaseDate:
+          type: string
+          format: date-time
+        genres:
+          type: array
+          items:
             type: object
             properties:
-              message:
+              id:
+                type: integer
+              name:
                 type: string
-                example: '알 수 없는 오류인대요?'
+
+    ReviewOverviewOutput:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 3
+        title:
+          type: string
+          example: '리뷰입니다..'
+        overview:
+          type: string
+          example: '맛없어요 영화'
+        rating:
+          type: float
+          format: float64
+          example: 0.1
+        createdAt:
+          type: string
+          format: date-time
+          example: '2023-04-16T01:41:43.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2023-04-15T16:41:44.000Z'
+        author:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              example: 3
+            name:
+              type: string
+              example: 'abc'
+            avatarUrl:
+              type: string
+              example: '/imgs/avatar/apassa21.png'

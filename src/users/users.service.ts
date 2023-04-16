@@ -2,31 +2,27 @@ import { AppError } from '../core/types/app_error';
 import { ErrorMessages } from '../core/constants/error_messages';
 import { HttpStatus } from '../core/constants/http_status';
 import usersRepository from './users.repository';
-import { UpdateUserAvatarUrlInput } from './dtos/inputs/update_user_avatar_url.input';
+import { UpdateUserAvatarUrlBody } from './dtos/inputs/update_user_avatar_url.body';
 import { UpdateUserPasswordInput } from './dtos/update_user_password.input';
+import { UserSimpleInfoOutput } from './dtos';
+import { UserDetailInfoOutput } from './dtos/outputs/user_detail_info.output';
 
-async function getMySimpleInfo(userId: number) {
-  const mySimpleInfo = await usersRepository.findSimpleInfoById(userId);
-
-  if (mySimpleInfo === null) {
-    throw AppError.create({
-      message: ErrorMessages.USER_NOT_FOUND,
-      status: HttpStatus.NOT_FOUND,
-    });
-  }
-  return mySimpleInfo;
+async function getSimpleInfo(
+  userId: number,
+): Promise<UserSimpleInfoOutput | null> {
+  return usersRepository.findSimpleInfoById(userId);
 }
 
-async function getMyDetailInfo(userId: number) {
-  const myDetailInfo = await usersRepository.findDetailInfoById(userId);
+async function mustGetMySimpleInfo(
+  userId: number,
+): Promise<UserSimpleInfoOutput> {
+  return usersRepository.findSimpleInfoByIdOrThrow(userId);
+}
 
-  if (myDetailInfo === null) {
-    throw AppError.create({
-      message: ErrorMessages.USER_NOT_FOUND,
-      status: HttpStatus.NOT_FOUND,
-    });
-  }
-  return myDetailInfo;
+async function mustGetMyDetailInfo(
+  userId: number,
+): Promise<UserDetailInfoOutput> {
+  return usersRepository.findDetailInfoByIdOrThrow(userId);
 }
 
 async function getUserById(userId: number) {
@@ -37,10 +33,10 @@ async function updatePassword(
   userId: number,
   updateUserPasswordInput: UpdateUserPasswordInput,
 ) {
-  const exists = await usersRepository.existsById(userId);
+  const exists = await usersRepository.exists(userId);
 
   if (!exists) {
-    throw AppError.create({
+    throw AppError.new({
       message: ErrorMessages.USER_NOT_FOUND,
       status: HttpStatus.NOT_FOUND,
     });
@@ -51,12 +47,12 @@ async function updatePassword(
 
 async function updateMyInfo(
   userId: number,
-  updateUserInput: UpdateUserAvatarUrlInput,
+  updateUserInput: UpdateUserAvatarUrlBody,
 ) {
-  const exists = await usersRepository.existsById(userId);
+  const exists = await usersRepository.exists(userId);
 
   if (!exists) {
-    throw AppError.create({
+    throw AppError.new({
       message: ErrorMessages.USER_NOT_FOUND,
       status: HttpStatus.NOT_FOUND,
     });
@@ -66,10 +62,10 @@ async function updateMyInfo(
 }
 
 async function withdraw(userId: number) {
-  const exists = await usersRepository.existsById(userId);
+  const exists = await usersRepository.exists(userId);
 
   if (!exists) {
-    throw AppError.create({
+    throw AppError.new({
       message: ErrorMessages.USER_NOT_FOUND,
       status: HttpStatus.NOT_FOUND,
     });
@@ -79,8 +75,9 @@ async function withdraw(userId: number) {
 }
 
 export default {
-  getMySimpleInfo,
-  getMyDetailInfo,
+  mustGetMyDetailInfo,
+  mustGetMySimpleInfo,
+  getSimpleInfo,
   getUserById,
   updateMyInfo,
   withdraw,

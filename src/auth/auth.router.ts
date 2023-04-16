@@ -1,35 +1,46 @@
 import { Router } from 'express';
-import { handle, handleResponse } from '../core/middlewares/handle_response';
-import { SignupInput } from './dtos/inputs/signup.input';
+import { handleResponse } from '../core/middlewares/handle_response';
+import { SignupBody } from './dtos/inputs/signup.body';
 import authController from './auth.controller';
-import { LoginInput } from './dtos/inputs/login.input';
+import { LoginBody } from './dtos/inputs/login.body';
+import { handle } from '../core/handle';
 
 const authRouter = Router();
 
-// authRouter.post(
-//   '/signup',
-//   mustValid(SignupInput),
-//   handleResponse(authController.signup),
-// );
-
+/**
+ * @description
+ * 회원 가입
+ */
 authRouter.post(
   '/signup',
   handle({
-    bodyCls: SignupInput,
+    bodyCls: SignupBody,
     controller: authController.signup,
   }),
 );
 
+/**
+ * @description
+ * 로그인
+ */
 authRouter.post(
   '/login',
   handle({
-    bodyCls: LoginInput,
+    bodyCls: LoginBody,
     controller: authController.login,
   }),
 );
 
+/**
+ * @description
+ * 로그아웃
+ */
 authRouter.post('/logout', handleResponse(authController.logout));
 
+/**
+ * @description
+ * AccessToken 재발급
+ */
 authRouter.patch('/refresh-token', handleResponse(authController.refreshToken));
 
 export default authRouter;

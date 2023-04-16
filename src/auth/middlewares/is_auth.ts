@@ -16,7 +16,7 @@ export function isAuth(req: OptionalAuthRequest, _, next: NextFunction) {
       next();
     } catch (e) {
       next(
-        AppError.create({
+        AppError.new({
           message: ErrorMessages.INVALID_TOKEN,
         }),
       );

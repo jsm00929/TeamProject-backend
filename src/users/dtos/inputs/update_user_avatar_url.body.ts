@@ -1,4 +1,4 @@
-export class UpdateUserAvatarUrlInput {
+export class UpdateUserAvatarUrlBody {
   // googleId?: string | null;
   // username?: string;
   // email?: string;

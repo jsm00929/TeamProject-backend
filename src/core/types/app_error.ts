@@ -1,5 +1,10 @@
 import { HttpStatus } from '../constants/http_status';
 
+interface AppErrorArgs {
+  message: string;
+  status?: HttpStatus;
+}
+
 export class AppError extends Error {
   status: HttpStatus;
 
@@ -11,20 +16,14 @@ export class AppError extends Error {
   /**
    * @description status 생략 가능, default = 400 BAD_REQUEST
    * @example
-   * const someError = AppError.create({
+   * const someError = AppError.new({
    *    message: '뭔가 이상해요. 오류 났음',
    *    status: HttpStatus.BAD_REQUEST,
    * });
    *
    * throw someError;
    */
-  static create({
-    message,
-    status = HttpStatus.BAD_REQUEST,
-  }: {
-    message: string;
-    status?: HttpStatus;
-  }) {
+  static new({ message, status = HttpStatus.BAD_REQUEST }: AppErrorArgs) {
     return new this(message, status);
   }
 }

@@ -1,6 +1,6 @@
 import { MaxLength, MinLength } from 'class-validator';
 
-export class LoginInput {
+export class LoginBody {
   @MinLength(4)
   @MaxLength(20)
   username: string;

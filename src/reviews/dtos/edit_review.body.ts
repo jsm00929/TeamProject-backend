@@ -1,6 +1,6 @@
 import { Max, MaxLength, Min } from 'class-validator';
 
-export class EditReviewInput {
+export class EditMovieReviewBody {
   @MaxLength(100)
   title?: string;
 

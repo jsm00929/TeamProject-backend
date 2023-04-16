@@ -27,14 +27,14 @@ export function generateRefreshToken(userId: number) {
 export function verifyAccessToken(accessToken: string) {
   const payload = verify(accessToken, Config.env.accessTokenSecret);
   if (typeof payload === 'string') {
-    throw AppError.create({
+    throw AppError.new({
       message: ErrorMessages.INVALID_TOKEN,
       status: HttpStatus.UNAUTHORIZED,
     });
   }
 
   if (isExpiredToken(payload as Payload)) {
-    throw AppError.create({
+    throw AppError.new({
       message: ErrorMessages.EXPIRED_ACCESS_TOKEN,
       status: HttpStatus.UNAUTHORIZED,
     });
@@ -46,14 +46,14 @@ export function verifyAccessToken(accessToken: string) {
 export function verifyRefreshToken(refreshToken: string) {
   const payload = verify(refreshToken, Config.env.refreshTokenSecret);
   if (typeof payload === 'string') {
-    throw AppError.create({
+    throw AppError.new({
       message: ErrorMessages.INVALID_TOKEN,
       status: HttpStatus.UNAUTHORIZED,
     });
   }
 
   if (isExpiredToken(payload as Payload)) {
-    throw AppError.create({
+    throw AppError.new({
       message: ErrorMessages.EXPIRED_REFRESH_TOKEN,
       status: HttpStatus.UNAUTHORIZED,
     });

@@ -1,6 +1,6 @@
 import { IsEmail, MaxLength, MinLength } from 'class-validator';
 
-export class SignupInput {
+export class SignupBody {
   @MinLength(4)
   @MaxLength(20)
   username: string;

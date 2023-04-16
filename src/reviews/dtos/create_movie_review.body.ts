@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, Max, MaxLength, Min } from 'class-validator';
 
-export class CreateReviewInput {
+export class CreateMovieReviewBody {
   @IsNotEmpty()
   @MaxLength(100)
   title: string;

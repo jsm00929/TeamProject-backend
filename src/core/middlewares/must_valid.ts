@@ -28,7 +28,7 @@ export function mustValidBody<I>(cls: ClassConstructor<I>) {
     const errors = await validate(body as object);
     if (errors.length > 0) {
       return next(
-        AppError.create({
+        AppError.new({
           message: ErrorMessages.INVALID_REQUEST_BODY,
         }),
       );
@@ -46,7 +46,7 @@ export function mustValidQuery<Q>(cls: ClassConstructor<Q>) {
     const errors = await validate(query as object);
     if (errors.length > 0) {
       return next(
-        AppError.create({
+        AppError.new({
           message: ErrorMessages.INVALID_REQUEST_BODY,
         }),
       );
@@ -64,7 +64,7 @@ export function mustValidParams<P>(cls: ClassConstructor<P>) {
     const errors = await validate(params as object);
     if (errors.length > 0) {
       return next(
-        AppError.create({
+        AppError.new({
           message: ErrorMessages.INVALID_REQUEST_PARAMS,
         }),
       );
@@ -96,7 +96,7 @@ export function mustValidParams<P>(cls: ClassConstructor<P>) {
 //     const inputErrors = await validate(input as object);
 //     if (inputErrors.length > 0) {
 //       return next(
-//         AppError.create({
+//         AppError.new({
 //           message:
 //             kind === 'body'
 //               ? ErrorMessages.INVALID_REQUEST_BODY
@@ -108,7 +108,7 @@ export function mustValidParams<P>(cls: ClassConstructor<P>) {
 //     const paramsErrors = await validate(params as object);
 //     if (paramsErrors.length > 0) {
 //       return next(
-//         AppError.create({
+//         AppError.new({
 //           message: ErrorMessages.INVALID_REQUEST_PARAMS,
 //         }),
 //       );

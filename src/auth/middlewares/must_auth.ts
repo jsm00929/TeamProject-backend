@@ -10,7 +10,7 @@ export function mustAuth(req: AuthRequest, res: Response, next: NextFunction) {
   const accessToken = req.signedCookies[ACCESS_TOKEN_COOKIE_NAME];
   if (!accessToken) {
     next(
-      AppError.create({
+      AppError.new({
         message: ErrorMessages.UNAUTHORIZED_USER,
         status: HttpStatus.UNAUTHORIZED,
       }),
@@ -22,7 +22,7 @@ export function mustAuth(req: AuthRequest, res: Response, next: NextFunction) {
     next();
   } catch (e) {
     next(
-      AppError.create({
+      AppError.new({
         message: ErrorMessages.INVALID_TOKEN,
         status: HttpStatus.UNAUTHORIZED,
       }),
