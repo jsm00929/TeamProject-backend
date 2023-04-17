@@ -32,6 +32,7 @@ async function getReviewOverviewsByUserId(
         select: {
           id: true,
           name: true,
+          username: true,
           avatarUrl: true,
         },
       },

@@ -708,9 +708,25 @@ components:
         username:
           type: string
           example: 'johndoe'
+          minLength: 4
+          maxLength: 20
+
+        email:
+          type: string
+          example: 'abc@gmail.com'
+          maxLength: 255
+
+        name:
+          type: string
+          example: 김방구
+          minLength: 1
+          maxLength: 20
+
         password:
           type: string
           example: 'mypassword'
+          minLength: 4
+          maxLength: 100
 
     LoginBody:
       type: object
@@ -734,9 +750,6 @@ components:
         name:
           type: string
           example: 'adad'
-        email:
-          type: string
-          example: 'abc2@gmail.com'
         avatarUrl:
           type: string
           nullable: true
@@ -795,9 +808,6 @@ components:
           nullable: true
           minLength: 4
           maxLength: 100
-        avatarUrl:
-          type: string
-          nullable: true
 
     UpdateReviewBody:
       type: object

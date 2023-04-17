@@ -15,6 +15,7 @@ async function findSimpleInfoById(userId: number) {
     where: { id: userId, deletedAt: null },
     select: {
       id: true,
+      username: true,
       name: true,
       avatarUrl: true,
     },
