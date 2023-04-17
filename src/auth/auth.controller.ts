@@ -8,10 +8,12 @@ import {
   clearAuthCookies,
   setAccessTokenCookie,
   setAuthCookies,
-} from '../utils/cookie/cookie_store';
+} from '../utils/cookie_store';
 import { REFRESH_TOKEN_COOKIE_NAME } from '../config/constants';
-import { verifyRefreshToken } from '../utils/token/token';
+import { verifyRefreshToken } from '../utils/token';
 import { AppResult } from '../core/types/app_result';
+import { AppError } from '../core/types';
+import { ErrorMessages } from '../core/constants';
 
 async function signup(req: RequestWith<SignupBody>, res: Response) {
   const signupInput = req.unwrap();
@@ -38,6 +40,12 @@ async function logout(_, res: Response) {
 
 async function refreshToken(req: Request, res: Response) {
   const token = req.signedCookies[REFRESH_TOKEN_COOKIE_NAME];
+  if (typeof token !== 'string') {
+    throw AppError.new({
+      message: ErrorMessages.INVALID_TOKEN,
+      status: HttpStatus.UNAUTHORIZED,
+    });
+  }
   const userId = verifyRefreshToken(token);
 
   setAccessTokenCookie(userId, res);

@@ -1,7 +1,7 @@
 import { prisma } from '../config/db';
 import { ErrorMessages, HttpStatus } from '../core/constants';
 import { AppError } from '../core/types';
-import { CreateUserDto } from './dtos/create_user.input';
+import { CreateUserBody } from './dtos/inputs/create_user.body';
 
 /**
  * 조회(Fetch)
@@ -99,7 +99,7 @@ async function findByEmail(email: string) {
  */
 async function exists(userId: number) {
   const user = await findById(userId);
-  return user !== null && user.deletedAt !== null;
+  return user !== null && user.deletedAt === null;
 }
 
 /**
@@ -131,7 +131,7 @@ async function existsByUsername(username: string) {
 /**
  * 생성 및 수정(Mutation)
  */
-async function create({ email, name, password, username }: CreateUserDto) {
+async function create({ email, name, password, username }: CreateUserBody) {
   const user = await prisma.user.create({
     data: {
       email,

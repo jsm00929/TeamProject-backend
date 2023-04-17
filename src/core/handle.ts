@@ -18,6 +18,7 @@ type HandleArgs<A extends AuthLevel, I, P> = {
   bodyCls?: ClassConstructor<I>;
   queryCls?: ClassConstructor<I>;
   paramsCls?: ClassConstructor<P>;
+  preController?: Handler<ExtendedRequest<A, I, P>>;
   controller: Handler<ExtendedRequest<A, I, P>>;
 };
 
@@ -27,6 +28,7 @@ export function handle<A extends AuthLevel = 'none', I = never, P = never>({
   bodyCls,
   queryCls,
   paramsCls,
+  preController,
 }: HandleArgs<A, I, P>) {
   type Request = ExtendedRequest<A, I, P>;
 
@@ -60,6 +62,10 @@ export function handle<A extends AuthLevel = 'none', I = never, P = never>({
     handlers.push(mustAuth as Handler<Request>);
   } else if (authLevel === 'optional') {
     handlers.push(isAuth as Handler<Request>);
+  }
+
+  if (preController) {
+    handlers.push(handleResponse(preController));
   }
 
   handlers.push(handleResponse(controller));

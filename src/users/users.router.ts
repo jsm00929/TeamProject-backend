@@ -1,9 +1,14 @@
 import { Router } from 'express';
 import usersController from './users.controller';
-import { UpdateUserAvatarUrlBody } from './dtos/inputs/update_user_avatar_url.body';
 import { handle } from '../core/handle';
 import { PaginationQuery } from '../core/dtos/inputs';
 import { UserIdParams } from './dtos/inputs/user_id.params';
+import { mustAuth } from '../auth/middlewares/must_auth';
+import { DeleteUserBody } from './dtos/inputs/delete_user.body';
+import { UpdateUserInfoBody } from './dtos/inputs/update_user_info.body';
+import { UpdateUserPasswordBody } from './dtos/inputs/update_user_password.body';
+import { handleUploadAvatar } from '../core/middlewares/handle_upload_avatar';
+import { handleResponse } from '../core/middlewares';
 
 const usersRouter = Router();
 
@@ -51,10 +56,41 @@ usersRouter.patch(
   '/me',
   handle({
     authLevel: 'must',
-    bodyCls: UpdateUserAvatarUrlBody,
-    controller: usersController.update,
+    bodyCls: UpdateUserInfoBody,
+    controller: usersController.updateMyInfo,
   }),
 );
+
+/**
+ * @description
+ * 현재 로그인 된 사용자의 비밀번호 수정하기
+ */
+usersRouter.patch(
+  '/me',
+  handle({
+    authLevel: 'must',
+    bodyCls: UpdateUserPasswordBody,
+    controller: usersController.updateMyPassword,
+  }),
+);
+
+/**
+ * @description
+ * 현재 로그인 된 사용자의 아바타 업로드 및 아바타 url 수정
+ */
+usersRouter.post(
+  '/me/avatars',
+  mustAuth,
+  handleUploadAvatar.single('avatar'),
+  handleResponse(usersController.updateMyAvatar),
+);
+
+// usersRouter.post(
+//   '/me/avatars',
+//   mustAuth,
+//   handleUploadAvatar.single('avatar'),
+//   usersController.updateMyAvatar,
+// );
 
 /**
  * @description
@@ -64,6 +100,7 @@ usersRouter.delete(
   '/me',
   handle({
     authLevel: 'must',
+    bodyCls: DeleteUserBody,
     controller: usersController.withdraw,
   }),
 );

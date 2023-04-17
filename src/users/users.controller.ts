@@ -1,22 +1,33 @@
 import usersService from './users.service';
-import { UpdateUserAvatarUrlBody } from './dtos/inputs/update_user_avatar_url.body';
 import { AuthRequest, AuthRequestWith, RequestWith } from '../core/types';
 import { AppResult } from '../core/types/app_result';
 import { UserIdParams } from './dtos/inputs/user_id.params';
 import reviewsService from '../reviews/reviews.service';
 import { PaginationQuery } from '../core/dtos/inputs';
 import moviesService from '../movies/movies.service';
+import { UpdateUserPasswordBody } from './dtos/inputs/update_user_password.body';
+import { UpdateUserInfoBody } from './dtos/inputs/update_user_info.body';
+import { DeleteUserBody } from './dtos/inputs/delete_user.body';
+import { Multer } from 'multer';
+import { log } from '../utils/logger';
+import { handleUploadAvatar } from '../core/middlewares/handle_upload_avatar';
+import { NextFunction, Response } from 'express';
+import { HttpStatus } from '../core/constants';
+import { UpdateAvatarOutput } from './dtos/outputs/update_avatar.output';
+import { removeAvatarImage } from '../utils/files';
+import { STATIC_AVATARS_URL } from '../config/constants';
+import { filenameIntoStaticUrl } from '../utils/static_path_resolvers';
 
 async function me(req: AuthRequest) {
   const userId = req.userId;
-  const me = await usersService.mustGetMySimpleInfo(userId);
+  const me = await usersService.getMySimpleInfo(userId);
 
   return AppResult.new({ body: me });
 }
 
 async function myDetailInfo(req: AuthRequest) {
   const userId = req.userId;
-  const myDetailInfo = await usersService.mustGetMyDetailInfo(userId);
+  const myDetailInfo = await usersService.getMyDetailInfo(userId);
 
   return AppResult.new({ body: myDetailInfo });
 }
@@ -28,17 +39,39 @@ async function simpleInfo(req: RequestWith<never, UserIdParams>) {
   return AppResult.new({ body: userSimpleInfo });
 }
 
-async function update(req: AuthRequestWith<UpdateUserAvatarUrlBody>) {
+async function updateMyInfo(req: AuthRequestWith<UpdateUserInfoBody>) {
   const userId = req.userId;
-  const updateUserInput = req.unwrap();
+  const body = req.unwrap();
 
-  await usersService.updateMyInfo(userId, updateUserInput);
+  await usersService.updateMyInfo(userId, body);
 }
 
-async function withdraw(req: AuthRequest) {
+async function updateMyPassword(req: AuthRequestWith<UpdateUserPasswordBody>) {
   const userId = req.userId;
+  const body = req.unwrap();
 
-  await usersService.withdraw(userId);
+  await usersService.updatePassword(userId, body);
+}
+
+async function updateMyAvatar(
+  req: AuthRequest & { file: Express.Multer.File },
+) {
+  const { userId, file } = req;
+
+  const avatarUrl = filenameIntoStaticUrl(file.filename, 'avatars');
+
+  await usersService.updateAvatar(userId, avatarUrl, file.filename);
+
+  return AppResult.new({
+    body: { avatarUrl } as UpdateAvatarOutput,
+    status: HttpStatus.CREATED,
+  });
+}
+
+async function withdraw(req: AuthRequestWith<DeleteUserBody>) {
+  const userId = req.userId;
+  const body = req.unwrap();
+  await usersService.withdraw(userId, body);
 }
 
 /**
@@ -47,13 +80,11 @@ async function withdraw(req: AuthRequest) {
 
 async function getMyReviewOverviews(req: AuthRequestWith<PaginationQuery>) {
   const { userId } = req;
-  const paginationQuery = req.unwrap();
-  console.log(userId);
-  console.log('okok');
+  const query = req.unwrap();
 
   const myReviews = await reviewsService.getReviewOverviewsByUserId(
     userId,
-    paginationQuery,
+    query,
   );
 
   return AppResult.new({ body: myReviews });
@@ -63,11 +94,11 @@ async function getReviewOverviews(
   req: RequestWith<PaginationQuery, UserIdParams>,
 ) {
   const { userId } = req.unwrapParams();
-  const paginationQuery = req.unwrap();
+  const query = req.unwrap();
 
   const reviews = await reviewsService.getReviewOverviewsByUserId(
     userId,
-    paginationQuery,
+    query,
   );
 
   return AppResult.new({ body: reviews });
@@ -81,18 +112,18 @@ async function getMyRecentlyViewedMovies(
   req: AuthRequestWith<PaginationQuery>,
 ) {
   const { userId } = req;
-  const paginationQuery = req.unwrap();
+  const query = req.unwrap();
 
-  const movies = await moviesService.getRecentlyViewed(userId, paginationQuery);
+  const movies = await moviesService.getRecentlyViewed(userId, query);
 
   return AppResult.new({ body: movies });
 }
 
 async function getMyFavoriteMovies(req: AuthRequestWith<PaginationQuery>) {
   const { userId } = req;
-  const paginationQuery = req.unwrap();
+  const query = req.unwrap();
 
-  const movies = await moviesService.getFavorites(userId, paginationQuery);
+  const movies = await moviesService.getFavorites(userId, query);
 
   return AppResult.new({ body: movies });
 }
@@ -104,7 +135,9 @@ export default {
   me,
   myDetailInfo,
   simpleInfo,
-  update,
+  updateMyInfo,
+  updateMyPassword,
+  updateMyAvatar,
   withdraw,
   getMyReviewOverviews,
   getReviewOverviews,

@@ -1,0 +1,16 @@
+[
+  {
+    "_id": "d17e8a1c-5ec1-43aa-ba0d-d15ec0b99f64",
+    "name": "dev",
+    "default": true,
+    "sortNum": 10000,
+    "created": "2023-04-17T15:16:00.881Z",
+    "modified": "2023-04-17T15:16:00.881Z",
+    "data": [
+      {
+        "name": "BASE_URL",
+        "value": "http://localhost:8080/api"
+      }
+    ]
+  }
+]

@@ -1,12 +1,12 @@
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
-import { Config } from '../../config/env';
-import { ErrorMessages } from '../../core/constants/error_messages';
+import { Config } from '../config/env';
+import { ErrorMessages } from '../core/constants/error_messages';
 import {
   ACCESS_TOKEN_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
-} from '../../config/constants';
-import { AppError } from '../../core/types/app_error';
-import { HttpStatus } from '../../core/constants/http_status';
+} from '../config/constants';
+import { AppError } from '../core/types/app_error';
+import { HttpStatus } from '../core/constants/http_status';
 
 export function generateAccessToken(userId: number) {
   const payload = {

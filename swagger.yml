@@ -248,9 +248,54 @@ paths:
       parameters:
         - $ref: '#/components/parameters/AccessTokenCookie'
 
+        - name: DeleteUserBody
+          in: body
+          required: true
+          schema:
+            $ref: '#/components/schemas/DeleteUserBody'
+
       responses:
         200:
           description: 회원 탈티 성공
+
+        401:
+          description: 'AccessToken이 유효하지 않은 경우'
+          schema:
+            $ref: '#/components/schemas/InvalidTokenError'
+
+        401(2):
+          description: 'AccessToken이 만료된 경우'
+          schema:
+            $ref: '#/components/schemas/ExpiredAccessTokenError'
+
+        404:
+          description: 해당 사용자를 찾을 수 없습니다.
+          schema:
+            $ref: '#/components/schemas/UserNotFoundError'
+
+        500:
+          description: '서버 오류가 발생한 경우'
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+
+  /users/me/avatars:
+    post:
+      tags:
+        - 'Users'
+      summary: '사용자 프로필 사진 수정'
+      description: '현재 로그인한 사용자의 프로필 사진을 수정합니다.'
+      parameters:
+        - $ref: '#/components/parameters/AccessTokenCookie'
+        - in: formData
+          name: avatar
+          type: file
+          description: 업로드 할 이미지 파일
+
+      responses:
+        200:
+          description: '사용자 프로필 사진 수정 성공'
+          schema:
+            $ref: '#/components/schemas/UpdateAvatarOutput'
 
         401:
           description: 'AccessToken이 유효하지 않은 경우'
@@ -682,6 +727,13 @@ components:
           type: string
           example: '이 걸 할 권한이 없느내요?'
 
+    InvalidFileTypeError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '지원되지 않는 파일 형식입니다? : png'
+
     UserSimpleInfo:
       type: object
       properties:
@@ -710,23 +762,37 @@ components:
           example: 'johndoe'
           minLength: 4
           maxLength: 20
+          required: true
+          description: 사용자 아이디
 
         email:
           type: string
           example: 'abc@gmail.com'
           maxLength: 255
+          required: true
+          description: 사용자 이메일
 
         name:
           type: string
           example: 김방구
           minLength: 1
           maxLength: 20
+          required: true
+          description: 사용자 이름
 
         password:
           type: string
           example: 'mypassword'
           minLength: 4
           maxLength: 100
+          required: true
+          description: 사용자 비밀번호
+
+      required:
+        - username
+        - password
+        - name
+        - email
 
     LoginBody:
       type: object
@@ -734,9 +800,16 @@ components:
         username:
           type: string
           example: 'johndoe'
+          required: true
+          description: 사용자 아이디
         password:
           type: string
           example: 'mypassword'
+          required: true
+          description: 사용자 비밀번호
+      required:
+        - username
+        - password
 
     UserSimpleInfoOutput:
       type: object
@@ -795,6 +868,41 @@ components:
           type: number
           example: 1234
 
+    UpdateAvatarOutput:
+      type: object
+      properties:
+        avatarUrl:
+          type: string
+          example: '/images/avatars/b2924b86-ffb4-43cd-a249-4a84ca51e028.png'
+          nullable: true
+
+    DeleteUserBody:
+      type: object
+      properties:
+        password:
+          type: string
+          nullable: true
+          minLength: 4
+          maxLength: 100
+          description: 탈퇴할 사용자 비밀번호
+          required: false
+
+      required:
+        - password
+
+    UpdateUserPasswordBody:
+      type: object
+      properties:
+      password:
+        type: string
+        nullable: true
+        minLength: 4
+        maxLength: 100
+        required: false
+
+      required:
+        - password
+
     UpdateUserInfoBody:
       type: object
       properties:
@@ -803,11 +911,13 @@ components:
           nullable: true
           minLength: 4
           maxLength: 20
+          required: false
         password:
           type: string
           nullable: true
           minLength: 4
           maxLength: 100
+          required: false
 
     UpdateReviewBody:
       type: object

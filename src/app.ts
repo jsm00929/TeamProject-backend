@@ -3,14 +3,15 @@ import usersRouter from './users/users.router';
 import { Config } from './config/env';
 import { handleErrors } from './core/middlewares/handle_errors';
 import { handleNotFoundError } from './core/middlewares/handle_not_found_error';
-import { logger } from './utils/logger/logger';
+import { log } from './utils/logger';
 import cookieParser from 'cookie-parser';
 import authRouter from './auth/auth.router';
 import moviesRouter from './movies/movies.router';
 import swaggerUi from 'swagger-ui-express';
 import cors from 'cors';
-import { parseSwaggerDoc } from './utils/parser/parse_swagger_doc';
 import reviewsRouter from './reviews/reviews.router';
+import { STATIC_AVATARS_PATH, STATIC_AVATARS_URL } from './config/constants';
+import { parseSwaggerDoc } from './utils/parsers';
 
 // Singleton App instance
 export class App {
@@ -25,9 +26,18 @@ export class App {
     this.config = Config.env;
   }
 
+  private setStaticDirs() {
+    this.app.use(STATIC_AVATARS_URL, express.static(STATIC_AVATARS_PATH));
+  }
+
+  // http request 파싱을 위한 모든 parser 로드
+  private setRequestParsers() {
+    this.app.use(cookieParser(this.config.cookieSecret));
+    this.app.use(express.json());
+  }
+
   private setSwagger() {
     if (this.config.env === 'dev') {
-      console.log(this.config.env);
       this.app.use(
         '/swagger',
         swaggerUi.serve,
@@ -38,7 +48,6 @@ export class App {
 
   private setCors() {
     if (this.config.env === 'dev') {
-      console.log(this.config.allowedOrigins);
       this.app.use(
         cors({
           origin: this.config.allowedOrigins,
@@ -46,12 +55,6 @@ export class App {
         }),
       );
     }
-  }
-
-  // http request 파싱을 위한 모든 parser 로드
-  private setRequestParsers() {
-    this.app.use(cookieParser(this.config.cookieSecret));
-    this.app.use(express.json());
   }
 
   // api router 포함 모든 하위 router 로드
@@ -75,6 +78,7 @@ export class App {
   private init() {
     this.loadConfig();
     this.app = express();
+    this.setStaticDirs();
     this.setRequestParsers();
     this.setCors();
     this.setSwagger();
@@ -93,9 +97,8 @@ export class App {
     this.instance = new App();
     this.instance.init();
     this.instance.app.listen(this.instance.config.port, () => {
-      logger.info(
-        `✅server is running at port ${this.instance!.config.port}😊`,
-      );
+      console.log();
+      log.info(`✅server is running at port ${this.instance!.config.port}😊`);
     });
   }
 }

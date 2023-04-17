@@ -114,6 +114,12 @@ model Comment {
   @@index([authorId, deletedAt], name: "authorIdDeletedAt")
 }
 
+model RefreshToken {
+  id Int @id
+
+  expiresAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
+}
+
 // model MovieGenre {
 //   id      Int   @id @default(autoincrement())
 //   genreId Int

@@ -1,0 +1,168 @@
+[
+  {
+    "_id": "523ed49c-104c-4b1f-8190-d7bcaf8df096",
+    "colId": "380187f3-3281-4f0e-b90c-04a0fa69c437",
+    "containerId": "",
+    "name": "/signup",
+    "url": "{{BASE_URL}}/auth/signup",
+    "method": "POST",
+    "sortNum": 10000,
+    "created": "2023-04-17T15:17:11.173Z",
+    "modified": "2023-04-17T15:20:03.019Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n    \"username\": \"x인생이뭐1조\",\n    \"email\": \"dinsaneiswhast@gmail.com\",\n    \"name\": \"x\",\n    \"password\": \"1234\"\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
+    "_id": "d9ce4d00-57b5-4afc-b746-7aa097164b6c",
+    "colId": "380187f3-3281-4f0e-b90c-04a0fa69c437",
+    "containerId": "",
+    "name": "/login",
+    "url": "{{BASE_URL}}/auth/login",
+    "method": "POST",
+    "sortNum": 20000,
+    "created": "2023-04-17T15:20:18.618Z",
+    "modified": "2023-04-17T15:20:39.015Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n    \"username\": \"abcd\",\n    \"password\": \"1234\"\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
+    "_id": "d69c96a8-8b13-4228-9a38-b8fd78483624",
+    "colId": "380187f3-3281-4f0e-b90c-04a0fa69c437",
+    "containerId": "",
+    "name": "/logout",
+    "url": "{{BASE_URL}}/auth/logout",
+    "method": "POST",
+    "sortNum": 30000,
+    "created": "2023-04-17T15:20:56.677Z",
+    "modified": "2023-04-17T15:21:15.911Z",
+    "headers": [],
+    "params": [],
+    "tests": []
+  },
+  {
+    "_id": "6913b1f1-5ae6-4998-8563-93c0f0158f82",
+    "colId": "380187f3-3281-4f0e-b90c-04a0fa69c437",
+    "containerId": "",
+    "name": "/refresh-token",
+    "url": "{{BASE_URL}}/auth/refresh-token",
+    "method": "PATCH",
+    "sortNum": 40000,
+    "created": "2023-04-17T15:21:45.185Z",
+    "modified": "2023-04-17T15:21:53.129Z",
+    "headers": [],
+    "params": [],
+    "tests": []
+  },
+  {
+    "_id": "b2204a6f-3b1e-4d16-bee3-9477007120de",
+    "colId": "9a6d0a19-795e-4979-b18d-2589b51d7d6e",
+    "containerId": "",
+    "name": "/me",
+    "url": "{{BASE_URL}}/users/me",
+    "method": "GET",
+    "sortNum": 10000,
+    "created": "2023-04-17T15:26:30.348Z",
+    "modified": "2023-04-17T15:26:46.670Z",
+    "headers": [],
+    "params": [],
+    "tests": []
+  },
+  {
+    "_id": "50e57389-ea21-4c64-9356-9f1d69324c84",
+    "colId": "9a6d0a19-795e-4979-b18d-2589b51d7d6e",
+    "containerId": "",
+    "name": "/me/detail",
+    "url": "{{BASE_URL}}/users/me/detail",
+    "method": "GET",
+    "sortNum": 20000,
+    "created": "2023-04-17T15:27:08.305Z",
+    "modified": "2023-04-17T15:27:17.160Z",
+    "headers": [],
+    "params": [],
+    "tests": []
+  },
+  {
+    "_id": "6cd12497-6a7f-4eb0-beb4-1c93bd950dc3",
+    "colId": "9a6d0a19-795e-4979-b18d-2589b51d7d6e",
+    "containerId": "",
+    "name": "/me/avatars",
+    "url": "{{BASE_URL}}/users/me/avatars",
+    "method": "POST",
+    "sortNum": 30000,
+    "created": "2023-04-17T15:27:27.961Z",
+    "modified": "2023-04-17T18:52:52.818Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "formdata",
+      "raw": "",
+      "form": [],
+      "files": [
+        {
+          "name": "avatar",
+          "value": "../../../Documents/flutter.png"
+        }
+      ]
+    },
+    "tests": []
+  },
+  {
+    "_id": "cb79d0b1-ff81-43a7-b9a1-24f28390beb0",
+    "colId": "9a6d0a19-795e-4979-b18d-2589b51d7d6e",
+    "containerId": "",
+    "name": "/me",
+    "url": "{{BASE_URL}}/users/me",
+    "method": "DELETE",
+    "sortNum": 15000,
+    "created": "2023-04-17T18:53:43.755Z",
+    "modified": "2023-04-17T18:54:38.675Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"password\": \"string\"\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
+    "_id": "b8884ee9-ce01-4c2f-a0d9-3c29f3ed0883",
+    "colId": "9a6d0a19-795e-4979-b18d-2589b51d7d6e",
+    "containerId": "",
+    "name": "/me/movies/reviews",
+    "url": "{{BASE_URL}}/users/me/movies/reviews",
+    "method": "GET",
+    "sortNum": 40000,
+    "created": "2023-04-17T18:55:07.066Z",
+    "modified": "2023-04-17T18:55:36.861Z",
+    "headers": [],
+    "params": [],
+    "tests": []
+  },
+  {
+    "_id": "eab0cb05-bd92-42c6-b1d8-4f996ba43d1d",
+    "colId": "9a6d0a19-795e-4979-b18d-2589b51d7d6e",
+    "containerId": "",
+    "name": "/{userId}",
+    "url": "{{BASE_URL}}/users/1",
+    "method": "GET",
+    "sortNum": 5000,
+    "created": "2023-04-17T18:55:55.397Z",
+    "modified": "2023-04-17T18:56:17.026Z",
+    "headers": [],
+    "params": [],
+    "tests": []
+  }
+]

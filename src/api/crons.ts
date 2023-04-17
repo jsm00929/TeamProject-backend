@@ -4,7 +4,7 @@ import path from 'path';
 import { writeFile } from 'fs';
 import { createGenresIfNotExists } from './tasks';
 import { fetchAllGenres } from './tmdb_fetcher';
-import { logger } from '../utils/logger/logger';
+import { log } from '../utils/logger';
 import { CreateMovieInput } from '../movies/dtos/inputs/create_movie.input';
 import { FetchMoviePageDto } from './dtos/fetch_movie_page.dto';
 import { tmdbClient } from './tmdb_client';
@@ -15,7 +15,6 @@ const pagePath = path.join(__dirname, 'page.json');
 async function readLastPage() {
   const buf = await readFile(pagePath);
   const { page } = JSON.parse(buf.toString());
-  console.log(page);
   return page;
 }
 
@@ -36,7 +35,7 @@ export async function upsertMovies() {
         },
       },
     );
-    logger.info(data);
+    log.info(data);
     data.results.forEach(
       async ({
         adult,
@@ -71,7 +70,7 @@ export async function upsertMovies() {
       },
     );
   } catch (err) {
-    logger.error((err as Error).message);
+    log.error((err as Error).message);
     throw err;
   }
   await updateLastPage(page + 1);
@@ -84,17 +83,17 @@ export function setCrons() {
   // 업데이트 사항이 있으면 DB에 반영
   cron.schedule('0 0 * * *', async () => {
     const genres = await fetchAllGenres();
-    logger.info(`fetched genres: ${genres}`);
+    log.info(`fetched genres: ${genres}`);
     await createGenresIfNotExists(genres);
   });
 
   // 1분마다 새로운 movie 업데이트
   cron.schedule('* * * * *', async () => {
     const page = await upsertMovies();
-    logger.info(`fetched movies page: ${page}`);
+    log.info(`fetched movies page: ${page}`);
   });
 
   cron.schedule('* * * * *', () => {
-    logger.info(`it's executed`);
+    log.info(`it's executed`);
   });
 }

@@ -1,7 +1,7 @@
 import { setCrons, upsertMovies } from './api/crons';
 import { App } from './app';
 import moviesRepository from './movies/movies.repository';
-import { logger } from './utils/logger/logger';
+import { log } from './utils/logger';
 
 async function main() {
   // setCrons();

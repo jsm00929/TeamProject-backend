@@ -2,7 +2,7 @@ import { AppError } from '../core/types/app_error';
 import { ErrorMessages } from '../core/constants/error_messages';
 import { HttpStatus } from '../core/constants/http_status';
 import usersRepository from '../users/users.repository';
-import { comparePassword, hashPassword } from '../utils/etc/hash';
+import { comparePassword, hashPassword } from '../utils/hash';
 import { LoginBody } from './dtos/inputs/login.body';
 import { SignupBody } from './dtos/inputs/signup.body';
 import { SignupOutput } from './dtos/outputs/signup.output';
