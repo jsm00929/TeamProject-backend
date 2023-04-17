@@ -59,6 +59,47 @@ async function updateViewedAt(userId: number, movieId: number) {
     });
   });
 }
+
+async function getRecentlyViewed(
+  userId: number,
+  { skip, take }: PaginationQuery,
+) {
+  const movies = await prisma.userMovie.findMany({
+    where: {
+      userId,
+    },
+    orderBy: {
+      viewedAt: 'desc',
+    },
+    include: {
+      movie: true,
+    },
+    skip,
+    take,
+  });
+
+  return movies;
+}
+
+async function getFavorites(userId: number, { skip, take }: PaginationQuery) {
+  const movies = await prisma.userMovie.findMany({
+    where: {
+      userId,
+      isFavorite: true,
+    },
+    orderBy: {
+      viewedAt: 'desc',
+    },
+    include: {
+      movie: true,
+    },
+    skip,
+    take,
+  });
+
+  return movies;
+}
+
 async function getMovieDetail(movieId: number) {
   return prisma.movie.findUnique({
     where: {
@@ -70,30 +111,30 @@ async function getMovieDetail(movieId: number) {
   });
 }
 
-async function getRecentlyViewedMovies(
-  userId: number,
-  { skip, take }: PaginationQuery,
-) {
-  const movies =
-    (
-      await prisma.user.findUnique({
-        where: { id: userId },
-        include: {
-          movies: {
-            orderBy: {
-              viewedAt: 'desc',
-            },
-            skip,
-            take,
-            include: {
-              movie: true,
-            },
-          },
-        },
-      })
-    )?.movies ?? [];
-  return movies.map((m) => m.movie);
-}
+// async function getRecentlyViewedMovies(
+//   userId: number,
+//   { skip, take }: PaginationQuery,
+// ) {
+//   const movies =
+//     (
+//       await prisma.user.findUnique({
+//         where: { id: userId },
+//         include: {
+//           movies: {
+//             orderBy: {
+//               viewedAt: 'desc',
+//             },
+//             skip,
+//             take,
+//             include: {
+//               movie: true,
+//             },
+//           },
+//         },
+//       })
+//     )?.movies ?? [];
+//   return movies.map((m) => m.movie);
+// }
 
 async function getPopularMovies({ skip, take }: PaginationQuery) {
   return prisma.movie.findMany({
@@ -190,10 +231,11 @@ export default {
   toggleFavoriteMovie,
   updateViewedAt,
   getMovieDetail,
-  getRecentlyViewedMovies,
   getPopularMovies,
   createMany,
   findAllGenres,
   upsert,
   upsertGenre,
+  getRecentlyViewed,
+  getFavorites,
 };

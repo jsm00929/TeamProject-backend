@@ -29,7 +29,7 @@ async function getMovieDetail(req: AuthRequestWith<never, MovieIdParams>) {
  */
 
 async function writeReview(req: AuthRequestWith<CreateMovieReviewBody>) {
-  const userId = req.userId;
+  const { userId } = req;
   const createReviewInput = req.unwrap();
 
   const reviewId = await reviewsService.write(userId, createReviewInput);

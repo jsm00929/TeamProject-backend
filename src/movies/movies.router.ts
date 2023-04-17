@@ -7,6 +7,9 @@ import { CreateMovieReviewBody } from '../reviews/dtos/create_movie_review.body'
 import { EditMovieReviewBody } from '../reviews/dtos/edit_review.body';
 import { ReviewIdParams } from '../reviews/dtos/review_id.params';
 
+/**
+ * BASE_URL: /api/movies
+ */
 const moviesRouter = Router();
 
 /**
@@ -57,10 +60,24 @@ moviesRouter.post(
  */
 /**
  * @description
- * 특정 영화에 대한 리뷰 수정하기
+ * 특정 영화에 대한 리뷰 작성하기
+ */
+moviesRouter.post(
+  '/:movieId/reviews',
+  handle({
+    authLevel: 'must',
+    bodyCls: CreateMovieReviewBody,
+    paramsCls: ReviewIdParams,
+    controller: moviesController.writeReview,
+  }),
+);
+
+/**
+ * @description
+ * 특정 영화 리뷰 수정하기
  */
 moviesRouter.patch(
-  '/:movieId/reviews/:reviewId',
+  '/reviews/:reviewId',
   handle({
     authLevel: 'must',
     bodyCls: EditMovieReviewBody,
@@ -71,11 +88,12 @@ moviesRouter.patch(
 
 /**
  * @description
- * 특정 영화에 대한 리뷰 삭제하기
+ * 특정 영화 리뷰 삭제하기
  */
 moviesRouter.delete(
-  '/:movieId/reviews/:reviewId',
+  '/reviews/:reviewId',
   handle({
+    authLevel: 'must',
     paramsCls: ReviewIdParams,
     controller: moviesController.removeReview,
   }),
