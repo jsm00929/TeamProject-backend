@@ -77,7 +77,15 @@ usersRouter.delete(
  * 현재 로그인 한 사용자가 최근 조회한 영화(movie detail) 목록 조회(Pagination)
  */
 //@ts-ignore
-usersRouter.get('/me/movies/recent');
+usersRouter.get(
+  // TODO: query?
+  '/me/movies/recent',
+  handle({
+    authLevel: 'must',
+    queryCls: PaginationQuery,
+    controller: usersController.getMyRecentlyViewedMovies,
+  }),
+);
 /**
  * @description
  * TODO:
@@ -93,7 +101,6 @@ usersRouter.get('/me/movies/favorite');
  * @description
  * 현재 로그인 된 사용자가 작성한 영화 리뷰 보기
  */
-// TODO: 정렬 추가
 usersRouter.get(
   '/me/movies/reviews',
   handle({

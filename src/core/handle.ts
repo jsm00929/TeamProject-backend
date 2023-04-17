@@ -22,7 +22,7 @@ type HandleArgs<A extends AuthLevel, I, P> = {
 };
 
 export function handle<A extends AuthLevel = 'none', I = never, P = never>({
-  authLevel = 'none' as A,
+  authLevel,
   controller,
   bodyCls,
   queryCls,
@@ -31,12 +31,6 @@ export function handle<A extends AuthLevel = 'none', I = never, P = never>({
   type Request = ExtendedRequest<A, I, P>;
 
   const handlers: Handler<Request>[] = [];
-
-  if (authLevel === 'must') {
-    handlers.push(mustAuth as Handler<Request>);
-  } else if (authLevel === 'optional') {
-    handlers.push(isAuth as Handler<Request>);
-  }
 
   if (bodyCls && queryCls) {
     handlers.push(async (_, __, next: NextFunction) => {
@@ -60,6 +54,12 @@ export function handle<A extends AuthLevel = 'none', I = never, P = never>({
 
   if (paramsCls) {
     handlers.push(mustValidParams(paramsCls) as Handler<Request>);
+  }
+
+  if (authLevel === 'must') {
+    handlers.push(mustAuth as Handler<Request>);
+  } else if (authLevel === 'optional') {
+    handlers.push(isAuth as Handler<Request>);
   }
 
   handlers.push(handleResponse(controller));
