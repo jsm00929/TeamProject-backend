@@ -4,6 +4,7 @@ import { SignupBody } from './dtos/inputs/signup.body';
 import authController from './auth.controller';
 import { LoginBody } from './dtos/inputs/login.body';
 import { handle } from '../core/handle';
+import { mustAuth } from './middlewares/must_auth';
 
 const authRouter = Router();
 

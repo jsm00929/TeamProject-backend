@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import authRouter from './auth/auth.router';
 import moviesRouter from './movies/movies.router';
 import swaggerUi from 'swagger-ui-express';
+import cors from 'cors';
 import { parseSwaggerDoc } from './utils/parser/parse_swagger_doc';
 import reviewsRouter from './reviews/reviews.router';
 
@@ -24,6 +25,35 @@ export class App {
     this.config = Config.env;
   }
 
+  private setSwagger() {
+    if (this.config.env === 'dev') {
+      console.log(this.config.env);
+      this.app.use(
+        '/swagger',
+        swaggerUi.serve,
+        swaggerUi.setup(parseSwaggerDoc()),
+      );
+    }
+  }
+
+  private setCors() {
+    if (this.config.env === 'dev') {
+      console.log(this.config.allowedOrigins);
+      this.app.use(
+        cors({
+          origin: this.config.allowedOrigins,
+          credentials: true,
+        }),
+      );
+    }
+  }
+
+  // http request 파싱을 위한 모든 parser 로드
+  private setRequestParsers() {
+    this.app.use(cookieParser(this.config.cookieSecret));
+    this.app.use(express.json());
+  }
+
   // api router 포함 모든 하위 router 로드
   private setApi() {
     const apiRouter = Router();
@@ -33,20 +63,6 @@ export class App {
     apiRouter.use('/movies', moviesRouter);
     apiRouter.use('/reviews', reviewsRouter);
     // apiRouter.use('/comments', moviesRouter);
-
-    if (this.config.env === 'dev') {
-      this.app.use(
-        '/swagger',
-        swaggerUi.serve,
-        swaggerUi.setup(parseSwaggerDoc()),
-      );
-    }
-  }
-
-  // http request 파싱을 위한 모든 parser 로드
-  private setRequestParsers() {
-    this.app.use(cookieParser(this.config.cookieSecret));
-    this.app.use(express.json());
   }
 
   // 오류 처리 미들웨어, 404 미들웨어 로드
@@ -60,6 +76,8 @@ export class App {
     this.loadConfig();
     this.app = express();
     this.setRequestParsers();
+    this.setCors();
+    this.setSwagger();
     this.setApi();
     this.setErrorHandlers();
   }
