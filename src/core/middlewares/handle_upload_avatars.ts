@@ -35,7 +35,7 @@ const fileFilter = (
   fn(null, true);
 };
 
-export const handleUploadAvatar = multer({
+export const handleUploadAvatars = multer({
   storage,
   fileFilter,
   limits: { fileSize: 1024 * 1024 * 10 },

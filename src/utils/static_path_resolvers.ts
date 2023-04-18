@@ -1,4 +1,4 @@
-import path, { join } from 'path';
+import { join } from 'path';
 import {
   STATIC_AVATARS_PATH,
   STATIC_AVATARS_URL,
@@ -6,6 +6,11 @@ import {
 } from '../config/constants';
 
 export type StaticDirectoryKind = 'avatars';
+
+// TODO
+// export function resolveTrashDirPath(filepath: string) {
+//   return `${filepath}`;
+// }
 
 export function staticPathIntoUrl(path: string, kind: StaticDirectoryKind) {
   let staticUrl;
@@ -15,24 +20,35 @@ export function staticPathIntoUrl(path: string, kind: StaticDirectoryKind) {
   return `${staticUrl}/${path.split('/').reverse()[0]}`;
 }
 
-export function staticUrlIntoPath(url: string, kind: StaticDirectoryKind) {
+export function staticUrlIntoPath(
+  url: string,
+  kind: StaticDirectoryKind,
+  isAbsolutePath: boolean = false,
+) {
   let staticPath;
   if (kind === 'avatars') {
     staticPath = STATIC_AVATARS_PATH;
   }
-  return join(process.cwd(), `${staticPath}/${url.split('/').reverse()[0]}`);
+  if (isAbsolutePath) {
+    staticPath = intoAbsolutePath(staticPath);
+  }
+  return `${staticPath}/${url.split('/').reverse()[0]}`;
 }
 
 export function filenameIntoStaticPath(
   filename: string,
   kind: StaticDirectoryKind,
+  isAbsolutePath: boolean = false,
 ) {
   let staticPath;
   if (kind === 'avatars') {
     staticPath = STATIC_AVATARS_PATH;
   }
 
-  return join(process.cwd(), `${staticPath}/${filename}`);
+  if (isAbsolutePath) {
+    staticPath = intoAbsolutePath(staticPath);
+  }
+  return `${staticPath}/${filename}`;
 }
 
 export function filenameIntoStaticUrl(
@@ -46,6 +62,10 @@ export function filenameIntoStaticUrl(
   return `${staticUrl}/${filename}`;
 }
 
-export function filenameIntoTempPath(filename: string) {
-  return path.join(process.cwd(), `${UPLOADS_TEMP_PATH}/${filename}`);
+export function filenameIntoAbsoluteTempPath(filename: string) {
+  return intoAbsolutePath(`${UPLOADS_TEMP_PATH}/${filename}`);
+}
+
+export function intoAbsolutePath(path: string) {
+  return join(process.cwd(), path);
 }

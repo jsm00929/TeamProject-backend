@@ -6,6 +6,10 @@ import { comparePassword, hashPassword } from '../utils/hash';
 import { LoginBody } from './dtos/inputs/login.body';
 import { SignupBody } from './dtos/inputs/signup.body';
 import { SignupOutput } from './dtos/outputs/signup.output';
+import {
+  fetchGoogleToken,
+  fetchGoogleUserInfo,
+} from '../pkg/oauth/google/fetchers';
 
 async function signUp({ email, name, password, username }: SignupBody) {
   const exists = await usersRepository.existsByUsername(username);
@@ -55,7 +59,58 @@ async function login({ username, password }: LoginBody) {
   return user.id;
 }
 
+async function googleSignupRedirect(code: string) {
+  const {
+    data: { accessToken },
+  } = await fetchGoogleToken(code, 'signup');
+
+  const {
+    data: { id, email },
+  } = await fetchGoogleUserInfo(accessToken);
+
+  // TODO
+  const user = await usersRepository.findByEmail(email);
+
+  if (user) {
+    if (user.googleId !== null) {
+      throw AppError.new({
+        message: ErrorMessages.DUPLICATE_USER,
+        status: HttpStatus.CONFLICT,
+      });
+    }
+
+    return usersRepository.update(user.id, {
+      googleId: user.googleId,
+    });
+  }
+
+  // password is nullable?
+  // createWithGoogle
+  // await usersRepository.create({});
+}
+
+async function googleLoginRedirect(code: string) {
+  const {
+    data: { accessToken },
+  } = await fetchGoogleToken(code, 'signup');
+
+  const {
+    data: { id, email },
+  } = await fetchGoogleUserInfo(accessToken);
+
+  // TODO
+  const exists = await usersRepository.existsByEmail(email);
+  if (exists) {
+    throw AppError.new({
+      message: ErrorMessages.DUPLICATE_EMAIL,
+      status: HttpStatus.CONFLICT,
+    });
+  }
+}
+
 export default {
   signUp,
   login,
+  googleSignupRedirect,
+  googleLoginRedirect,
 };

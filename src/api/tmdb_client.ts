@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { snakeToCamel } from '../utils/parser/snake_to_camel';
 import { Config } from '../config/env';
+import { snakeToCamel } from '../utils/parsers';
 
 const { imdbApiKeyV3, imdbApiUrl } = Config.env;
 

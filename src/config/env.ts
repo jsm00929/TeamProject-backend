@@ -51,6 +51,22 @@ export class Config {
   @IsNotEmpty()
   private _imdbApiKeyV3: string;
 
+  @IsString()
+  @IsNotEmpty()
+  private _googleClientId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  private _googleClientSecret: string;
+
+  @IsString()
+  @IsNotEmpty()
+  private _googleSignupRedirectUri: string;
+
+  @IsString()
+  @IsNotEmpty()
+  private _googleLoginRedirectUri: string;
+
   // #################
   // # SECRET CONFIG #
   // #################
@@ -81,7 +97,7 @@ export class Config {
   // ####################
   // #     NODE_ENV     #
   // ####################
-  @IsIn(['dev', 'prod'])
+  @IsIn(['dev', 'prod', 'test'])
   private _env: string;
 
   public get host(): string {
@@ -120,6 +136,22 @@ export class Config {
     return this._imdbApiKeyV3;
   }
 
+  get googleClientId(): string {
+    return this._googleClientId;
+  }
+
+  get googleClientSecret(): string {
+    return this._googleClientSecret;
+  }
+
+  get googleSignupRedirectUri(): string {
+    return this._googleSignupRedirectUri;
+  }
+
+  get googleLoginRedirectUri(): string {
+    return this._googleLoginRedirectUri;
+  }
+
   get cookieSecret() {
     return this._cookieSecret;
   }
@@ -139,7 +171,12 @@ export class Config {
   private static instance?: Config;
 
   static init() {
-    require('dotenv').config();
+    const envPath = process.env.NODE_ENV === 'dev' ? '.env.dev' : '.env.test';
+
+    require('dotenv').config({
+      path: envPath,
+    });
+
     const {
       HOST,
       PORT,
@@ -148,6 +185,10 @@ export class Config {
       DB_URL,
       IMDB_API_URL,
       IMDB_API_KEY_V3,
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET,
+      GOOGLE_SIGNUP_REDIRECT_URI,
+      GOOGLE_LOGIN_REDIRECT_URI,
       COOKIE_SECRET,
       ACCESS_TOKEN_SECRET,
       REFRESH_TOKEN_SECRET,
@@ -163,6 +204,10 @@ export class Config {
     config._dbUrl = DB_URL!;
     config._imdbApiUrl = IMDB_API_URL!;
     config._imdbApiKeyV3 = IMDB_API_KEY_V3!;
+    config._googleClientId = GOOGLE_CLIENT_ID!;
+    config._googleClientSecret = GOOGLE_CLIENT_SECRET!;
+    config._googleSignupRedirectUri = GOOGLE_SIGNUP_REDIRECT_URI!;
+    config._googleLoginRedirectUri = GOOGLE_LOGIN_REDIRECT_URI!;
     config._accessTokenSecret = ACCESS_TOKEN_SECRET!;
     config._refreshTokenSecret = REFRESH_TOKEN_SECRET!;
     config._cookieSecret = COOKIE_SECRET!;

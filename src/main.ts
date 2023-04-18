@@ -6,7 +6,7 @@ import { log } from './utils/logger';
 async function main() {
   // setCrons();
   // const page = await upsertMovies();
-  // logger.info(`fetched movies page: ${page}`);
+  // log.info(`fetched movies page: ${page}`);
   App.start();
 
   // const data = await moviesRepository.getPopularMovies();

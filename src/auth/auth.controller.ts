@@ -9,11 +9,16 @@ import {
   setAccessTokenCookie,
   setAuthCookies,
 } from '../utils/cookie_store';
-import { REFRESH_TOKEN_COOKIE_NAME } from '../config/constants';
+import {
+  GOOGLE_LOGIN_OAUTH2_URL,
+  GOOGLE_SIGNUP_OAUTH2_URL,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from '../config/constants';
 import { verifyRefreshToken } from '../utils/token';
 import { AppResult } from '../core/types/app_result';
 import { AppError } from '../core/types';
 import { ErrorMessages } from '../core/constants';
+import { GoogleLoginCodeQuery } from './dtos/inputs/google_login_code.query';
 
 async function signup(req: RequestWith<SignupBody>, res: Response) {
   const signupInput = req.unwrap();
@@ -51,9 +56,34 @@ async function refreshToken(req: Request, res: Response) {
   setAccessTokenCookie(userId, res);
 }
 
+async function googleSignup(req: Request, res: Response) {
+  res.redirect(GOOGLE_SIGNUP_OAUTH2_URL);
+}
+
+async function googleLogin(req: Request, res: Response) {
+  res.redirect(GOOGLE_LOGIN_OAUTH2_URL);
+}
+
+async function googleLoginRedirect(
+  req: RequestWith<GoogleLoginCodeQuery>,
+  res: Response,
+) {
+  const { code } = req.unwrap();
+  await authService.googleLoginRedirect(code);
+}
+
+async function googleSignupRedirect(
+  req: RequestWith<GoogleLoginCodeQuery>,
+  res: Response,
+) {
+  const { code } = req.unwrap();
+  await authService.googleLoginRedirect(code);
+}
+
 export default {
   signup,
   login,
   logout,
   refreshToken,
+  googleLogin,
 };

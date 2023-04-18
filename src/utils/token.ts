@@ -8,58 +8,71 @@ import {
 import { AppError } from '../core/types/app_error';
 import { HttpStatus } from '../core/constants/http_status';
 
-export function generateAccessToken(userId: number) {
+const { accessTokenSecret, refreshTokenSecret } = Config.env;
+
+export function generateAccessToken(
+  userId: number,
+  maxAge: number = ACCESS_TOKEN_MAX_AGE,
+) {
   const payload = {
     userId,
-    exp: Date.now() + ACCESS_TOKEN_MAX_AGE,
+    exp: Date.now() + maxAge,
   } as Payload;
-  return sign(payload, Config.env.accessTokenSecret);
+
+  return sign(payload, accessTokenSecret);
 }
 
-export function generateRefreshToken(userId: number) {
+export function generateRefreshToken(
+  userId: number,
+  maxAge: number = REFRESH_TOKEN_MAX_AGE,
+) {
   const payload = {
     userId,
-    exp: Date.now() + REFRESH_TOKEN_MAX_AGE,
+    exp: Date.now() + maxAge,
   } as Payload;
-  return sign(payload, Config.env.refreshTokenSecret);
+  return sign(payload, refreshTokenSecret);
 }
 
 export function verifyAccessToken(accessToken: string) {
-  const payload = verify(accessToken, Config.env.accessTokenSecret);
-  if (typeof payload === 'string') {
+  let payload: Payload;
+  try {
+    payload = verify(accessToken, accessTokenSecret) as Payload;
+  } catch (error) {
     throw AppError.new({
       message: ErrorMessages.INVALID_TOKEN,
       status: HttpStatus.UNAUTHORIZED,
     });
   }
 
-  if (isExpiredToken(payload as Payload)) {
+  if (isExpiredToken(payload)) {
     throw AppError.new({
       message: ErrorMessages.EXPIRED_ACCESS_TOKEN,
       status: HttpStatus.UNAUTHORIZED,
     });
   }
 
-  return (payload as Payload).userId;
+  return payload.userId;
 }
 
 export function verifyRefreshToken(refreshToken: string) {
-  const payload = verify(refreshToken, Config.env.refreshTokenSecret);
-  if (typeof payload === 'string') {
+  let payload: Payload;
+  try {
+    payload = verify(refreshToken, refreshTokenSecret) as Payload;
+  } catch (error) {
     throw AppError.new({
       message: ErrorMessages.INVALID_TOKEN,
       status: HttpStatus.UNAUTHORIZED,
     });
   }
 
-  if (isExpiredToken(payload as Payload)) {
+  if (isExpiredToken(payload)) {
     throw AppError.new({
       message: ErrorMessages.EXPIRED_REFRESH_TOKEN,
       status: HttpStatus.UNAUTHORIZED,
     });
   }
 
-  return (payload as Payload).userId;
+  return payload.userId;
 }
 
 interface Payload extends JwtPayload {

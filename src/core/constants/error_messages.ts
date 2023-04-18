@@ -12,6 +12,19 @@
  *    message: errMsg,
  * })
  */
+/**
+ * @swagger
+ * components:
+ *  schemas:
+ *    INVALID_REQUEST_BODY:
+ *      type: string
+ *      x-enums:
+ *        - enum: '입력 값이 많이 구데긴대요?'
+ *          description: 유효하지 않은 request body
+ *        - enum: '입력 query가 구데긴대요?'
+ *          description: 유효하지 않은 request query
+ *
+ */
 export enum ErrorMessages {
   INVALID_REQUEST_INPUT = '입력 값이 많이 구데긴대요?',
   INVALID_REQUEST_BODY = '입력 값이 구데긴대요?',

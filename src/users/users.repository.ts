@@ -129,6 +129,15 @@ async function existsByUsername(username: string) {
 }
 
 /**
+ * @description
+ * 구글 아이디 등록 여부 확인(by Email)
+ */
+async function isGoogleIdNull(email: string) {
+  const user = await findByEmail(email);
+  return user !== null && user.googleId !== null;
+}
+
+/**
  * 생성 및 수정(Mutation)
  */
 async function create({ email, name, password, username }: CreateUserBody) {
@@ -171,6 +180,7 @@ async function remove(userId: number) {
  */
 export default {
   findById,
+  findByEmail,
   findByUsername,
   findSimpleInfoById,
   findDetailInfoById,
@@ -182,4 +192,5 @@ export default {
   remove,
   findDetailInfoByIdOrThrow,
   findSimpleInfoByIdOrThrow,
+  isGoogleIdNull,
 };

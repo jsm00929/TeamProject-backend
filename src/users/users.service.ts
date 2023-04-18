@@ -9,9 +9,20 @@ import { UpdateUserInfoBody } from './dtos/inputs/update_user_info.body';
 import { DeleteUserBody } from './dtos/inputs/delete_user.body';
 import { comparePassword } from '../utils/hash';
 import { prisma } from '../config/db';
-import { persistAvatarImage, removeAvatarImageIfExists } from '../utils/files';
 import { AppResult } from '../core/types/app_result';
-import { STATIC_AVATARS_PATH } from '../config/constants';
+import {
+  filenameIntoAbsoluteTempPath,
+  filenameIntoStaticPath,
+  filenameIntoStaticUrl,
+  staticUrlIntoPath,
+} from '../utils/static_path_resolvers';
+import {
+  moveFile,
+  persistFile,
+  removeFileOrThrow,
+  removeFile,
+} from '../utils/file_utils';
+import { log } from '../utils/logger';
 
 async function getSimpleInfo(
   userId: number,
@@ -47,11 +58,7 @@ async function updatePassword(
   await usersRepository.update(userId, updateUserPasswordBody);
 }
 
-async function updateAvatar(
-  userId: number,
-  avatarUrl: string,
-  filename: string,
-) {
+async function updateAvatar(userId: number, filename: string) {
   const user = await usersRepository.findById(userId);
 
   if (!user) {
@@ -63,9 +70,12 @@ async function updateAvatar(
 
   const prevAvatarUrl = user.avatarUrl;
 
+  const avatarUrl = filenameIntoStaticUrl(filename, 'avatars');
+  let absoluteAvatarPath: string | null = null;
+
   try {
-    await prisma.$transaction(async (client) => {
-      await client.user.update({
+    return await prisma.$transaction(async (client) => {
+      const user = await client.user.update({
         where: {
           id: userId,
         },
@@ -75,12 +85,27 @@ async function updateAvatar(
       });
 
       if (prevAvatarUrl) {
-        await removeAvatarImageIfExists(prevAvatarUrl);
+        const prevAbsoluteAvatarPath = staticUrlIntoPath(
+          prevAvatarUrl,
+          'avatars',
+          true,
+        );
+        await removeFile(prevAbsoluteAvatarPath);
       }
-      await persistAvatarImage(filename);
+
+      const absoluteTempPath = filenameIntoAbsoluteTempPath(filename);
+      absoluteAvatarPath = filenameIntoStaticPath(filename, 'avatars', true);
+
+      await moveFile(absoluteTempPath, absoluteAvatarPath);
+
+      return user.avatarUrl;
     });
   } catch (error) {
-    await removeAvatarImageIfExists(`${STATIC_AVATARS_PATH}/${avatarUrl}`);
+    log.error(error);
+
+    if (absoluteAvatarPath !== null) {
+      await removeFileOrThrow(absoluteAvatarPath);
+    }
     return AppResult.new({
       body: ErrorMessages.INTERNAL_SERVER_ERROR,
       status: HttpStatus.INTERNAL_SERVER_ERROR,

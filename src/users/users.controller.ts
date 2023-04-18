@@ -8,14 +8,8 @@ import moviesService from '../movies/movies.service';
 import { UpdateUserPasswordBody } from './dtos/inputs/update_user_password.body';
 import { UpdateUserInfoBody } from './dtos/inputs/update_user_info.body';
 import { DeleteUserBody } from './dtos/inputs/delete_user.body';
-import { Multer } from 'multer';
-import { log } from '../utils/logger';
-import { handleUploadAvatar } from '../core/middlewares/handle_upload_avatar';
-import { NextFunction, Response } from 'express';
 import { HttpStatus } from '../core/constants';
 import { UpdateAvatarOutput } from './dtos/outputs/update_avatar.output';
-import { removeAvatarImage } from '../utils/files';
-import { STATIC_AVATARS_URL } from '../config/constants';
 import { filenameIntoStaticUrl } from '../utils/static_path_resolvers';
 
 async function me(req: AuthRequest) {
@@ -56,11 +50,12 @@ async function updateMyPassword(req: AuthRequestWith<UpdateUserPasswordBody>) {
 async function updateMyAvatar(
   req: AuthRequest & { file: Express.Multer.File },
 ) {
-  const { userId, file } = req;
+  const {
+    userId,
+    file: { filename },
+  } = req;
 
-  const avatarUrl = filenameIntoStaticUrl(file.filename, 'avatars');
-
-  await usersService.updateAvatar(userId, avatarUrl, file.filename);
+  const avatarUrl = await usersService.updateAvatar(userId, filename);
 
   return AppResult.new({
     body: { avatarUrl } as UpdateAvatarOutput,

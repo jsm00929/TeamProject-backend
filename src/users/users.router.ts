@@ -7,7 +7,7 @@ import { mustAuth } from '../auth/middlewares/must_auth';
 import { DeleteUserBody } from './dtos/inputs/delete_user.body';
 import { UpdateUserInfoBody } from './dtos/inputs/update_user_info.body';
 import { UpdateUserPasswordBody } from './dtos/inputs/update_user_password.body';
-import { handleUploadAvatar } from '../core/middlewares/handle_upload_avatar';
+import { handleUploadAvatars } from '../core/middlewares/handle_upload_avatars';
 import { handleResponse } from '../core/middlewares';
 
 const usersRouter = Router();
@@ -81,7 +81,7 @@ usersRouter.patch(
 usersRouter.post(
   '/me/avatars',
   mustAuth,
-  handleUploadAvatar.single('avatar'),
+  handleUploadAvatars.single('avatar'),
   handleResponse(usersController.updateMyAvatar),
 );
 

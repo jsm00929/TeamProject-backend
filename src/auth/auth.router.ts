@@ -44,4 +44,13 @@ authRouter.post('/logout', handleResponse(authController.logout));
  */
 authRouter.patch('/refresh-token', handleResponse(authController.refreshToken));
 
+/**
+ * @description
+ * Google Login
+ */
+authRouter.get('/signup/google');
+authRouter.get('/signup/google/redirect');
+authRouter.get('/login/google');
+authRouter.get('/login/google/redirect');
+
 export default authRouter;
