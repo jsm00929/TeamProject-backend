@@ -5,6 +5,7 @@ import authController from './auth.controller';
 import { LoginBody } from './dtos/inputs/login.body';
 import { handle } from '../core/handle';
 import { mustAuth } from './middlewares/must_auth';
+import { GoogleLoginCodeQuery } from './dtos/inputs/google_login_code.query';
 
 const authRouter = Router();
 
@@ -36,21 +37,42 @@ authRouter.post(
  * @description
  * 로그아웃
  */
-authRouter.post('/logout', handleResponse(authController.logout));
+authRouter.post('/logout', handle({ controller: authController.logout }));
 
 /**
  * @description
  * AccessToken 재발급
  */
-authRouter.patch('/refresh-token', handleResponse(authController.refreshToken));
+authRouter.patch(
+  '/refresh-token',
+  handle({ controller: authController.refreshToken }),
+);
 
 /**
  * @description
  * Google Login
  */
-authRouter.get('/signup/google');
-authRouter.get('/signup/google/redirect');
-authRouter.get('/login/google');
-authRouter.get('/login/google/redirect');
+authRouter.get(
+  '/signup/google',
+  handle({ controller: authController.googleSignup }),
+);
+authRouter.get(
+  '/signup/google/redirect',
+  handle({ controller: authController.googleSignupRedirect }),
+);
+authRouter.get(
+  '/login/google',
+  handle({
+    queryCls: GoogleLoginCodeQuery,
+    controller: authController.googleLogin,
+  }),
+);
+authRouter.get(
+  '/login/google/redirect',
+  handle({
+    queryCls: GoogleLoginCodeQuery,
+    controller: authController.googleLoginRedirect,
+  }),
+);
 
 export default authRouter;

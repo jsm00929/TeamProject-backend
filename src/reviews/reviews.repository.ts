@@ -59,6 +59,7 @@ async function isAuthor(userId: number, reviewId: number) {
  */
 async function create(
   userId: number,
+  movieId: number,
   { title, content, rating }: CreateMovieReviewBody,
 ) {
   const { id } = await prisma.review.create({
@@ -67,6 +68,7 @@ async function create(
       content,
       overview: content.slice(0, 100),
       rating,
+      movieId,
       authorId: userId,
     },
     select: {

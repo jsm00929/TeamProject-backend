@@ -67,7 +67,7 @@ moviesRouter.post(
   handle({
     authLevel: 'must',
     bodyCls: CreateMovieReviewBody,
-    paramsCls: ReviewIdParams,
+    paramsCls: MovieIdParams,
     controller: moviesController.writeReview,
   }),
 );

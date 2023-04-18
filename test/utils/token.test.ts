@@ -1,11 +1,10 @@
-import { Config } from '../../config/env';
-import { ErrorMessages, HttpStatus } from '../../core/constants';
+import { ErrorMessages } from '../../src/core/constants';
 import {
   generateAccessToken,
   generateRefreshToken,
   verifyAccessToken,
   verifyRefreshToken,
-} from '../token';
+} from '../../src/utils/token';
 
 describe('Auth Tests', () => {
   const userId = 123;

@@ -9,8 +9,8 @@
     "dev": "NODE_ENV=dev npx nodemon --exec ts-node src/main",
     "test": "NODE_ENV=test npx jest --config=jest.config.js",
     "swagger": "npx openapi-typescript src/config/swagger.yml -o src/types/swagger.d.ts",
-    "migrate": "npx prisma migrate dev",
-    "postmigrate": "npx prisma generate",
+    "migrate": "dotenv -e .env.dev -- npx prisma migrate dev",
+    "postmigrate": "dotenv -e .env.dev -- npx prisma generate",
     "studio": "npx prisma studio"
   },
   "dependencies": {

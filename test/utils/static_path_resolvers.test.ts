@@ -4,7 +4,7 @@ import {
   filenameIntoStaticPath,
   filenameIntoStaticUrl,
   filenameIntoAbsoluteTempPath,
-} from '../static_path_resolvers';
+} from '../../src/utils/static_path_resolvers';
 
 describe('staticPathIntoUrl', () => {
   it('should return static url for avatars', () => {

@@ -1,1 +1,9 @@
 🦑🍜
+
+# 1. USER SCHEMA
+
+# 2. OAUTH LOGIN
+
+# 3. REFRESH TOKEN
+
+# 4. MOVIE FILTERS

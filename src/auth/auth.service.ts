@@ -5,7 +5,6 @@ import usersRepository from '../users/users.repository';
 import { comparePassword, hashPassword } from '../utils/hash';
 import { LoginBody } from './dtos/inputs/login.body';
 import { SignupBody } from './dtos/inputs/signup.body';
-import { SignupOutput } from './dtos/outputs/signup.output';
 import {
   fetchGoogleToken,
   fetchGoogleUserInfo,
@@ -35,7 +34,7 @@ async function signUp({ email, name, password, username }: SignupBody) {
     password: await hashPassword(password),
     username,
   });
-  return { userId } as SignupOutput;
+  return userId;
 }
 
 async function login({ username, password }: LoginBody) {
@@ -95,17 +94,21 @@ async function googleLoginRedirect(code: string) {
   } = await fetchGoogleToken(code, 'signup');
 
   const {
-    data: { id, email },
+    data: { id, email, name, picture },
   } = await fetchGoogleUserInfo(accessToken);
 
   // TODO
   const exists = await usersRepository.existsByEmail(email);
-  if (exists) {
+  if (!exists) {
     throw AppError.new({
-      message: ErrorMessages.DUPLICATE_EMAIL,
-      status: HttpStatus.CONFLICT,
+      message: ErrorMessages.USER_NOT_FOUND,
+      status: HttpStatus.NOT_FOUND,
     });
   }
+
+  // TODO
+  // 필드 결정
+  // await usersRepository.create({ email, name, password: null, username });
 }
 
 export default {

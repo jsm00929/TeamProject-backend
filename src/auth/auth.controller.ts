@@ -22,12 +22,11 @@ import { GoogleLoginCodeQuery } from './dtos/inputs/google_login_code.query';
 
 async function signup(req: RequestWith<SignupBody>, res: Response) {
   const signupInput = req.unwrap();
-  const signupOutput = await authService.signUp(signupInput);
+  const userId = await authService.signUp(signupInput);
 
-  setAuthCookies(signupOutput.userId, res);
+  setAuthCookies(userId, res);
 
   return AppResult.new({
-    body: signupOutput,
     status: HttpStatus.CREATED,
   });
 }
@@ -64,20 +63,18 @@ async function googleLogin(req: Request, res: Response) {
   res.redirect(GOOGLE_LOGIN_OAUTH2_URL);
 }
 
-async function googleLoginRedirect(
-  req: RequestWith<GoogleLoginCodeQuery>,
-  res: Response,
-) {
+// TODO: unimplemented
+async function googleLoginRedirect(req: RequestWith<GoogleLoginCodeQuery>) {
   const { code } = req.unwrap();
-  await authService.googleLoginRedirect(code);
+  return AppResult.new({ body: { code } });
+  // await authService.googleLoginRedirect(code);
 }
 
-async function googleSignupRedirect(
-  req: RequestWith<GoogleLoginCodeQuery>,
-  res: Response,
-) {
+// TODO: unimplemented
+async function googleSignupRedirect(req: RequestWith<GoogleLoginCodeQuery>) {
   const { code } = req.unwrap();
-  await authService.googleLoginRedirect(code);
+  return AppResult.new({ body: { code } });
+  // await authService.googleLoginRedirect(code);
 }
 
 export default {
@@ -86,4 +83,7 @@ export default {
   logout,
   refreshToken,
   googleLogin,
+  googleLoginRedirect,
+  googleSignup,
+  googleSignupRedirect,
 };

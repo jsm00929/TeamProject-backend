@@ -28,11 +28,18 @@ async function getMovieDetail(req: AuthRequestWith<never, MovieIdParams>) {
  * Movie Reviews
  */
 
-async function writeReview(req: AuthRequestWith<CreateMovieReviewBody>) {
+async function writeReview(
+  req: AuthRequestWith<CreateMovieReviewBody, MovieIdParams>,
+) {
   const { userId } = req;
+  const { movieId } = req.unwrapParams();
   const createReviewInput = req.unwrap();
 
-  const reviewId = await reviewsService.write(userId, createReviewInput);
+  const reviewId = await reviewsService.write(
+    userId,
+    movieId,
+    createReviewInput,
+  );
 
   return AppResult.new({
     body: { reviewId },

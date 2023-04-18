@@ -37,3 +37,25 @@ export function snakeToCamel(obj: any) {
     return acc;
   }, {});
 }
+
+export function parseISODateStringToDate(dto: any) {
+  // 1. field의 value가 배열인 경우,
+  // 모든 elements에 대해 재귀적으로 함수 호출
+  if (Array.isArray(dto)) {
+    dto.forEach((elem) => {
+      parseISODateStringToDate(elem);
+    });
+  } else if (typeof dto === 'object') {
+    // 2. field가 object인 경우,
+    // 각 field를 돌면서 field 명이 "createdAt", "updatedAt", "lastModified"
+    // 인 경우, string -> Date로 type 변환해줌
+    Object.keys(dto).forEach((key) => {
+      if (['createdAt', 'updatedAt', 'lastModified'].includes(key)) {
+        dto[key] = new Date(dto[key]);
+      } else if (typeof dto[key] === 'object' && dto[key] !== null) {
+        // 3. nested object인 경우, 재귀적으로 함수 호출
+        parseISODateStringToDate(dto[key]);
+      }
+    });
+  }
+}

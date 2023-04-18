@@ -10,7 +10,6 @@ import { UpdateUserInfoBody } from './dtos/inputs/update_user_info.body';
 import { DeleteUserBody } from './dtos/inputs/delete_user.body';
 import { HttpStatus } from '../core/constants';
 import { UpdateAvatarOutput } from './dtos/outputs/update_avatar.output';
-import { filenameIntoStaticUrl } from '../utils/static_path_resolvers';
 
 async function me(req: AuthRequest) {
   const userId = req.userId;

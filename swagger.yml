@@ -27,9 +27,11 @@ paths:
 
       responses:
         201:
-          description: '성공적으로 회원 가입한 경우'
-          schema:
-            $ref: '#/components/schemas/SignupOutput'
+          description: '성공적으로 회원 가입한 경우(응답 Body 없음)'
+
+          headers:
+            Set-Cookie:
+              $ref: '#/components/headers/Set-Cookie'
 
         400:
           description: '입력 값 검증 실패한 경우..(body의 model 펼쳐서 참조)'
@@ -69,6 +71,9 @@ paths:
       responses:
         200:
           description: '성공적으로 로그인한 경우(응답 body 없음)'
+          headers:
+            Set-Cookie:
+              $ref: '#/components/headers/Set-Cookie'
 
         400:
           description: '입력 Body 오류'
@@ -80,6 +85,64 @@ paths:
           schema:
             $ref: '#/components/schemas/InvalidPasswordError'
 
+        404:
+          description: '존재하지 않는 계정'
+          schema:
+            $ref: '#/components/schemas/UserNotFoundError'
+
+        500:
+          description: '서버 오류가 발생한 경우'
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+
+  /auth/signup/google:
+    get:
+      tags:
+        - 'Auth'
+      summary: 'Google Social 회원가입'
+      description: 'Google 인증 페이지로 Redirect하여 구글 계정 인증 후 가입 진행'
+      security:
+        - googleAuth: []
+
+      responses:
+        201:
+          description: 구글 계정 인증 및 회원가입 성공
+          headers:
+            Set-Cookie:
+              $ref: '#/components/headers/Set-Cookie'
+
+        409:
+          description: '아이디(username)가 중복되면 안 됨...'
+          schema:
+            $ref: '#/components/schemas/DuplicateUserError'
+
+        409(2):
+          description: '이메일도 중복되면 안 됨...'
+          schema:
+            $ref: '#/components/schemas/DuplicateEmailError'
+
+        500:
+          description: '서버 오류가 발생한 경우'
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+
+      # responses:
+      #   302:
+      #     description: '구글 계정을 통한 회원가입을 위해 OAuth 인증 페이지로 이동하도록 Redirect'
+
+  /auth/login/google:
+    get:
+      tags:
+        - 'Auth'
+      summary: 'Google Social 로그인'
+      description: 'Google 인증 페이지로 Redirect하여 구글 계정 인증 후 로그인 진행'
+
+      responses:
+        200:
+          description: '성공적으로 로그인한 경우(응답 body 없음)'
+          headers:
+            Set-Cookie:
+              $ref: '#/components/headers/Set-Cookie'
         404:
           description: '존재하지 않는 계정'
           schema:
@@ -583,6 +646,22 @@ paths:
             $ref: '#/components/schemas/InternalServerError'
 
 components:
+  headers:
+    Set-Cookie:
+      type: string
+      example: accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+      description: 로그인 성공 시 사용자 인증을 위한 쿠키 발급
+
+  securitySchemes:
+    googleAuth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://accounts.google.com/o/oauth2/auth
+          tokenUrl: https://oauth2.googleapis.com/token
+          scopes:
+            email: 구글 이메일
+            profile: 구글 프로필
   parameters:
     AccessTokenCookie:
       in: cookie

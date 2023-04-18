@@ -4,7 +4,7 @@ import { UserSimpleInfoOutput } from '../../users/dtos/outputs/user_simple_info.
 export interface ReviewOverviewOutput extends BaseOutput {
   title: string;
   overview: string;
-  rating: number;
+  rating: number | null;
   author: UserSimpleInfoOutput;
 }
 
