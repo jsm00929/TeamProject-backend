@@ -58,12 +58,14 @@ authRouter.get(
 );
 authRouter.get(
   '/signup/google/redirect',
-  handle({ controller: authController.googleSignupRedirect }),
+  handle({
+    queryCls: GoogleLoginCodeQuery,
+    controller: authController.googleSignupRedirect,
+  }),
 );
 authRouter.get(
   '/login/google',
   handle({
-    queryCls: GoogleLoginCodeQuery,
     controller: authController.googleLogin,
   }),
 );
