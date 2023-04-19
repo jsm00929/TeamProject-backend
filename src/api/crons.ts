@@ -159,7 +159,6 @@ export async function createFakeUsers(len: number) {
   for (let i = 0; i < len; i++) {
     const dto = new CreateUserBody();
     dto.email = randomEmail();
-    dto.username = randomString();
     dto.password = randomString();
     dto.name = randomString();
     users.push(dto);
