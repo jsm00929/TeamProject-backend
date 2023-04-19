@@ -4,11 +4,11 @@ import { GoogleToken, GoogleUserInfo } from './types';
 
 const { googleLoginRedirectUri, googleSignupRedirectUri } = Config.env;
 
-type Purpose = 'login' | 'signup';
+type Action = 'login' | 'signup';
 
 const { googleClientId, googleClientSecret } = Config.env;
 
-export async function fetchGoogleToken(code: string, purpose: Purpose) {
+export async function fetchGoogleToken(code: string, purpose: Action) {
   const redirectUri =
     purpose === 'signup' ? googleSignupRedirectUri : googleLoginRedirectUri;
 

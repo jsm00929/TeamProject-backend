@@ -76,7 +76,7 @@ async function googleLoginRedirect(
 
   setAuthCookies(userId, res);
   // return AppResult.redirect(`${clientHost}:${clientPort}`);
-  return AppResult.redirect(`/`);
+  return AppResult.redirect(`http://${clientHost}:${clientPort}/`);
 }
 
 async function googleSignupRedirect(
@@ -88,7 +88,7 @@ async function googleSignupRedirect(
 
   setAuthCookies(userId, res);
   // return AppResult.redirect(`${clientHost}:${clientPort}`);
-  return AppResult.redirect(`/`);
+  return AppResult.redirect(`http://${clientHost}:${clientPort}/`);
 }
 
 export default {

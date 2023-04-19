@@ -7,7 +7,7 @@ import {
   userEntityIntoUserOutput,
 } from './dtos/outputs/user.output';
 import { UpdateMyPasswordBody } from './dtos/inputs/update_my_password.body';
-import { UpdateMeBody } from './dtos/inputs/update_user_info.body';
+import { UpdateMeBody } from './dtos/inputs/update_me.body';
 import { comparePassword } from '../utils/hash';
 import { prisma } from '../config/db';
 import { AppResult } from '../core/types/app_result';

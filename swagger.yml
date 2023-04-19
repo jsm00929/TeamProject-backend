@@ -271,11 +271,11 @@ paths:
       parameters:
         - $ref: '#/components/parameters/AccessTokenCookie'
 
-        - name: UpdateUserInfoBody
+        - name: UpdateMeBody
           in: body
           required: true
           schema:
-            $ref: '#/components/schemas/UpdateUserInfoBody'
+            $ref: '#/components/schemas/UpdateMeBody'
 
       responses:
         200:
@@ -976,7 +976,7 @@ components:
         - oldPassword
         - newPassword
 
-    UpdateUserInfoBody:
+    UpdateMeBody:
       type: object
       properties:
         name:

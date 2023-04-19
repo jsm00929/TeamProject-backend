@@ -32,7 +32,7 @@ async function login({ email, password }: LoginBody) {
   const user = await usersRepository.findByEmail(email);
 
   // 로그인 하려는 계정이 DB에 없음
-  if (!user) {
+  if (user === null) {
     throw AppError.new({
       message: ErrorMessages.USER_NOT_FOUND,
       status: HttpStatus.NOT_FOUND,
@@ -47,7 +47,7 @@ async function login({ email, password }: LoginBody) {
   }
 
   // 비번이 맞지가 않음
-  if (!comparePassword(password, user.password)) {
+  if (!(await comparePassword(password, user.password))) {
     throw AppError.new({
       message: ErrorMessages.INVALID_PASSWORD,
       status: HttpStatus.UNAUTHORIZED,

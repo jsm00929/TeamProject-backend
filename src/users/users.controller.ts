@@ -11,7 +11,7 @@ import reviewsService from '../reviews/reviews.service';
 import { PaginationQuery } from '../core/dtos/inputs';
 import moviesService from '../movies/movies.service';
 import { UpdateMyPasswordBody } from './dtos/inputs/update_my_password.body';
-import { UpdateMeBody } from './dtos/inputs/update_user_info.body';
+import { UpdateMeBody } from './dtos/inputs/update_me.body';
 import { ErrorMessages, HttpStatus } from '../core/constants';
 import { UpdateAvatarOutput } from './dtos/outputs/update_avatar.output';
 import { clearAuthCookies } from '../utils/cookie_store';

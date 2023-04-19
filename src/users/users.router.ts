@@ -4,7 +4,7 @@ import { handle } from '../core/handle';
 import { PaginationQuery } from '../core/dtos/inputs';
 import { UserIdParams } from './dtos/inputs/user_id.params';
 import { mustAuth } from '../auth/middlewares/must_auth';
-import { UpdateMeBody } from './dtos/inputs/update_user_info.body';
+import { UpdateMeBody } from './dtos/inputs/update_me.body';
 import { UpdateMyPasswordBody } from './dtos/inputs/update_my_password.body';
 import { handleUploadAvatars } from '../core/middlewares/handle_upload_avatars';
 import { handleResponse } from '../core/middlewares';
@@ -72,13 +72,6 @@ usersRouter.post(
   handleUploadAvatars.single('avatar'),
   handleResponse(usersController.updateMyAvatar),
 );
-
-// usersRouter.post(
-//   '/me/avatars',
-//   mustAuth,
-//   handleUploadAvatar.single('avatar'),
-//   usersController.updateMyAvatar,
-// );
 
 /**
  * @description

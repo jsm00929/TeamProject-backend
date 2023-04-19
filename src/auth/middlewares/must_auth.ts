@@ -9,7 +9,7 @@ import { AuthRequest } from '../../core/types';
 export function mustAuth(req: AuthRequest, res: Response, next: NextFunction) {
   const accessToken = req.signedCookies[ACCESS_TOKEN_COOKIE_NAME];
   if (!accessToken) {
-    next(
+    return next(
       AppError.new({
         message: ErrorMessages.UNAUTHORIZED_USER,
         status: HttpStatus.UNAUTHORIZED,

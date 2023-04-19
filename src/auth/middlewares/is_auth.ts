@@ -4,6 +4,7 @@ import { ErrorMessages } from '../../core/constants/error_messages';
 import { ACCESS_TOKEN_COOKIE_NAME } from '../../config/constants';
 import { verifyAccessToken } from '../../utils/token';
 import { OptionalAuthRequest } from '../../core/types';
+import { HttpStatus } from '../../core/constants';
 
 export function isAuth(req: OptionalAuthRequest, _, next: NextFunction) {
   const accessToken = req.cookies[ACCESS_TOKEN_COOKIE_NAME];
@@ -12,14 +13,14 @@ export function isAuth(req: OptionalAuthRequest, _, next: NextFunction) {
     try {
       const userId = verifyAccessToken(accessToken);
       req.userId = userId;
-
-      next();
     } catch (e) {
-      next(
+      return next(
         AppError.new({
           message: ErrorMessages.INVALID_TOKEN,
+          status: HttpStatus.UNAUTHORIZED,
         }),
       );
     }
   }
+  next();
 }
