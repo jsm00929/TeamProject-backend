@@ -97,7 +97,7 @@ export class Config {
   // ####################
   // #     NODE_ENV     #
   // ####################
-  @IsIn(['dev', 'prod', 'test'])
+  @IsIn(['dev', 'prod', 'test', 'ngrok'])
   private _env: string;
 
   public get host(): string {
@@ -171,7 +171,7 @@ export class Config {
   private static instance?: Config;
 
   static init() {
-    const envPath = process.env.NODE_ENV === 'dev' ? '.env.dev' : '.env.test';
+    const envPath = `.env.${process.env.NODE_ENV}`;
 
     require('dotenv').config({
       path: envPath,

@@ -10,35 +10,26 @@ import {
   fetchGoogleUserInfo,
 } from '../pkg/oauth/google/fetchers';
 
-async function signUp({ email, name, password, username }: SignupBody) {
-  const exists = await usersRepository.existsByUsername(username);
+async function signUp({ email, name, password }: SignupBody) {
+  const exists = await usersRepository.isExistsByEmail(email);
   // 이미 가입된 사용자
   if (exists) {
-    throw AppError.new({
-      message: ErrorMessages.DUPLICATE_USER,
-      status: HttpStatus.CONFLICT,
-    });
-  }
-
-  const isDuplicateEmail = await usersRepository.existsByEmail(username);
-  // 이메일 중복 확인..
-  if (isDuplicateEmail) {
     throw AppError.new({
       message: ErrorMessages.DUPLICATE_EMAIL,
       status: HttpStatus.CONFLICT,
     });
   }
+
   const userId = await usersRepository.create({
     email,
     name,
     password: await hashPassword(password),
-    username,
   });
   return userId;
 }
 
-async function login({ username, password }: LoginBody) {
-  const user = await usersRepository.findByUsername(username);
+async function login({ email, password }: LoginBody) {
+  const user = await usersRepository.findByEmail(email);
 
   // 로그인 하려는 계정이 DB에 없음
   if (!user) {
@@ -47,6 +38,14 @@ async function login({ username, password }: LoginBody) {
       status: HttpStatus.NOT_FOUND,
     });
   }
+
+  if (user.password === null) {
+    throw AppError.new({
+      message: ErrorMessages.NOT_SET_PASSWORD,
+      status: HttpStatus.UNAUTHORIZED,
+    });
+  }
+
   // 비번이 맞지가 않음
   if (!comparePassword(password, user.password)) {
     throw AppError.new({
@@ -64,51 +63,45 @@ async function googleSignupRedirect(code: string) {
   } = await fetchGoogleToken(code, 'signup');
 
   const {
-    data: { id, email },
+    data: { email, name, picture: avatarUrl },
   } = await fetchGoogleUserInfo(accessToken);
 
-  // TODO
   const user = await usersRepository.findByEmail(email);
-
-  if (user) {
-    if (user.googleId !== null) {
-      throw AppError.new({
-        message: ErrorMessages.DUPLICATE_USER,
-        status: HttpStatus.CONFLICT,
-      });
-    }
-
-    return usersRepository.update(user.id, {
-      googleId: user.googleId,
+  if (user !== null) {
+    throw AppError.new({
+      message: ErrorMessages.DUPLICATE_USER,
+      status: HttpStatus.CONFLICT,
     });
   }
 
-  // password is nullable?
-  // createWithGoogle
-  // await usersRepository.create({});
+  const userId = await usersRepository.createWithoutPassword({
+    email,
+    name,
+    avatarUrl,
+  });
+
+  return userId;
 }
 
 async function googleLoginRedirect(code: string) {
   const {
     data: { accessToken },
-  } = await fetchGoogleToken(code, 'signup');
+  } = await fetchGoogleToken(code, 'login');
 
   const {
-    data: { id, email, name, picture },
+    data: { email },
   } = await fetchGoogleUserInfo(accessToken);
 
   // TODO
-  const exists = await usersRepository.existsByEmail(email);
-  if (!exists) {
+  const user = await usersRepository.findByEmail(email);
+  if (!user) {
     throw AppError.new({
       message: ErrorMessages.USER_NOT_FOUND,
       status: HttpStatus.NOT_FOUND,
     });
   }
 
-  // TODO
-  // 필드 결정
-  // await usersRepository.create({ email, name, password: null, username });
+  return user.id;
 }
 
 export default {

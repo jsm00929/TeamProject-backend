@@ -11,15 +11,19 @@ import { CreateUserBody } from './dtos/inputs/create_user.body';
  * 사용자 간략 정보 가져오기(by Id)
  */
 async function findSimpleInfoById(userId: number) {
-  return prisma.user.findFirst({
-    where: { id: userId, deletedAt: null },
+  const user = await prisma.user.findFirst({
+    where: { id: userId },
     select: {
       id: true,
-      username: true,
       name: true,
       avatarUrl: true,
+      deletedAt: true,
     },
   });
+  if (user === null || user.deletedAt !== null) {
+    return null;
+  }
+  return user;
 }
 
 /**
@@ -29,14 +33,14 @@ async function findSimpleInfoById(userId: number) {
  * 존재하지 않는 사용자일 경우 오류 발생
  */
 async function findSimpleInfoByIdOrThrow(userId: number) {
-  const userSimpleInfo = await findSimpleInfoById(userId);
-  if (userSimpleInfo === null) {
+  const user = await findSimpleInfoById(userId);
+  if (user === null) {
     throw AppError.new({
       message: ErrorMessages.USER_NOT_FOUND,
       status: HttpStatus.NOT_FOUND,
     });
   }
-  return userSimpleInfo;
+  return user;
 }
 
 /**
@@ -47,14 +51,14 @@ async function findSimpleInfoByIdOrThrow(userId: number) {
  * 존재하지 않는 사용자일 경우 오류 발생
  */
 async function findDetailInfoByIdOrThrow(userId: number) {
-  const userDetailInfo = await findDetailInfoById(userId);
-  if (userDetailInfo === null) {
+  const user = await findDetailInfoById(userId);
+  if (user === null) {
     throw AppError.new({
       message: ErrorMessages.USER_NOT_FOUND,
       status: HttpStatus.NOT_FOUND,
     });
   }
-  return userDetailInfo;
+  return user;
 }
 
 /**
@@ -62,94 +66,90 @@ async function findDetailInfoByIdOrThrow(userId: number) {
  * 사용자 상세 정보 가져오기(by Id)
  */
 async function findDetailInfoById(userId: number) {
-  return prisma.user.findFirst({
-    where: { id: userId, deletedAt: null },
+  const user = await prisma.user.findFirst({
+    where: { id: userId },
     select: {
       id: true,
-      googleId: true,
-      username: true,
       email: true,
       name: true,
       avatarUrl: true,
       createdAt: true,
       updatedAt: true,
+      deletedAt: true,
     },
   });
+  if (user === null || user.deletedAt !== null) {
+    return null;
+  }
+  return user;
 }
 
 /**
  * @description
- * 사용자 상세 정보 가져오기(by Id)
+ * 사용자 정보 가져오기(by Id)
  */
 async function findById(userId: number) {
-  return prisma.user.findFirst({ where: { id: userId, deletedAt: null } });
-}
+  const user = await prisma.user.findUnique({ where: { id: userId } });
 
-async function findByUsername(username: string) {
-  return prisma.user.findFirst({ where: { username, deletedAt: null } });
+  if (user === null || user.deletedAt !== null) {
+    return null;
+  }
+  return user;
 }
 
 async function findByEmail(email: string) {
-  return prisma.user.findFirst({ where: { email, deletedAt: null } });
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  if (user === null || user.deletedAt !== null) {
+    return null;
+  }
+  return user;
 }
 
 /**
  * @description
  * 사용자 존재 여부 확인(by Id)
  */
-async function exists(userId: number) {
-  const user = await findById(userId);
-  return user !== null && user.deletedAt === null;
+async function isExistsById(userId: number) {
+  return (await findById(userId)) !== null;
 }
 
 /**
  * @description
  * 사용자 존재 여부 확인(by Email)
  */
-async function existsByEmail(email: string) {
-  const user = await prisma.user.findFirst({
-    where: { email, deletedAt: null },
-    select: { id: true },
-  });
-
-  return user !== null;
-}
-
-/**
- * @description
- * 사용자 존재 여부 확인(by Username)
- */
-async function existsByUsername(username: string) {
-  const user = await prisma.user.findFirst({
-    where: { username, deletedAt: null },
-    select: { id: true },
-  });
-
-  return user !== null;
-}
-
-/**
- * @description
- * 구글 아이디 등록 여부 확인(by Email)
- */
-async function isGoogleIdNull(email: string) {
-  const user = await findByEmail(email);
-  return user !== null && user.googleId !== null;
+async function isExistsByEmail(email: string) {
+  return (await findByEmail(email)) !== null;
 }
 
 /**
  * 생성 및 수정(Mutation)
  */
-async function create({ email, name, password, username }: CreateUserBody) {
+async function create({ email, name, password }: CreateUserBody) {
   const user = await prisma.user.create({
     data: {
       email,
       name,
       password,
-      username,
     },
-    select: {
-      id: true,
+  });
+  return user.id;
+}
+
+async function createWithoutPassword({
+  email,
+  name,
+  avatarUrl,
+}: {
+  email: string;
+  name: string;
+  avatarUrl?: string;
+}) {
+  const user = await prisma.user.create({
+    data: {
+      email,
+      name,
+      avatarUrl,
     },
   });
   return user.id;
@@ -161,7 +161,6 @@ async function update(userId: number, updateUserInput) {
       id: userId,
     },
     data: updateUserInput,
-    select: { id: true },
   });
 }
 
@@ -171,7 +170,6 @@ async function remove(userId: number) {
     data: {
       deletedAt: new Date(),
     },
-    select: { id: true },
   });
 }
 
@@ -181,16 +179,14 @@ async function remove(userId: number) {
 export default {
   findById,
   findByEmail,
-  findByUsername,
   findSimpleInfoById,
   findDetailInfoById,
-  existsByEmail,
-  exists,
-  existsByUsername,
+  isExistsById,
+  isExistsByEmail,
   create,
+  createWithoutPassword,
   update,
   remove,
   findDetailInfoByIdOrThrow,
   findSimpleInfoByIdOrThrow,
-  isGoogleIdNull,
 };

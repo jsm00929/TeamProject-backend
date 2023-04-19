@@ -7,10 +7,10 @@ import { ReviewOverviewOutput } from './dtos/review_overview.output';
 /**
  * 조회(Fetch)
  */
-async function getReviewOverviewsByUserId(
+async function findManyByAuthorId(
   userId: number,
   { skip, take }: PaginationQuery,
-): Promise<ReviewOverviewOutput[]> {
+) {
   return prisma.review.findMany({
     where: {
       authorId: userId,
@@ -21,22 +21,6 @@ async function getReviewOverviewsByUserId(
     orderBy: {
       createdAt: 'desc',
     },
-    select: {
-      id: true,
-      title: true,
-      overview: true,
-      rating: true,
-      createdAt: true,
-      updatedAt: true,
-      author: {
-        select: {
-          id: true,
-          name: true,
-          username: true,
-          avatarUrl: true,
-        },
-      },
-    },
   });
 }
 
@@ -44,7 +28,7 @@ async function findById(reviewId: number) {
   return prisma.review.findUnique({ where: { id: reviewId } });
 }
 
-async function exists(reviewId: number) {
+async function isExists(reviewId: number) {
   const review = await findById(reviewId);
   return review !== null && review.deletedAt === null;
 }
@@ -110,8 +94,8 @@ async function remove(reviewId: number) {
 
 export default {
   findById,
-  getReviewOverviewsByUserId,
-  exists,
+  findManyByAuthorId,
+  isExists,
   isAuthor,
   create,
   update,

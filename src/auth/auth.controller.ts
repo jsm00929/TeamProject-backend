@@ -19,6 +19,9 @@ import { AppResult } from '../core/types/app_result';
 import { AppError } from '../core/types';
 import { ErrorMessages } from '../core/constants';
 import { GoogleLoginCodeQuery } from './dtos/inputs/google_login_code.query';
+import { Config } from '../config/env';
+
+const { clientHost, clientPort } = Config.env;
 
 async function signup(req: RequestWith<SignupBody>, res: Response) {
   const signupInput = req.unwrap();
@@ -64,17 +67,28 @@ async function googleLogin(req: Request, res: Response) {
 }
 
 // TODO: unimplemented
-async function googleLoginRedirect(req: RequestWith<GoogleLoginCodeQuery>) {
+async function googleLoginRedirect(
+  req: RequestWith<GoogleLoginCodeQuery>,
+  res: Response,
+) {
   const { code } = req.unwrap();
-  return AppResult.new({ body: { code } });
-  // await authService.googleLoginRedirect(code);
+  const userId = await authService.googleLoginRedirect(code);
+
+  setAuthCookies(userId, res);
+  // return AppResult.redirect(`${clientHost}:${clientPort}`);
+  return AppResult.redirect(`/`);
 }
 
-// TODO: unimplemented
-async function googleSignupRedirect(req: RequestWith<GoogleLoginCodeQuery>) {
+async function googleSignupRedirect(
+  req: RequestWith<GoogleLoginCodeQuery>,
+  res: Response,
+) {
   const { code } = req.unwrap();
-  return AppResult.new({ body: { code } });
-  // await authService.googleLoginRedirect(code);
+  const userId = await authService.googleSignupRedirect(code);
+
+  setAuthCookies(userId, res);
+  // return AppResult.redirect(`${clientHost}:${clientPort}`);
+  return AppResult.redirect(`/`);
 }
 
 export default {

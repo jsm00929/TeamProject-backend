@@ -1,45 +1,70 @@
 import usersService from './users.service';
-import { AuthRequest, AuthRequestWith, RequestWith } from '../core/types';
+import {
+  AppError,
+  AuthRequest,
+  AuthRequestWith,
+  RequestWith,
+} from '../core/types';
 import { AppResult } from '../core/types/app_result';
 import { UserIdParams } from './dtos/inputs/user_id.params';
 import reviewsService from '../reviews/reviews.service';
 import { PaginationQuery } from '../core/dtos/inputs';
 import moviesService from '../movies/movies.service';
-import { UpdateUserPasswordBody } from './dtos/inputs/update_user_password.body';
-import { UpdateUserInfoBody } from './dtos/inputs/update_user_info.body';
-import { DeleteUserBody } from './dtos/inputs/delete_user.body';
-import { HttpStatus } from '../core/constants';
+import { UpdateMyPasswordBody } from './dtos/inputs/update_my_password.body';
+import { UpdateMeBody } from './dtos/inputs/update_user_info.body';
+import { ErrorMessages, HttpStatus } from '../core/constants';
 import { UpdateAvatarOutput } from './dtos/outputs/update_avatar.output';
+import { clearAuthCookies } from '../utils/cookie_store';
+import { Response } from 'express';
+import { DeleteUserBody } from './dtos/inputs/delete_user.body';
 
-async function me(req: AuthRequest) {
+async function me(req: AuthRequest, res: Response) {
   const userId = req.userId;
-  const me = await usersService.getMySimpleInfo(userId);
+  const me = await usersService.userById(userId);
+
+  if (me === null) {
+    clearAuthCookies(res);
+    AppError.new({
+      message: ErrorMessages.USER_NOT_FOUND,
+      status: HttpStatus.NOT_FOUND,
+    });
+  }
 
   return AppResult.new({ body: me });
 }
 
-async function myDetailInfo(req: AuthRequest) {
-  const userId = req.userId;
-  const myDetailInfo = await usersService.getMyDetailInfo(userId);
-
-  return AppResult.new({ body: myDetailInfo });
-}
-
-async function simpleInfo(req: RequestWith<never, UserIdParams>) {
+async function user(req: RequestWith<never, UserIdParams>, res: Response) {
   const { userId } = req.unwrapParams();
-  const userSimpleInfo = await usersService.getSimpleInfo(userId);
+  const user = await usersService.userById(userId);
 
-  return AppResult.new({ body: userSimpleInfo });
+  return AppResult.new({ body: user });
 }
 
-async function updateMyInfo(req: AuthRequestWith<UpdateUserInfoBody>) {
+async function updateMe(req: AuthRequestWith<UpdateMeBody>, res: Response) {
   const userId = req.userId;
   const body = req.unwrap();
 
-  await usersService.updateMyInfo(userId, body);
+  try {
+    await usersService.update(userId, body);
+  } catch (error) {
+    if (
+      error instanceof AppError &&
+      error.message === ErrorMessages.USER_NOT_FOUND
+    ) {
+      clearAuthCookies(res);
+    }
+    throw error;
+  }
 }
 
-async function updateMyPassword(req: AuthRequestWith<UpdateUserPasswordBody>) {
+async function update(req: AuthRequestWith<UpdateMeBody>) {
+  const userId = req.userId;
+  const body = req.unwrap();
+
+  await usersService.update(userId, body);
+}
+
+async function updateMyPassword(req: AuthRequestWith<UpdateMyPasswordBody>) {
   const userId = req.userId;
   const body = req.unwrap();
 
@@ -64,8 +89,8 @@ async function updateMyAvatar(
 
 async function withdraw(req: AuthRequestWith<DeleteUserBody>) {
   const userId = req.userId;
-  const body = req.unwrap();
-  await usersService.withdraw(userId, body);
+  const { password } = req.unwrap();
+  await usersService.withdraw(userId, password);
 }
 
 /**
@@ -127,9 +152,9 @@ async function getMyFavoriteMovies(req: AuthRequestWith<PaginationQuery>) {
  */
 export default {
   me,
-  myDetailInfo,
-  simpleInfo,
-  updateMyInfo,
+  user,
+  update,
+  updateMe,
   updateMyPassword,
   updateMyAvatar,
   withdraw,

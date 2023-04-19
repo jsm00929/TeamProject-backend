@@ -1,6 +1,6 @@
 import { MaxLength, MinLength } from 'class-validator';
 
-export class UpdateUserInfoBody {
+export class UpdateMeBody {
   @MinLength(4)
   @MaxLength(20)
   name?: string;

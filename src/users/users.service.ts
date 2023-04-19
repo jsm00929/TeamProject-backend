@@ -2,11 +2,12 @@ import { AppError } from '../core/types/app_error';
 import { ErrorMessages } from '../core/constants/error_messages';
 import { HttpStatus } from '../core/constants/http_status';
 import usersRepository from './users.repository';
-import { UserSimpleInfoOutput } from './dtos';
-import { UserDetailInfoOutput } from './dtos/outputs/user_detail_info.output';
-import { UpdateUserPasswordBody } from './dtos/inputs/update_user_password.body';
-import { UpdateUserInfoBody } from './dtos/inputs/update_user_info.body';
-import { DeleteUserBody } from './dtos/inputs/delete_user.body';
+import {
+  UserOutput,
+  userEntityIntoUserOutput,
+} from './dtos/outputs/user.output';
+import { UpdateMyPasswordBody } from './dtos/inputs/update_my_password.body';
+import { UpdateMeBody } from './dtos/inputs/update_user_info.body';
 import { comparePassword } from '../utils/hash';
 import { prisma } from '../config/db';
 import { AppResult } from '../core/types/app_result';
@@ -16,46 +17,48 @@ import {
   filenameIntoStaticUrl,
   staticUrlIntoPath,
 } from '../utils/static_path_resolvers';
-import {
-  moveFile,
-  persistFile,
-  removeFileOrThrow,
-  removeFile,
-} from '../utils/file_utils';
+import { moveFile, removeFileOrThrow, removeFile } from '../utils/file_utils';
 import { log } from '../utils/logger';
+import { DeleteUserBody } from './dtos/inputs/delete_user.body';
 
-async function getSimpleInfo(
-  userId: number,
-): Promise<UserSimpleInfoOutput | null> {
-  return usersRepository.findSimpleInfoById(userId);
+async function userById(userId: number): Promise<UserOutput | null> {
+  const user = await usersRepository.findById(userId);
+  return user !== null ? userEntityIntoUserOutput(user) : null;
 }
 
-async function getMySimpleInfo(userId: number): Promise<UserSimpleInfoOutput> {
-  return usersRepository.findSimpleInfoByIdOrThrow(userId);
-}
-
-async function getMyDetailInfo(userId: number): Promise<UserDetailInfoOutput> {
-  return usersRepository.findDetailInfoByIdOrThrow(userId);
-}
-
-async function getUserById(userId: number) {
-  return usersRepository.findById(userId);
+async function userByEmail(email: string): Promise<UserOutput | null> {
+  const user = await usersRepository.findByEmail(email);
+  return user !== null ? userEntityIntoUserOutput(user) : null;
 }
 
 async function updatePassword(
   userId: number,
-  updateUserPasswordBody: UpdateUserPasswordBody,
+  { oldPassword, newPassword }: UpdateMyPasswordBody,
 ) {
-  const exists = await usersRepository.exists(userId);
+  const user = await usersRepository.findById(userId);
 
-  if (!exists) {
+  if (!user) {
     throw AppError.new({
       message: ErrorMessages.USER_NOT_FOUND,
-      status: HttpStatus.NOT_FOUND,
+      status: HttpStatus.UNAUTHORIZED,
     });
   }
 
-  await usersRepository.update(userId, updateUserPasswordBody);
+  if (
+    user.password !== null &&
+    oldPassword !== undefined &&
+    oldPassword !== null
+  ) {
+    const isMatchedPassword = await comparePassword(oldPassword, user.password);
+    if (!isMatchedPassword) {
+      throw AppError.new({
+        message: ErrorMessages.INVALID_PASSWORD,
+        status: HttpStatus.UNAUTHORIZED,
+      });
+    }
+  }
+
+  await usersRepository.update(userId, { password: newPassword });
 }
 
 async function updateAvatar(userId: number, filename: string) {
@@ -113,11 +116,8 @@ async function updateAvatar(userId: number, filename: string) {
   }
 }
 
-async function updateMyInfo(
-  userId: number,
-  updateUserInfoBody: UpdateUserInfoBody,
-) {
-  const exists = await usersRepository.exists(userId);
+async function update(userId: number, updateUserInfoBody: UpdateMeBody) {
+  const exists = await usersRepository.isExistsById(userId);
 
   if (!exists) {
     throw AppError.new({
@@ -129,32 +129,33 @@ async function updateMyInfo(
   await usersRepository.update(userId, updateUserInfoBody);
 }
 
-async function withdraw(userId: number, { password }: DeleteUserBody) {
+async function withdraw(userId: number, password?: string) {
   const user = await usersRepository.findById(userId);
 
   if (!user) {
     throw AppError.new({
       message: ErrorMessages.USER_NOT_FOUND,
-      status: HttpStatus.NOT_FOUND,
-    });
-  }
-  const isMatchedPassword = await comparePassword(password, user.password);
-  if (!isMatchedPassword) {
-    throw AppError.new({
-      message: ErrorMessages.INVALID_PASSWORD,
       status: HttpStatus.UNAUTHORIZED,
     });
   }
+
+  if (user.password !== null) {
+    if (!password || !(await comparePassword(password, user.password))) {
+      throw AppError.new({
+        message: ErrorMessages.INVALID_PASSWORD,
+        status: HttpStatus.UNAUTHORIZED,
+      });
+    }
+  }
+
   await usersRepository.remove(userId);
 }
 
 export default {
-  getMyDetailInfo,
-  getMySimpleInfo,
-  getSimpleInfo,
-  getUserById,
+  userById,
+  userByEmail,
   updateAvatar,
-  updateMyInfo,
+  update,
   updatePassword,
   withdraw,
 };

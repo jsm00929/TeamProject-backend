@@ -12,7 +12,11 @@ export const handleResponse =
         appResult = AppResult.default();
       }
 
-      const { status, body } = appResult;
+      const { status, body, redirectUrl } = appResult;
+
+      if (300 <= status && status < 400 && redirectUrl !== undefined) {
+        return res.status(status).redirect(redirectUrl);
+      }
       res.status(status).json(body);
     } catch (error) {
       next(error);

@@ -1,9 +1,9 @@
-import { MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class LoginBody {
-  @MinLength(4)
-  @MaxLength(20)
-  username: string;
+  @IsString()
+  @IsEmail()
+  email: string;
 
   @MinLength(4)
   @MaxLength(100)

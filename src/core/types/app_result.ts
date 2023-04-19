@@ -3,10 +3,12 @@ import { HttpStatus } from '../constants';
 interface AppResultArgs<T> {
   body?: T;
   status?: HttpStatus;
+  redirectUrl?: string;
 }
 export class AppResult<T> {
   body: T | undefined;
   status: HttpStatus;
+  redirectUrl?: string;
 
   static default<T = unknown>() {
     const appResult = new AppResult<T>();
@@ -23,6 +25,13 @@ export class AppResult<T> {
       appResult.status = status;
     }
 
+    return appResult;
+  }
+
+  static redirect(url: string) {
+    const appResult = new AppResult();
+    appResult.status = HttpStatus.FOUND;
+    appResult.redirectUrl = url;
     return appResult;
   }
 }

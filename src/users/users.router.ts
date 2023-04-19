@@ -4,11 +4,11 @@ import { handle } from '../core/handle';
 import { PaginationQuery } from '../core/dtos/inputs';
 import { UserIdParams } from './dtos/inputs/user_id.params';
 import { mustAuth } from '../auth/middlewares/must_auth';
-import { DeleteUserBody } from './dtos/inputs/delete_user.body';
-import { UpdateUserInfoBody } from './dtos/inputs/update_user_info.body';
-import { UpdateUserPasswordBody } from './dtos/inputs/update_user_password.body';
+import { UpdateMeBody } from './dtos/inputs/update_user_info.body';
+import { UpdateMyPasswordBody } from './dtos/inputs/update_my_password.body';
 import { handleUploadAvatars } from '../core/middlewares/handle_upload_avatars';
 import { handleResponse } from '../core/middlewares';
+import { DeleteUserBody } from './dtos/inputs/delete_user.body';
 
 const usersRouter = Router();
 
@@ -32,19 +32,7 @@ usersRouter.get(
   '/:userId',
   handle({
     paramsCls: UserIdParams,
-    controller: usersController.simpleInfo,
-  }),
-);
-
-/**
- * @description
- * 현재 로그인 된 사용자의 상세 정보 가져오기
- */
-usersRouter.get(
-  '/me/detail',
-  handle({
-    authLevel: 'must',
-    controller: usersController.myDetailInfo,
+    controller: usersController.user,
   }),
 );
 
@@ -56,8 +44,8 @@ usersRouter.patch(
   '/me',
   handle({
     authLevel: 'must',
-    bodyCls: UpdateUserInfoBody,
-    controller: usersController.updateMyInfo,
+    bodyCls: UpdateMeBody,
+    controller: usersController.updateMe,
   }),
 );
 
@@ -69,7 +57,7 @@ usersRouter.patch(
   '/me',
   handle({
     authLevel: 'must',
-    bodyCls: UpdateUserPasswordBody,
+    bodyCls: UpdateMyPasswordBody,
     controller: usersController.updateMyPassword,
   }),
 );
