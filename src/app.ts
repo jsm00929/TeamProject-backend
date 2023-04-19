@@ -48,10 +48,10 @@ export class App {
 
   private setCors() {
     if (['dev', 'ngrok'].includes(this.config.env)) {
+      console.log(this.config.env);
       this.app.use(
         cors({
-          // origin: this.config.allowedOrigins,
-          origin: '*',
+          origin: this.config.allowedOrigins,
           credentials: true,
         }),
       );
