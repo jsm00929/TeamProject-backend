@@ -37,7 +37,7 @@ export class App {
   }
 
   private setSwagger() {
-    if (this.config.env === 'dev') {
+    if (['dev', 'ngrok'].includes(this.config.env)) {
       this.app.use(
         '/swagger',
         swaggerUi.serve,
@@ -47,7 +47,7 @@ export class App {
   }
 
   private setCors() {
-    if (this.config.env === 'dev') {
+    if (['dev', 'ngrok'].includes(this.config.env)) {
       this.app.use(
         cors({
           origin: this.config.allowedOrigins,
@@ -59,6 +59,11 @@ export class App {
 
   // api router 포함 모든 하위 router 로드
   private setApi() {
+    if (['dev', 'ngrok'].includes(this.config.env)) {
+      this.app.get('/', (_, res) =>
+        res.send('<h1>HOME: 서버가 잘 작동하고 있음</h1>'),
+      );
+    }
     const apiRouter = Router();
     this.app.use('/api', apiRouter);
     apiRouter.use('/auth', authRouter);

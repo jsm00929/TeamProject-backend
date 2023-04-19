@@ -46,12 +46,12 @@ moviesRouter.get(
  * @description
  * 특정 영화에 대한 리뷰 가져오기(Pagination)
  */
-moviesRouter.post(
+moviesRouter.get(
   '/:movieId/reviews',
   handle({
     authLevel: 'must',
-    bodyCls: CreateMovieReviewBody,
-    controller: moviesController.writeReview,
+    paramsCls: MovieIdParams,
+    controller: moviesController.getMovieDetail,
   }),
 );
 

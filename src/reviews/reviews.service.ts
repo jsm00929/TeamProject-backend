@@ -14,7 +14,7 @@ async function getReviewOverviewsByUserId(
   userId: number,
   paginationQuery: PaginationQuery,
 ) {
-  return reviewsRepository.getReviewOverviewsByUserId(userId, paginationQuery);
+  return reviewsRepository.findManyByAuthorId(userId, paginationQuery);
 }
 
 async function write(
@@ -30,7 +30,7 @@ async function edit(
   reviewId: number,
   editReviewInput: EditMovieReviewBody,
 ) {
-  const exists = await reviewsRepository.exists(reviewId);
+  const exists = await reviewsRepository.isExists(reviewId);
   if (!exists) {
     throw AppError.new({
       message: ErrorMessages.NOT_FOUND,
@@ -50,7 +50,7 @@ async function edit(
 }
 
 async function remove(userId: number, reviewId: number) {
-  const exists = await reviewsRepository.exists(reviewId);
+  const exists = await reviewsRepository.isExists(reviewId);
   if (!exists) {
     throw AppError.new({
       message: ErrorMessages.NOT_FOUND,

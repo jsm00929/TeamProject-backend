@@ -6,14 +6,22 @@ const { googleLoginRedirectUri, googleSignupRedirectUri } = Config.env;
 
 type Purpose = 'login' | 'signup';
 
+const { googleClientId, googleClientSecret } = Config.env;
+
 export async function fetchGoogleToken(code: string, purpose: Purpose) {
   const redirectUri =
     purpose === 'signup' ? googleSignupRedirectUri : googleLoginRedirectUri;
 
-  return tokenClient.post<GoogleToken>('/', {
+  const data = new URLSearchParams({
     code,
     redirect_uri: redirectUri,
+    client_id: googleClientId,
+    client_secret: googleClientSecret,
+    grant_type: 'authorization_code',
+    scope: 'profile email',
   });
+
+  return tokenClient.post<GoogleToken>('', data);
 }
 
 export async function fetchGoogleUserInfo(accessToken: string) {
