@@ -19,6 +19,7 @@ datasource db {
   url      = env("DB_URL")
 }
 
+// TODO
 model User {
   id        Int         @id @default(autoincrement())
   googleId  String?     @unique @db.Char(21)
@@ -70,6 +71,7 @@ model Movie {
   lang        String // 사용 언어
   releaseDate DateTime?   @db.Date
   // User                 User?                     @relation(fields: [userId], references: [id])
+  reviews     Review[]
   genres      Genre[]
   users       UserMovie[]
 }
@@ -89,9 +91,11 @@ model Review {
   title     String    @db.VarChar(100)
   overview  String    @db.VarChar(100)
   content   String    @db.Text
-  rating    Float     @default(0.0) @db.Float
+  rating    Int?      @db.Int
   comments  Comment[]
   authorId  Int
+  movieId   Int
+  movie     Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
   updatedAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
   deletedAt DateTime? @db.Timestamp()
@@ -112,6 +116,12 @@ model Comment {
 
   @@index([reviewId], name: "reviewId")
   @@index([authorId, deletedAt], name: "authorIdDeletedAt")
+}
+
+model RefreshToken {
+  id Int @id
+
+  expiresAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
 }
 
 // model MovieGenre {

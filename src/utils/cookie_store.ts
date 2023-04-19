@@ -3,9 +3,9 @@ import {
   ACCESS_TOKEN_COOKIE_NAME,
   ACCESS_TOKEN_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
-} from '../../config/constants';
-import { REFRESH_TOKEN_COOKIE_NAME } from '../../config/constants';
-import { generateAccessToken, generateRefreshToken } from '../token/token';
+} from '../config/constants';
+import { REFRESH_TOKEN_COOKIE_NAME } from '../config/constants';
+import { generateAccessToken, generateRefreshToken } from './token';
 
 export function setAuthCookies(userId: number, res: Response) {
   setAccessTokenCookie(userId, res);

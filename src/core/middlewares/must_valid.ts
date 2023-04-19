@@ -5,7 +5,7 @@ import { NextFunction } from 'express';
 import { RequestWith } from '../types/request_with';
 import { AppError } from '../types/app_error';
 import { ErrorMessages } from '../constants/error_messages';
-import { parseIntProps } from '../../utils/parser/parse_int_props';
+import { parseIntProps } from '../../utils/parsers';
 
 /**
  *

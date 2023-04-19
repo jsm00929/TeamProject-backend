@@ -10,7 +10,7 @@ export class CreateMovieReviewBody {
   content: string;
 
   @IsNumber()
-  @Min(0.0)
-  @Max(5.0)
+  @Min(0)
+  @Max(100)
   rating: number;
 }

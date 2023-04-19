@@ -8,19 +8,25 @@ import {
   clearAuthCookies,
   setAccessTokenCookie,
   setAuthCookies,
-} from '../utils/cookie/cookie_store';
-import { REFRESH_TOKEN_COOKIE_NAME } from '../config/constants';
-import { verifyRefreshToken } from '../utils/token/token';
+} from '../utils/cookie_store';
+import {
+  GOOGLE_LOGIN_OAUTH2_URL,
+  GOOGLE_SIGNUP_OAUTH2_URL,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from '../config/constants';
+import { verifyRefreshToken } from '../utils/token';
 import { AppResult } from '../core/types/app_result';
+import { AppError } from '../core/types';
+import { ErrorMessages } from '../core/constants';
+import { GoogleLoginCodeQuery } from './dtos/inputs/google_login_code.query';
 
 async function signup(req: RequestWith<SignupBody>, res: Response) {
   const signupInput = req.unwrap();
-  const signupOutput = await authService.signUp(signupInput);
+  const userId = await authService.signUp(signupInput);
 
-  setAuthCookies(signupOutput.userId, res);
+  setAuthCookies(userId, res);
 
   return AppResult.new({
-    body: signupOutput,
     status: HttpStatus.CREATED,
   });
 }
@@ -38,9 +44,37 @@ async function logout(_, res: Response) {
 
 async function refreshToken(req: Request, res: Response) {
   const token = req.signedCookies[REFRESH_TOKEN_COOKIE_NAME];
+  if (typeof token !== 'string') {
+    throw AppError.new({
+      message: ErrorMessages.INVALID_TOKEN,
+      status: HttpStatus.UNAUTHORIZED,
+    });
+  }
   const userId = verifyRefreshToken(token);
 
   setAccessTokenCookie(userId, res);
+}
+
+async function googleSignup(req: Request, res: Response) {
+  res.redirect(GOOGLE_SIGNUP_OAUTH2_URL);
+}
+
+async function googleLogin(req: Request, res: Response) {
+  res.redirect(GOOGLE_LOGIN_OAUTH2_URL);
+}
+
+// TODO: unimplemented
+async function googleLoginRedirect(req: RequestWith<GoogleLoginCodeQuery>) {
+  const { code } = req.unwrap();
+  return AppResult.new({ body: { code } });
+  // await authService.googleLoginRedirect(code);
+}
+
+// TODO: unimplemented
+async function googleSignupRedirect(req: RequestWith<GoogleLoginCodeQuery>) {
+  const { code } = req.unwrap();
+  return AppResult.new({ body: { code } });
+  // await authService.googleLoginRedirect(code);
 }
 
 export default {
@@ -48,4 +82,8 @@ export default {
   login,
   logout,
   refreshToken,
+  googleLogin,
+  googleLoginRedirect,
+  googleSignup,
+  googleSignupRedirect,
 };

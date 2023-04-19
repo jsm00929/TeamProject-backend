@@ -17,8 +17,12 @@ async function getReviewOverviewsByUserId(
   return reviewsRepository.getReviewOverviewsByUserId(userId, paginationQuery);
 }
 
-async function write(userId: number, createReviewInput: CreateMovieReviewBody) {
-  return reviewsRepository.create(userId, createReviewInput);
+async function write(
+  userId: number,
+  movieId: number,
+  createReviewInput: CreateMovieReviewBody,
+) {
+  return reviewsRepository.create(userId, movieId, createReviewInput);
 }
 
 async function edit(

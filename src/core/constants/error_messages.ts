@@ -12,6 +12,19 @@
  *    message: errMsg,
  * })
  */
+/**
+ * @swagger
+ * components:
+ *  schemas:
+ *    INVALID_REQUEST_BODY:
+ *      type: string
+ *      x-enums:
+ *        - enum: '입력 값이 많이 구데긴대요?'
+ *          description: 유효하지 않은 request body
+ *        - enum: '입력 query가 구데긴대요?'
+ *          description: 유효하지 않은 request query
+ *
+ */
 export enum ErrorMessages {
   INVALID_REQUEST_INPUT = '입력 값이 많이 구데긴대요?',
   INVALID_REQUEST_BODY = '입력 값이 구데긴대요?',
@@ -28,4 +41,6 @@ export enum ErrorMessages {
   EXPIRED_ACCESS_TOKEN = '토큰 만료 기간 지납',
   EXPIRED_REFRESH_TOKEN = '토큰 리프래시불가능',
   PERMISSION_DENIED = '이 걸 할 권한이 없느내요?',
+  INVALID_FILE_TYPE = '지원되지 않는 파일 형식입니다? : ',
+  NOT_FOUND_ENDPOINT = '존재하지 않는 엔드포인트입니다. 경로를 잘~~😊 확인해주세요?',
 }

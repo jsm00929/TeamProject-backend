@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { snakeToCamel } from '../utils/parser/snake_to_camel';
 import { Config } from '../config/env';
+import { parseISODateStringToDate, snakeToCamel } from '../utils/parsers';
 
 const { imdbApiKeyV3, imdbApiUrl } = Config.env;
 
@@ -15,5 +15,6 @@ export const tmdbClient = axios.create({
 
 tmdbClient.interceptors.response.use((res) => {
   res.data = snakeToCamel(res.data);
+  parseISODateStringToDate(res.data);
   return res;
 });
