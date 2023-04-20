@@ -1,6 +1,6 @@
-import { AppError } from '../core/types/app_error';
-import { ErrorMessages } from '../core/constants/error_messages';
-import { HttpStatus } from '../core/constants/http_status';
+import { AppError } from '../core/types';
+import { ErrorMessages } from '../core/constants';
+import { HttpStatus } from '../core/constants';
 import usersRepository from '../users/users.repository';
 import { comparePassword, hashPassword } from '../utils/hash';
 import { LoginBody } from './dtos/inputs/login.body';
@@ -39,6 +39,7 @@ async function login({ email, password }: LoginBody) {
     });
   }
 
+  // 비밀번호가 설정되지 않은 계정 (OAuth Login만 한 경우)
   if (user.password === null) {
     throw AppError.new({
       message: ErrorMessages.NOT_SET_PASSWORD,

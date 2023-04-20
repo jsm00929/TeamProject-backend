@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class UpdateMovieReviewCommentBody {
+export class CreateMovieReviewCommentBody {
   @IsString()
   @IsNotEmpty()
   content: string;

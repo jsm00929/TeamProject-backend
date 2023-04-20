@@ -2,6 +2,8 @@ import { PaginationQuery } from '../core/dtos/inputs/pagination.query';
 import { prisma } from '../config/db';
 import { CreateMovieInput } from './dtos/inputs/create_movie.input';
 import { GenreOutput } from './dtos/outputs/genre.output';
+import { MoviesPaginationQuery } from './dtos/inputs/movies_pagination.query';
+import { Genre } from './dtos/genre';
 
 async function toggleFavoriteMovie(userId: number, movieId: number) {
   await prisma.$transaction(async (prisma) => {
@@ -31,6 +33,7 @@ async function toggleFavoriteMovie(userId: number, movieId: number) {
     });
   });
 }
+
 async function updateViewedAt(userId: number, movieId: number) {
   await prisma.$transaction(async (prisma) => {
     let userMovie = await prisma.userMovie.findFirst({
@@ -136,6 +139,45 @@ async function getMovieDetail(movieId: number) {
 //   return movies.map((m) => m.movie);
 // }
 
+async function findMany({
+  skip,
+  take,
+  genre,
+  /**
+   * DB 내의 모든 row의 adult column이 모두 0이라 필터링 불가하여 제거됨.
+   */
+  // isAdult,
+  order,
+  criteria,
+}: MoviesPaginationQuery) {
+  return prisma.movie.findMany({
+    orderBy: {
+      [criteria]: order,
+    },
+    where:
+      genre !== Genre.ALL
+        ? {
+            genres: {
+              some: {
+                name: genre,
+              },
+            },
+          }
+        : {},
+    /**
+     * DB 내의 모든 row의 adult column이 모두 0이라 필터링 불가하여 제거됨.
+     */
+    // ...(isAdult !== undefined && {
+    //   adult: isAdult ? 1 : 0,
+    // }),
+    skip,
+    take,
+    include: {
+      genres: true,
+    },
+  });
+}
+
 async function getPopularMovies({ skip, take }: PaginationQuery) {
   return prisma.movie.findMany({
     orderBy: [
@@ -153,11 +195,13 @@ async function getPopularMovies({ skip, take }: PaginationQuery) {
     },
   });
 }
+
 async function createMany(createMovieDtos: CreateMovieInput[]) {
   await prisma.movie.createMany({
     data: [],
   });
 }
+
 async function findAllGenres() {
   return prisma.genre.findMany();
 }
@@ -228,6 +272,7 @@ async function upsertGenre({ id, name }: GenreOutput) {
 }
 
 export default {
+  findMany,
   toggleFavoriteMovie,
   updateViewedAt,
   getMovieDetail,

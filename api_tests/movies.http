@@ -1,0 +1,12 @@
+### 1. 영화 가져오기 - 최신순
+GET {{BASE_URL}}/movies
+Content-Type: application/json
+
+### 1-2. 영화 가져오기 - 인기순
+GET {{BASE_URL}}/movies?criteria=popularity
+Content-Type: application/json
+
+### 1-3. 영화 가져오기 - 평점순
+GET {{BASE_URL}}/movies?criteria=voteAverage
+Content-Type: application/json
+

@@ -1,0 +1,23 @@
+### 1. 회원 가입
+POST {{BASE_URL}}/auth/signup
+Content-Type: application/json
+
+{
+  "email": "abc@gmail.com",
+  "name": "abc",
+  "password": "1234"
+}
+
+### 2. 로그인
+POST {{BASE_URL}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "abc@gmail.com",
+  "password": "1234"
+}
+
+
+### 3. 비밀번호 변경
+POST {{BASE_URL}}/auth/me/password
+

@@ -1,9 +1,8 @@
-import { ErrorMessages } from '../core/constants/error_messages';
-import { HttpStatus } from '../core/constants/http_status';
-import { PaginationQuery } from '../core/dtos/inputs/pagination.query';
-import { AppError } from '../core/types/app_error';
-import { CreateMovieReviewBody } from './dtos/create_movie_review.body';
-import { EditMovieReviewBody } from './dtos/edit_review.body';
+import { ErrorMessages, HttpStatus } from '../core/constants';
+import { PaginationQuery } from '../core/dtos/inputs';
+import { AppError } from '../core/types';
+import { CreateMovieReviewBody } from './dtos/inputs/create_movie_review.body';
+import { EditMovieReviewBody } from './dtos/inputs/edit_review.body';
 import reviewsRepository from './reviews.repository';
 
 async function getReviewDetail(reviewId: number) {

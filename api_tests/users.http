@@ -1,0 +1,42 @@
+### 1. 로그인 한 사용자의 정보
+GET {{BASE_URL}}/users/me
+Content-Type: application/json
+
+### 2. 특정 사용자의 정보
+GET {{BASE_URL}}/users/{{USER_ID}}
+Content-Type: application/json
+
+### 3. 로그인 한 사용자의 정보 수정
+POST {{BASE_URL}}/me
+Content-Type: application/json
+
+{
+  "name": "abc",
+  "password": "112344"
+}
+
+### 4. 회원 탈퇴
+DELETE {{BASE_URL}}/users/me
+Content-Type: application/json
+
+{
+  "password": "112344"
+}
+
+### 5. 로그인 한 사용자의 비밀번호 수정
+PATCH {{BASE_URL}}/me
+Content-Type: application/json
+
+{
+  "oldPassword": "1234",
+  "newPassword": "12345"
+}
+
+### 6. 사용자의 최근 본 영화 목록 가져오기
+POST {{BASE_URL}}/me
+Content-Type: application/json
+
+{
+  "oldPassword": "1234",
+  "newPassword": "12345"
+}

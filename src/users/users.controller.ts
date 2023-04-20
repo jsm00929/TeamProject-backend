@@ -17,6 +17,7 @@ import { UpdateAvatarOutput } from './dtos/outputs/update_avatar.output';
 import { clearAuthCookies } from '../utils/cookie_store';
 import { Response } from 'express';
 import { DeleteUserBody } from './dtos/inputs/delete_user.body';
+import commentsService from '../comments/comments.service';
 
 async function me(req: AuthRequest, res: Response) {
   const userId = req.userId;
@@ -148,6 +149,19 @@ async function getMyFavoriteMovies(req: AuthRequestWith<PaginationQuery>) {
 }
 
 /**
+ * COMMENTS
+ */
+async function getMyReviewComments(req: AuthRequestWith<PaginationQuery>) {
+  const { userId } = req;
+  const q = req.unwrap();
+  const myComments = await commentsService.getReviewCommentsByUserId(userId, q);
+
+  return AppResult.new({
+    body: myComments,
+  });
+}
+
+/**
  * EXPORT
  */
 export default {
@@ -161,5 +175,6 @@ export default {
   getMyReviewOverviews,
   getReviewOverviews,
   getMyFavoriteMovies,
+  getMyReviewComments,
   getMyRecentlyViewedMovies,
 };

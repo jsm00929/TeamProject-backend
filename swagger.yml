@@ -81,6 +81,11 @@ paths:
             $ref: '#/components/schemas/InvalidRequestBodyError'
 
         401:
+          description: '구글 회원가입 계정(비밀번호 설정하지 않은 상태)'
+          schema:
+            $ref: '#/components/schemas/NotSetPasswordError'
+
+        401(2):
           description: '비밀번호 일치 안함'
           schema:
             $ref: '#/components/schemas/InvalidPasswordError'
@@ -102,7 +107,7 @@ paths:
       summary: 'Google Social 회원가입'
       description: 'Google 인증 페이지로 Redirect하여 구글 계정 인증 후 가입 진행'
       security:
-        - googleAuth: []
+        - googleAuth: [ ]
 
       responses:
         201:
@@ -342,7 +347,7 @@ paths:
             $ref: '#/components/schemas/InternalServerError'
 
   /users/me/password:
-    post:
+    patch:
       tags:
         - 'Users'
       summary: '사용자 비밀번호 수정'
@@ -452,11 +457,50 @@ paths:
   #         schema:
   #           $ref: '#/components/schemas/InternalServerError'
 
-  /movies/popular:
+  /movies:
     get:
       tags:
         - Movies
-      summary: 유명한 영화 순번대로 가져옴니다
+      summary: '영화를 가져옵니다. query params로 필터링 합니다. 사용 가능한 query params는 열어서 참조'
+      # description: 기본 20개씩 가져와요.
+      parameters:
+        - $ref: '#/components/parameters/SkipQuery'
+        - $ref: '#/components/parameters/TakeQuery'
+        - $ref: '#/components/parameters/Order'
+        - $ref: '#/components/parameters/Criteria'
+        - $ref: '#/components/parameters/Genres'
+          description: '❌주의: 장르 1개 선택시 반드시 뒤에 trailing commas 추가할 것\n ex) genres=War,\n기본값 모든 장르("*,"), 필터링할 장르의 문자열(,로 구분)'
+
+      responses:
+        200:
+          description: 성공적으로 영화를 가져온 경우
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/MovieOutput'
+
+
+
+        400:
+          description: 'take, skip 범위 벗어난 경우..(query의 model 펼쳐서 참조)'
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: '입력 값이 구데긴대요?'
+
+        500:
+          description: '서버 오류가 발생한 경우'
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+
+  /users/me/movies/history:
+    get:
+      tags:
+        - Movies
+        - Users
+      summary: 사용자가 최근 본 영화 목록 가져오기
       # description: 기본 20개씩 가져와요.
       parameters:
         - $ref: '#/components/parameters/SkipQuery'
@@ -464,6 +508,7 @@ paths:
 
       responses:
         200:
+          description: 성공적으로 영화를 가져온 경우
           schema:
             type: array
             items:
@@ -482,6 +527,40 @@ paths:
           description: '서버 오류가 발생한 경우'
           schema:
             $ref: '#/components/schemas/InternalServerError'
+
+  /users/me/movies/favorites:
+    get:
+      tags:
+        - Users
+        - Movies
+      summary: 사용자가 즐겨찾기 한 영화 목록 가져오기
+      # description: 기본 20개씩 가져와요.
+      parameters:
+        - $ref: '#/components/parameters/SkipQuery'
+        - $ref: '#/components/parameters/TakeQuery'
+
+      responses:
+        200:
+          description: 성공적으로 영화를 가져온 경우
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/MovieOutput'
+
+        400:
+          description: 'take, skip 범위 벗어난 경우..(query의 model 펼쳐서 참조)'
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: '입력 값이 구데긴대요?'
+
+        500:
+          description: '서버 오류가 발생한 경우'
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+
 
   /movies/detail/{movieId}:
     get:
@@ -560,7 +639,7 @@ paths:
       summary: 내가 작성한 영화 리뷰 전부 보기
       tags:
         - Users
-        - Movies
+        - Reviews
       parameters:
         - $ref: '#/components/parameters/SkipQuery'
         - $ref: '#/components/parameters/TakeQuery'
@@ -578,7 +657,7 @@ paths:
           description: 작성한 리뷰가 한개도 없는 경우, 빈 배열
           schema:
             type: array
-            example: []
+            example: [ ]
 
         401:
           description: 'AccessToken이 유효하지 않은 경우'
@@ -725,10 +804,12 @@ components:
       schema:
         type: string
 
+
+
     SkipQuery:
       in: query
       name: skip
-      description: $skip개 이후 가져오기
+      description: $skip개 이후 가져오기(기본값 0, 최소 0)
       required: false
       schema:
         type: integer
@@ -737,13 +818,60 @@ components:
     TakeQuery:
       in: query
       name: take
-      description: $skip개 이후 $take개 가져오기(최소 10)
+      description: $skip개 이후 $take개 가져오기(기본값 20, 최소 10, 최대 100)
       required: false
       schema:
         type: integer
         minimum: 10
         maximum: 100
         default: 20
+
+    Order:
+      name: order
+      in: query
+      type: string
+      enum: [ "asc", "desc" ]
+      description: "기본값 'desc', 정렬 순서를 결정합니다. asc는 오름차순, desc는 내림차순입니다."
+
+    Criteria:
+      name: criteria
+      in: query
+      type: string
+      enum: [ "popularity", "voteAverage", "releaseDate" ]
+      description: "기본값 'releaseDate', 정렬 기준을 결정합니다. popularity는 인기순, voteAverage는 평점순, releaseDate는 개봉일 순입니다."
+
+    Genres:
+      in: query
+      name: genres
+      type: array
+      items:
+        type: string
+        enum:
+          - '*'
+          - Action
+          - Adventure
+          - Animation
+          - Comedy
+          - Crime
+          - Documentary
+          - Drama
+          - Family
+          - Fantasy
+          - History
+          - Horror
+          - Music
+          - Mystery
+          - Romance
+          - Science Fiction
+          - Thriller
+          - TV Movie
+          - War
+          - Western
+        style: form
+        description: '주의: 장르 1개 선택시 반드시 뒤에 trailing commas 추가할 것'
+        default: '*'
+        example: 'War,Music,Horror'
+
 
   schemas:
     InvalidRequestBodyError:
@@ -822,6 +950,13 @@ components:
         message:
           type: string
           example: '비번이 틀리내요??'
+
+    NotSetPasswordError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: '비밀번호를 설정하지 않으셨습니다. 꾸끌 로그인을 하신것 같은 대 요?^^'
 
     ExpiredAccessTokenError:
       type: object
@@ -1024,10 +1159,10 @@ components:
           example: 꿀잠을 자서 내일 출근하는데 매우 큰 도움이 될듯 싶습니다.
         rating:
           type: number
-          description: 영화 평점(0.0~5.0)
-          minimum: 0.0
-          maximum: 5.0
-          example: 5.0
+          description: 영화 평점(0~100)
+          minimum: 0
+          maximum: 100
+          example: 59
       required:
         - title
         - content
@@ -1038,40 +1173,42 @@ components:
       properties:
         id:
           type: integer
+          example: 700391
         title:
           type: string
-        titleKo:
-          type: string
+          example: "65"
         overview:
           type: string
-        overviewKo:
-          type: string
-        adult:
-          type: boolean
+          example: "65 million years ago, the only 2 survivors of a spaceship from Somaris that crash-landed on Earth must fend off dinosaurs and reach the escape vessel in time before an imminent asteroid strike threatens to destroy the planet."
         popularity:
           type: number
+          example: 3754.397
         voteCount:
           type: integer
+          example: 484
         voteAverage:
           type: number
+          example: 6.3
         backdropUrl:
           type: string
+          nullable: true
+          example: "https://image.tmdb.org/t/p/original/eSVu1FvGPy86TDo4hQbpuHx55DJ.jpg"
         posterUrl:
           type: string
+          nullable: true
+          example: "https://image.tmdb.org/t/p/original/rzRb63TldOKdKydCvWJM8B6EkPM.jpg"
         lang:
           type: string
         releaseDate:
+          nullable: true
           type: string
           format: date-time
-        genres:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: integer
-              name:
-                type: string
+          example: "2023-03-02T00:00:00.000Z"
+        genre:
+          type: string
+          example: "Action"
+          default: "*"
+          nullable: true
 
     ReviewOverviewOutput:
       type: object
@@ -1111,3 +1248,7 @@ components:
             avatarUrl:
               type: string
               example: '/imgs/avatar/apassa21.png'
+
+#    CommentOutput:
+#      type: object
+#      properties:

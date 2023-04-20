@@ -1,8 +1,7 @@
 import { PaginationQuery } from '../core/dtos/inputs/pagination.query';
 import { prisma } from '../config/db';
-import { CreateMovieReviewBody } from './dtos/create_movie_review.body';
-import { EditMovieReviewBody } from './dtos/edit_review.body';
-import { ReviewOverviewOutput } from './dtos/review_overview.output';
+import { CreateMovieReviewBody } from './dtos/inputs/create_movie_review.body';
+import { EditMovieReviewBody } from './dtos/inputs/edit_review.body';
 
 /**
  * 조회(Fetch)
@@ -11,6 +10,20 @@ async function findManyByAuthorId(
   userId: number,
   { skip, take }: PaginationQuery,
 ) {
+  return prisma.review.findMany({
+    where: {
+      authorId: userId,
+      deletedAt: null,
+    },
+    skip,
+    take,
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+}
+
+async function findMany(userId: number, { skip, take }: PaginationQuery) {
   return prisma.review.findMany({
     where: {
       authorId: userId,

@@ -1,5 +1,7 @@
-import { PaginationQuery } from '../core/dtos/inputs/pagination.query';
+import { PaginationQuery } from '../core/dtos/inputs';
 import moviesRepository from './movies.repository';
+import { MoviesPaginationQuery } from './dtos/inputs/movies_pagination.query';
+import { movieEntityIntoMovieOutput } from './dtos/outputs/movie.output';
 
 async function getFavorites(userId: number, paginationInput: PaginationQuery) {
   return moviesRepository.getFavorites(userId, paginationInput);
@@ -10,6 +12,11 @@ async function getRecentlyViewed(
   paginationInput: PaginationQuery,
 ) {
   return moviesRepository.getRecentlyViewed(userId, paginationInput);
+}
+
+async function getMovies(q: MoviesPaginationQuery) {
+  const movieEntities = await moviesRepository.findMany(q);
+  return movieEntities.map((e) => movieEntityIntoMovieOutput(e));
 }
 
 async function getPopularMovies(paginationInput: PaginationQuery) {
@@ -29,6 +36,7 @@ async function toggleFavoriteMovie(userId: number, movieId: number) {
 }
 
 export default {
+  getMovies,
   getPopularMovies,
   getMovieDetail,
   getFavorites,

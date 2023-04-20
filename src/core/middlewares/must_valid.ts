@@ -1,11 +1,14 @@
-import { ClassConstructor } from 'class-transformer';
-import { plainToClass } from 'class-transformer';
+import {
+  ClassConstructor,
+  plainToClass,
+  plainToInstance,
+} from 'class-transformer';
 import { validate } from 'class-validator';
 import { NextFunction } from 'express';
 import { RequestWith } from '../types/request_with';
 import { AppError } from '../types/app_error';
 import { ErrorMessages } from '../constants/error_messages';
-import { parseIntProps } from '../../utils/parsers';
+import { parseProps } from '../../utils/parsers';
 
 /**
  *
@@ -23,7 +26,7 @@ import { parseIntProps } from '../../utils/parsers';
  */
 export function mustValidBody<I>(cls: ClassConstructor<I>) {
   return async (req: RequestWith<I>, _, next: NextFunction) => {
-    const body = plainToClass(cls, req.body);
+    const body = plainToInstance(cls, req.body);
 
     const errors = await validate(body as object);
     if (errors.length > 0) {
@@ -55,10 +58,11 @@ export function mustValidBody<I>(cls: ClassConstructor<I>) {
  */
 export function mustValidQuery<Q>(cls: ClassConstructor<Q>) {
   return async (req: RequestWith<Q>, _, next: NextFunction) => {
-    const query = plainToClass(cls, parseIntProps(req.query));
+    const query = plainToInstance(cls, parseProps(req.query));
 
     const errors = await validate(query as object);
     if (errors.length > 0) {
+      console.log(errors);
       return next(
         AppError.new({
           message: ErrorMessages.INVALID_REQUEST_QUERY,
@@ -87,7 +91,7 @@ export function mustValidQuery<Q>(cls: ClassConstructor<Q>) {
  */
 export function mustValidParams<P>(cls: ClassConstructor<P>) {
   return async (req: RequestWith<never, P>, _, next: NextFunction) => {
-    const params = plainToClass(cls, parseIntProps(req.params));
+    const params = plainToClass(cls, parseProps(req.params));
 
     const errors = await validate(params as object);
     if (errors.length > 0) {
