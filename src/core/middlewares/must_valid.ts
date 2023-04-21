@@ -5,9 +5,8 @@ import {
 } from 'class-transformer';
 import { validate } from 'class-validator';
 import { NextFunction } from 'express';
-import { RequestWith } from '../types/request_with';
-import { AppError } from '../types/app_error';
-import { ErrorMessages } from '../constants/error_messages';
+import { AppError, RequestWith } from '../types';
+import { ErrorMessages } from '../constants';
 import { parseProps } from '../../utils/parsers';
 
 /**

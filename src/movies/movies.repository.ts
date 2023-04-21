@@ -1,4 +1,4 @@
-import { PaginationQuery } from '../core/dtos/inputs/pagination.query';
+import { PaginationQuery } from '../core/dtos/inputs';
 import { prisma } from '../config/db';
 import { CreateMovieInput } from './dtos/inputs/create_movie.input';
 import { GenreOutput } from './dtos/outputs/genre.output';

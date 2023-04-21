@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { RequestWith } from '../core/types/request_with';
+import { AppError, RequestWith } from '../core/types';
 import { SignupBody } from './dtos/inputs/signup.body';
 import authService from './auth.service';
-import { HttpStatus } from '../core/constants/http_status';
+import { ErrorMessages, HttpStatus } from '../core/constants';
 import { LoginBody } from './dtos/inputs/login.body';
 import {
   clearAuthCookies,
@@ -16,8 +16,6 @@ import {
 } from '../config/constants';
 import { verifyRefreshToken } from '../utils/token';
 import { AppResult } from '../core/types/app_result';
-import { AppError } from '../core/types';
-import { ErrorMessages } from '../core/constants';
 import { GoogleLoginCodeQuery } from './dtos/inputs/google_login_code.query';
 import { Config } from '../config/env';
 

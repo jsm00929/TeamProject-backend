@@ -468,8 +468,7 @@ paths:
         - $ref: '#/components/parameters/TakeQuery'
         - $ref: '#/components/parameters/Order'
         - $ref: '#/components/parameters/Criteria'
-        - $ref: '#/components/parameters/Genres'
-          description: '❌주의: 장르 1개 선택시 반드시 뒤에 trailing commas 추가할 것\n ex) genres=War,\n기본값 모든 장르("*,"), 필터링할 장르의 문자열(,로 구분)'
+        - $ref: '#/components/parameters/Genre'
 
       responses:
         200:
@@ -832,6 +831,7 @@ components:
       type: string
       enum: [ "asc", "desc" ]
       description: "기본값 'desc', 정렬 순서를 결정합니다. asc는 오름차순, desc는 내림차순입니다."
+      default: 'desc'
 
     Criteria:
       name: criteria
@@ -839,9 +839,36 @@ components:
       type: string
       enum: [ "popularity", "voteAverage", "releaseDate" ]
       description: "기본값 'releaseDate', 정렬 기준을 결정합니다. popularity는 인기순, voteAverage는 평점순, releaseDate는 개봉일 순입니다."
+      default: 'releaseDate'
+
+    Genre:
+      in: query
+      name: genre
+      type: string
+      enum:
+        - '*'
+        - Action
+        - Adventure
+        - Animation
+        - Comedy
+        - Crime
+        - Documentary
+        - Drama
+        - Family
+        - Fantasy
+        - History
+        - Horror
+        - Music
+        - Mystery
+        - Romance
+        - Science Fiction
+        - Thriller
+        - TV Movie
+        - War
+        - Western
+      default: '*'
 
     Genres:
-      in: query
       name: genres
       type: array
       items:
@@ -868,9 +895,7 @@ components:
           - War
           - Western
         style: form
-        description: '주의: 장르 1개 선택시 반드시 뒤에 trailing commas 추가할 것'
-        default: '*'
-        example: 'War,Music,Horror'
+        example: [ War, Western ]
 
 
   schemas:
@@ -1204,11 +1229,8 @@ components:
           type: string
           format: date-time
           example: "2023-03-02T00:00:00.000Z"
-        genre:
-          type: string
-          example: "Action"
-          default: "*"
-          nullable: true
+        genres:
+          $ref: '#/components/parameters/Genres'
 
     ReviewOverviewOutput:
       type: object

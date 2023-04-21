@@ -1,7 +1,6 @@
 import { Response } from 'express';
-import { AppError } from '../types/app_error';
-import { HttpStatus } from '../constants/http_status';
-import { ErrorMessages } from '../constants/error_messages';
+import { AppError } from '../types';
+import { ErrorMessages, HttpStatus } from '../constants';
 import { clearAuthCookies } from '../../utils/cookie_store';
 import { log } from '../../utils/logger';
 

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import moviesController from './movies.controller';
-import { PaginationQuery } from '../core/dtos/inputs/pagination.query';
+import { PaginationQuery } from '../core/dtos/inputs';
 import { MovieIdParams } from './dtos/inputs/get_movie_detail.params';
 import { handle } from '../core/handle';
 import { CreateMovieReviewBody } from '../reviews/dtos/inputs/create_movie_review.body';

@@ -1,6 +1,5 @@
 import { AppError } from '../core/types';
-import { ErrorMessages } from '../core/constants';
-import { HttpStatus } from '../core/constants';
+import { ErrorMessages, HttpStatus } from '../core/constants';
 import usersRepository from '../users/users.repository';
 import { comparePassword, hashPassword } from '../utils/hash';
 import { LoginBody } from './dtos/inputs/login.body';
@@ -20,12 +19,11 @@ async function signUp({ email, name, password }: SignupBody) {
     });
   }
 
-  const userId = await usersRepository.create({
+  return usersRepository.create({
     email,
     name,
     password: await hashPassword(password),
   });
-  return userId;
 }
 
 async function login({ email, password }: LoginBody) {
@@ -75,13 +73,11 @@ async function googleSignupRedirect(code: string) {
     });
   }
 
-  const userId = await usersRepository.createWithoutPassword({
+  return usersRepository.createWithoutPassword({
     email,
     name,
     avatarUrl,
   });
-
-  return userId;
 }
 
 async function googleLoginRedirect(code: string) {

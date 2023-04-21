@@ -1,6 +1,4 @@
 import { prisma } from '../config/db';
-import { ErrorMessages, HttpStatus } from '../core/constants';
-import { AppError } from '../core/types';
 import { CreateUserBody } from './dtos/inputs/create_user.body';
 
 /**

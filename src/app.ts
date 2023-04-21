@@ -1,8 +1,7 @@
 import express, { Express, Router } from 'express';
 import usersRouter from './users/users.router';
 import { Config } from './config/env';
-import { handleErrors } from './core/middlewares/handle_errors';
-import { handleNotFoundError } from './core/middlewares/handle_not_found_error';
+import { handleErrors, handleNotFoundError } from './core/middlewares';
 import { log } from './utils/logger';
 import cookieParser from 'cookie-parser';
 import authRouter from './auth/auth.router';

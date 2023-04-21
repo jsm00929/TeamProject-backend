@@ -9,25 +9,22 @@ async function getReviewDetail(reviewId: number) {
   return reviewsRepository.findById(reviewId);
 }
 
-async function getReviewOverviewsByUserId(
-  userId: number,
-  paginationQuery: PaginationQuery,
-) {
-  return reviewsRepository.findManyByAuthorId(userId, paginationQuery);
+async function getReviewOverviewsByUserId(userId: number, q: PaginationQuery) {
+  return reviewsRepository.findManyByAuthorId(userId, q);
 }
 
 async function write(
   userId: number,
   movieId: number,
-  createReviewInput: CreateMovieReviewBody,
+  body: CreateMovieReviewBody,
 ) {
-  return reviewsRepository.create(userId, movieId, createReviewInput);
+  return reviewsRepository.create(userId, movieId, body);
 }
 
 async function edit(
   userId: number,
   reviewId: number,
-  editReviewInput: EditMovieReviewBody,
+  body: EditMovieReviewBody,
 ) {
   const exists = await reviewsRepository.isExists(reviewId);
   if (!exists) {
@@ -45,7 +42,7 @@ async function edit(
     });
   }
 
-  await reviewsRepository.update(reviewId, editReviewInput);
+  await reviewsRepository.update(reviewId, body);
 }
 
 async function remove(userId: number, reviewId: number) {

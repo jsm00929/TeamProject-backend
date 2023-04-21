@@ -1,4 +1,4 @@
-import { HttpStatus } from '../constants/http_status';
+import { HttpStatus } from '../constants';
 
 interface RepositoryErrorArgs {
   message: string;
