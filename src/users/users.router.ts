@@ -54,7 +54,7 @@ usersRouter.patch(
  * 현재 로그인 된 사용자의 비밀번호 수정하기
  */
 usersRouter.patch(
-  '/me',
+  '/me/password',
   handle({
     authLevel: 'must',
     bodyCls: UpdateMyPasswordBody,

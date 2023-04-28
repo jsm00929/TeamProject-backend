@@ -40,12 +40,15 @@ async function user(req: RequestWith<never, UserIdParams>, res: Response) {
   return AppResult.new({ body: user });
 }
 
-async function updateMyPassword(req: AuthRequestWith<UpdateMyPasswordBody>, res: Response) {
+async function updateMyPassword(
+  req: AuthRequestWith<UpdateMyPasswordBody>,
+  res: Response,
+) {
   const userId = req.userId;
   const body = req.unwrap();
 
   try {
-    await usersService.update(userId, body);
+    await usersService.updatePassword(userId, body);
   } catch (error) {
     if (
       error instanceof AppError &&
@@ -53,20 +56,19 @@ async function updateMyPassword(req: AuthRequestWith<UpdateMyPasswordBody>, res:
     ) {
       clearAuthCookies(res);
     }
-    return AppError.new({
-      message: error.message,
-      status: HttpStatus.UNAUTHORIZED,
-    });
+    throw error;
   }
 }
 
-
-async function updateMyName(req: AuthRequestWith<UpdateMyNameBody>, res: Response) {
+async function updateMyName(
+  req: AuthRequestWith<UpdateMyNameBody>,
+  res: Response,
+) {
   const userId = req.userId;
   const body = req.unwrap();
 
   try {
-    await usersService.update(userId, body);
+    await usersService.updateName(userId, body);
   } catch (error) {
     if (
       error instanceof AppError &&
@@ -74,10 +76,7 @@ async function updateMyName(req: AuthRequestWith<UpdateMyNameBody>, res: Respons
     ) {
       clearAuthCookies(res);
     }
-    return AppError.new({
-      message: error.message,
-      status: HttpStatus.UNAUTHORIZED,
-    });
+    throw error;
   }
 }
 
