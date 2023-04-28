@@ -7,7 +7,7 @@ import {
   userEntityIntoUserOutput,
 } from './dtos/outputs/user.output';
 import { UpdateMyPasswordBody } from './dtos/inputs/update_my_password.body';
-import { UpdateMeBody } from './dtos/inputs/update_me.body';
+import { UpdateMyNameBody } from './dtos/inputs/update_my_name.body';
 import { comparePassword } from '../utils/hash';
 import { prisma } from '../config/db';
 import { AppResult } from '../core/types/app_result';
@@ -116,7 +116,7 @@ async function updateAvatar(userId: number, filename: string) {
   }
 }
 
-async function update(userId: number, updateUserInfoBody: UpdateMeBody) {
+async function updateName(userId: number, body: UpdateMyNameBody) {
   const exists = await usersRepository.isExistsById(userId);
 
   if (!exists) {
@@ -126,7 +126,7 @@ async function update(userId: number, updateUserInfoBody: UpdateMeBody) {
     });
   }
 
-  await usersRepository.update(userId, updateUserInfoBody);
+  await usersRepository.update(userId, body);
 }
 
 async function withdraw(userId: number, password?: string) {
@@ -155,7 +155,7 @@ export default {
   userById,
   userByEmail,
   updateAvatar,
-  update,
+  updateName,
   updatePassword,
   withdraw,
 };
