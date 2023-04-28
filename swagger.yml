@@ -264,26 +264,24 @@ paths:
           schema:
             $ref: '#/components/schemas/InternalServerError'
 
-    patch:
+    
+    delete:
       tags:
         - 'Users'
-      summary: 현재 사용자 정보 수정
+      summary: 회원 탈티
       parameters:
         - $ref: '#/components/parameters/AccessTokenCookie'
 
-        - name: UpdateMeBody
+        - name: DeleteUserBody
           in: body
           required: true
           schema:
-            $ref: '#/components/schemas/UpdateMeBody'
+            $ref: '#/components/schemas/DeleteUserBody'
 
       responses:
         200:
-          description: 성공적으로 사용자 정보가 업데이트됨(응답 body 읎음)
-        400:
-          description: '입력 값 검증 실패한 경우..(body의 model 펼쳐서 참조)'
-          schema:
-            $ref: '#/components/schemas/InvalidRequestBodyError'
+          description: 회원 탈티 성공
+
         401:
           description: 'AccessToken이 유효하지 않은 경우'
           schema:
@@ -304,23 +302,27 @@ paths:
           schema:
             $ref: '#/components/schemas/InternalServerError'
 
-    delete:
+  /users/me/name:
+    patch:
       tags:
         - 'Users'
-      summary: 회원 탈티
+      summary: 현재 사용자 정보 수정
       parameters:
         - $ref: '#/components/parameters/AccessTokenCookie'
 
-        - name: DeleteUserBody
+        - name: UpdateMyNameBody
           in: body
           required: true
           schema:
-            $ref: '#/components/schemas/DeleteUserBody'
+            $ref: '#/components/schemas/UpdateMyNameBody'
 
       responses:
         200:
-          description: 회원 탈티 성공
-
+          description: 성공적으로 사용자 정보가 업데이트됨(응답 body 읎음)
+        400:
+          description: '입력 값 검증 실패한 경우..(body의 model 펼쳐서 참조)'
+          schema:
+            $ref: '#/components/schemas/InvalidRequestBodyError'
         401:
           description: 'AccessToken이 유효하지 않은 경우'
           schema:
@@ -976,21 +978,14 @@ components:
         - oldPassword
         - newPassword
 
-    UpdateMeBody:
+    UpdateMyNameBody:
       type: object
       properties:
         name:
           type: string
-          nullable: true
           minLength: 4
           maxLength: 20
-          required: false
-        password:
-          type: string
-          nullable: true
-          minLength: 4
-          maxLength: 100
-          required: false
+          required: true
 
     UpdateReviewBody:
       type: object
