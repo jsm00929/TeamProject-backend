@@ -11,7 +11,7 @@ import reviewsService from '../reviews/reviews.service';
 import { PaginationQuery } from '../core/dtos/inputs';
 import moviesService from '../movies/movies.service';
 import { UpdateMyPasswordBody } from './dtos/inputs/update_my_password.body';
-import { UpdateMeBody } from './dtos/inputs/update_me.body';
+import { UpdateMyNameBody } from './dtos/inputs/update_my_name.body';
 import { ErrorMessages, HttpStatus } from '../core/constants';
 import { UpdateAvatarOutput } from './dtos/outputs/update_avatar.output';
 import { clearAuthCookies } from '../utils/cookie_store';
@@ -40,7 +40,7 @@ async function user(req: RequestWith<never, UserIdParams>, res: Response) {
   return AppResult.new({ body: user });
 }
 
-async function updateMe(req: AuthRequestWith<UpdateMeBody>, res: Response) {
+async function updateMyPassword(req: AuthRequestWith<UpdateMyPasswordBody>, res: Response) {
   const userId = req.userId;
   const body = req.unwrap();
 
@@ -53,22 +53,32 @@ async function updateMe(req: AuthRequestWith<UpdateMeBody>, res: Response) {
     ) {
       clearAuthCookies(res);
     }
-    throw error;
+    return AppError.new({
+      message: error.message,
+      status: HttpStatus.UNAUTHORIZED,
+    });
   }
 }
 
-async function update(req: AuthRequestWith<UpdateMeBody>) {
+
+async function updateMyName(req: AuthRequestWith<UpdateMyNameBody>, res: Response) {
   const userId = req.userId;
   const body = req.unwrap();
 
-  await usersService.update(userId, body);
-}
-
-async function updateMyPassword(req: AuthRequestWith<UpdateMyPasswordBody>) {
-  const userId = req.userId;
-  const body = req.unwrap();
-
-  await usersService.updatePassword(userId, body);
+  try {
+    await usersService.update(userId, body);
+  } catch (error) {
+    if (
+      error instanceof AppError &&
+      error.message === ErrorMessages.USER_NOT_FOUND
+    ) {
+      clearAuthCookies(res);
+    }
+    return AppError.new({
+      message: error.message,
+      status: HttpStatus.UNAUTHORIZED,
+    });
+  }
 }
 
 async function updateMyAvatar(
@@ -153,8 +163,7 @@ async function getMyFavoriteMovies(req: AuthRequestWith<PaginationQuery>) {
 export default {
   me,
   user,
-  update,
-  updateMe,
+  updateMyName,
   updateMyPassword,
   updateMyAvatar,
   withdraw,
