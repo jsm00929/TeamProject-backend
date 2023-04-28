@@ -4,7 +4,7 @@ import { handle } from '../core/handle';
 import { PaginationQuery } from '../core/dtos/inputs';
 import { UserIdParams } from './dtos/inputs/user_id.params';
 import { mustAuth } from '../auth/middlewares/must_auth';
-import { UpdateMeBody } from './dtos/inputs/update_me.body';
+import { UpdateMyNameBody } from './dtos/inputs/update_my_name.body';
 import { UpdateMyPasswordBody } from './dtos/inputs/update_my_password.body';
 import { handleUploadAvatars } from '../core/middlewares/handle_upload_avatars';
 import { handleResponse } from '../core/middlewares';
@@ -41,11 +41,11 @@ usersRouter.get(
  * 현재 로그인 된 사용자의 정보 수정하기
  */
 usersRouter.patch(
-  '/me',
+  '/me/name',
   handle({
     authLevel: 'must',
-    bodyCls: UpdateMeBody,
-    controller: usersController.updateMe,
+    bodyCls: UpdateMyNameBody,
+    controller: usersController.updateMyName,
   }),
 );
 
