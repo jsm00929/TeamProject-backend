@@ -306,7 +306,7 @@ paths:
     patch:
       tags:
         - 'Users'
-      summary: 현재 사용자 정보 수정
+      summary: 현재 사용자 이름 수정
       parameters:
         - $ref: '#/components/parameters/AccessTokenCookie'
 
