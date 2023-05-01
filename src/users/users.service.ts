@@ -8,7 +8,7 @@ import {
 } from './dtos/outputs/user.output';
 import { UpdateMyPasswordBody } from './dtos/inputs/update_my_password.body';
 import { UpdateMyNameBody } from './dtos/inputs/update_my_name.body';
-import { comparePassword } from '../utils/hash';
+import { comparePassword, hashPassword } from '../utils/hash';
 import { prisma } from '../config/db';
 import { AppResult } from '../core/types/app_result';
 import {
@@ -58,7 +58,8 @@ async function updatePassword(
     }
   }
 
-  await usersRepository.update(userId, { password: newPassword });
+  const hashedPassword = await hashPassword(newPassword);
+  await usersRepository.update(userId, { password: hashedPassword });
 }
 
 async function updateAvatar(userId: number, filename: string) {
