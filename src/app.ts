@@ -12,6 +12,7 @@ import cors from 'cors';
 import reviewsRouter from './reviews/reviews.router';
 import { STATIC_AVATARS_PATH, STATIC_AVATARS_URL } from './config/constants';
 import { parseSwaggerDoc } from './utils/parsers';
+import path from 'path';
 
 // Singleton App instance
 export class App {
@@ -27,7 +28,10 @@ export class App {
   }
 
   private setStaticDirs() {
-    this.app.use(STATIC_AVATARS_URL, express.static(STATIC_AVATARS_PATH));
+    this.app.use(
+      STATIC_AVATARS_URL,
+      express.static(path.join(process.cwd(), STATIC_AVATARS_PATH)),
+    );
   }
 
   // http request 파싱을 위한 모든 parser 로드
