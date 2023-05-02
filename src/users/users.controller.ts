@@ -16,7 +16,7 @@ import {DeleteUserBody} from './dtos/inputs/delete_user.body';
 async function me(req: AuthRequest, res: Response) {
     const userId = req.userId;
     // 로그인 되어 있지 않은 경우
-    const me = await usersService.userById(userId);
+    const me = await usersService.userById({userId});
 
     if (me === null) {
         // 이미 탈퇴한 회원인 경우 쿠키를 지우고 에러를 던진다.
@@ -32,7 +32,7 @@ async function me(req: AuthRequest, res: Response) {
 
 async function meDetail(req: AuthRequest, res: Response) {
     const userId = req.userId;
-    const me = await usersService.userById(userId);
+    const me = await usersService.userById({userId});
 
     if (me === null) {
         // 이미 탈퇴한 회원인 경우 쿠키를 지우고 에러를 던진다.
@@ -46,9 +46,9 @@ async function meDetail(req: AuthRequest, res: Response) {
     return AppResult.new({body: me});
 }
 
-async function user(req: RequestWith<never, UserIdParams>, res: Response) {
+async function user(req: RequestWith<never, UserIdParams>) {
     const {userId} = req.unwrapParams();
-    const user = await usersService.userById(userId);
+    const user = await usersService.userById({userId});
 
     return AppResult.new({body: user});
 }
@@ -61,7 +61,7 @@ async function updateMyPassword(
     const body = req.unwrap();
 
     try {
-        await usersService.updatePassword(userId, body);
+        await usersService.updatePassword({userId}, body);
     } catch (error) {
         if (
             error instanceof AppError &&
@@ -81,7 +81,7 @@ async function updateMyName(
     const body = req.unwrap();
 
     try {
-        await usersService.updateName(userId, body);
+        await usersService.updateName({userId}, body);
     } catch (error) {
         if (
             error instanceof AppError &&
@@ -112,7 +112,7 @@ async function updateMyAvatar(
 async function withdraw(req: AuthRequestWith<DeleteUserBody>) {
     const userId = req.userId;
     const {password} = req.unwrap();
-    await usersService.withdraw(userId, password);
+    await usersService.withdraw({userId, password});
 }
 
 /**
@@ -121,11 +121,14 @@ async function withdraw(req: AuthRequestWith<DeleteUserBody>) {
 
 async function getMyReviewOverviews(req: AuthRequestWith<PaginationQuery>) {
     const {userId} = req;
-    const query = req.unwrap();
+    const {skip, take} = req.unwrap();
 
     const myReviews = await reviewsService.getReviewOverviewsByUserId(
-        userId,
-        query,
+        {
+            userId,
+            skip,
+            take,
+        }
     );
 
     return AppResult.new({body: myReviews});
@@ -135,11 +138,14 @@ async function getReviewOverviews(
     req: RequestWith<PaginationQuery, UserIdParams>,
 ) {
     const {userId} = req.unwrapParams();
-    const query = req.unwrap();
+    const {skip, take} = req.unwrap();
 
     const reviews = await reviewsService.getReviewOverviewsByUserId(
-        userId,
-        query,
+        {
+            userId,
+            skip,
+            take,
+        }
     );
 
     return AppResult.new({body: reviews});

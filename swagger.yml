@@ -102,7 +102,7 @@ paths:
       summary: 'Google Social 회원가입'
       description: 'Google 인증 페이지로 Redirect하여 구글 계정 인증 후 가입 진행'
       security:
-        - googleAuth: []
+        - googleAuth: [ ]
 
       responses:
         201:
@@ -580,7 +580,7 @@ paths:
           description: 작성한 리뷰가 한개도 없는 경우, 빈 배열
           schema:
             type: array
-            example: []
+            example: [ ]
 
         401:
           description: 'AccessToken이 유효하지 않은 경우'
@@ -1106,3 +1106,4 @@ components:
             avatarUrl:
               type: string
               example: '/imgs/avatar/apassa21.png'
+

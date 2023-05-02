@@ -1,162 +1,169 @@
-import { AppError } from '../core/types/app_error';
-import { ErrorMessages } from '../core/constants/error_messages';
-import { HttpStatus } from '../core/constants/http_status';
+import {AppError} from '../core/types';
+import {ErrorMessages, HttpStatus} from '../core/constants';
 import usersRepository from './users.repository';
+import {userEntityIntoUserOutput,} from './dtos/outputs/user.output';
+import {UpdateMyPasswordBody} from './dtos/inputs/update_my_password.body';
+import {UpdateMyNameBody} from './dtos/inputs/update_my_name.body';
+import {comparePassword, hashPassword} from '../utils/hash';
+import {prisma} from '../config/db';
 import {
-  UserOutput,
-  userEntityIntoUserOutput,
-} from './dtos/outputs/user.output';
-import { UpdateMyPasswordBody } from './dtos/inputs/update_my_password.body';
-import { UpdateMyNameBody } from './dtos/inputs/update_my_name.body';
-import { comparePassword, hashPassword } from '../utils/hash';
-import { prisma } from '../config/db';
-import { AppResult } from '../core/types/app_result';
-import {
-  filenameIntoAbsoluteTempPath,
-  filenameIntoStaticPath,
-  filenameIntoStaticUrl,
-  staticUrlIntoPath,
+    filenameIntoAbsoluteTempPath,
+    filenameIntoStaticPath,
+    filenameIntoStaticUrl,
+    staticUrlIntoPath,
 } from '../utils/static_path_resolvers';
-import { moveFile, removeFileOrThrow, removeFile } from '../utils/file_utils';
-import { log } from '../utils/logger';
-import { DeleteUserBody } from './dtos/inputs/delete_user.body';
+import {moveFile, removeFile, removeFileOrThrow} from '../utils/file_utils';
+import {log} from '../utils/logger';
+import {UserRecord} from "../core/types/tx";
+import {User} from "@prisma/client";
 
-async function userById(userId: number): Promise<UserOutput | null> {
-  const user = await usersRepository.findById(userId);
-  return user !== null ? userEntityIntoUserOutput(user) : null;
+async function userById({userId}: Pick<UserRecord, 'userId'>) {
+    const user = await usersRepository.findById({userId});
+    return user !== null ? userEntityIntoUserOutput(user) : null;
 }
 
-async function userByEmail(email: string): Promise<UserOutput | null> {
-  const user = await usersRepository.findByEmail(email);
-  return user !== null ? userEntityIntoUserOutput(user) : null;
+async function userByEmail({email}: Pick<UserRecord, 'email'>) {
+    const user = await usersRepository.findByEmail({email});
+    return user !== null ? userEntityIntoUserOutput(user) : null;
 }
 
 async function updatePassword(
-  userId: number,
-  { oldPassword, newPassword }: UpdateMyPasswordBody,
+    {userId}: Pick<UserRecord, 'userId'>,
+    {oldPassword, newPassword}: UpdateMyPasswordBody,
 ) {
-  const user = await usersRepository.findById(userId);
+    return prisma.$transaction(async (tx) => {
 
-  if (!user) {
-    throw AppError.new({
-      message: ErrorMessages.USER_NOT_FOUND,
-      status: HttpStatus.UNAUTHORIZED,
+        const user = await usersRepository.findById({userId, tx});
+
+        if (!user) {
+            throw AppError.new({
+                message: ErrorMessages.USER_NOT_FOUND,
+                status: HttpStatus.UNAUTHORIZED,
+            });
+        }
+
+        if (
+            user.password !== null &&
+            oldPassword !== undefined &&
+            oldPassword !== null
+        ) {
+            const isMatchedPassword = await comparePassword(oldPassword, user.password);
+            if (!isMatchedPassword) {
+                throw AppError.new({
+                    message: ErrorMessages.INVALID_PASSWORD,
+                    status: HttpStatus.UNAUTHORIZED,
+                });
+            }
+        }
+
+        const hashedPassword = await hashPassword(newPassword);
+        await usersRepository.update({userId, tx}, {password: hashedPassword});
     });
-  }
 
-  if (
-    user.password !== null &&
-    oldPassword !== undefined &&
-    oldPassword !== null
-  ) {
-    const isMatchedPassword = await comparePassword(oldPassword, user.password);
-    if (!isMatchedPassword) {
-      throw AppError.new({
-        message: ErrorMessages.INVALID_PASSWORD,
-        status: HttpStatus.UNAUTHORIZED,
-      });
-    }
-  }
 
-  const hashedPassword = await hashPassword(newPassword);
-  await usersRepository.update(userId, { password: hashedPassword });
 }
 
 async function updateAvatar(userId: number, filename: string) {
-  const user = await usersRepository.findById(userId);
 
-  if (!user) {
-    throw AppError.new({
-      message: ErrorMessages.USER_NOT_FOUND,
-      status: HttpStatus.NOT_FOUND,
-    });
-  }
+    let user: User | null = null;
+    let absoluteAvatarPath: string | null = null;
+    let avatarUrl: string | null = null;
 
-  const prevAvatarUrl = user.avatarUrl;
 
-  const avatarUrl = filenameIntoStaticUrl(filename, 'avatars');
-  let absoluteAvatarPath: string | null = null;
+    try {
+        return prisma.$transaction(async (tx) => {
 
-  try {
-    return await prisma.$transaction(async (client) => {
-      const user = await client.user.update({
-        where: {
-          id: userId,
-        },
-        data: {
-          avatarUrl,
-        },
-      });
+            user = await usersRepository.findById({userId, tx});
 
-      if (prevAvatarUrl) {
-        const prevAbsoluteAvatarPath = staticUrlIntoPath(
-          prevAvatarUrl,
-          'avatars',
-          true,
-        );
-        await removeFile(prevAbsoluteAvatarPath);
-      }
+            if (!user) {
+                throw AppError.new({
+                    message: ErrorMessages.USER_NOT_FOUND,
+                    status: HttpStatus.NOT_FOUND,
+                });
+            }
 
-      const absoluteTempPath = filenameIntoAbsoluteTempPath(filename);
-      absoluteAvatarPath = filenameIntoStaticPath(filename, 'avatars', true);
+            const prevAvatarUrl = user.avatarUrl;
 
-      await moveFile(absoluteTempPath, absoluteAvatarPath);
+            avatarUrl = filenameIntoStaticUrl(filename, 'avatars');
 
-      return user.avatarUrl;
-    });
-  } catch (error) {
-    log.error(error);
+            await usersRepository.update({userId, tx}, {avatarUrl});
 
-    if (absoluteAvatarPath !== null) {
-      await removeFileOrThrow(absoluteAvatarPath);
+            if (prevAvatarUrl) {
+                const prevAbsoluteAvatarPath = staticUrlIntoPath(
+                    prevAvatarUrl,
+                    'avatars',
+                    true,
+                );
+                await removeFile(prevAbsoluteAvatarPath);
+            }
+
+            const absoluteTempPath = filenameIntoAbsoluteTempPath(filename);
+            absoluteAvatarPath = filenameIntoStaticPath(filename, 'avatars', true);
+
+            await moveFile(absoluteTempPath, absoluteAvatarPath);
+
+            return avatarUrl;
+        });
+    } catch (error) {
+        log.error(error);
+
+        if (absoluteAvatarPath !== null) {
+            await removeFileOrThrow(absoluteAvatarPath);
+        }
     }
-    return AppResult.new({
-      body: ErrorMessages.INTERNAL_SERVER_ERROR,
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-    });
-  }
 }
 
-async function updateName(userId: number, body: UpdateMyNameBody) {
-  const exists = await usersRepository.isExistsById(userId);
+async function updateName({userId}: Pick<UserRecord, 'userId'>, {name}: UpdateMyNameBody) {
 
-  if (!exists) {
-    throw AppError.new({
-      message: ErrorMessages.USER_NOT_FOUND,
-      status: HttpStatus.NOT_FOUND,
+    return prisma.$transaction(async (tx) => {
+
+        const exists = await usersRepository.isExistsById({userId, tx});
+
+        if (!exists) {
+            throw AppError.new({
+                message: ErrorMessages.USER_NOT_FOUND,
+                status: HttpStatus.NOT_FOUND,
+            });
+        }
+
+        await usersRepository.update({userId, tx}, {name});
+
     });
-  }
 
-  await usersRepository.update(userId, body);
 }
 
-async function withdraw(userId: number, password?: string) {
-  const user = await usersRepository.findById(userId);
+async function withdraw({userId, password}: Pick<UserRecord, 'userId'> & Pick<Partial<UserRecord>, 'password'>) {
 
-  if (!user) {
-    throw AppError.new({
-      message: ErrorMessages.USER_NOT_FOUND,
-      status: HttpStatus.UNAUTHORIZED,
+    return prisma.$transaction(async (tx) => {
+
+        const user = await usersRepository.findById({userId, tx});
+
+        if (!user) {
+            throw AppError.new({
+                message: ErrorMessages.USER_NOT_FOUND,
+                status: HttpStatus.UNAUTHORIZED,
+            });
+        }
+
+        if (user.password !== null) {
+            if (!password || !(await comparePassword(password, user.password))) {
+                throw AppError.new({
+                    message: ErrorMessages.INVALID_PASSWORD,
+                    status: HttpStatus.UNAUTHORIZED,
+                });
+            }
+        }
+
+        await usersRepository.remove({userId, tx});
     });
-  }
 
-  if (user.password !== null) {
-    if (!password || !(await comparePassword(password, user.password))) {
-      throw AppError.new({
-        message: ErrorMessages.INVALID_PASSWORD,
-        status: HttpStatus.UNAUTHORIZED,
-      });
-    }
-  }
-
-  await usersRepository.remove(userId);
 }
 
 export default {
-  userById,
-  userByEmail,
-  updateAvatar,
-  updateName,
-  updatePassword,
-  withdraw,
+    userById,
+    userByEmail,
+    updateAvatar,
+    updateName,
+    updatePassword,
+    withdraw,
 };

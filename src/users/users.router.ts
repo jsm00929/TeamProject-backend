@@ -6,6 +6,8 @@ import {UserIdParams} from './dtos/inputs/user_id.params';
 import {mustAuth} from '../auth/middlewares/must_auth';
 import {UpdateMyNameBody} from './dtos/inputs/update_my_name.body';
 import {UpdateMyPasswordBody} from './dtos/inputs/update_my_password.body';
+
+
 import {handleUploadAvatars} from '../core/middlewares/handle_upload_avatars';
 import {handleResponse} from '../core/middlewares';
 import {DeleteUserBody} from './dtos/inputs/delete_user.body';

@@ -16,8 +16,7 @@ export function isAuth(req: OptionalAuthRequest, res: Response, next: NextFuncti
     // accessToken이 있는 경우
     if (accessToken) {
         try {
-            const userId = verifyAccessToken(accessToken);
-            req.userId = userId;
+            req.userId = verifyAccessToken(accessToken);
         } catch (e) {
             // 유효하지 않거나 만료된 토큰일 경우 쿠키를 지우고 에러를 던진다.
             return next(e);

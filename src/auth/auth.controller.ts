@@ -27,8 +27,8 @@ async function signup(req: RequestWith<SignupBody>, res: Response) {
 }
 
 async function login(req: RequestWith<LoginBody>, res: Response) {
-    const loginInput = req.unwrap();
-    const userId = await authService.login(loginInput);
+    const {email, password} = req.unwrap();
+    const userId = await authService.login({email, password});
 
     setAuthCookies(userId, res);
 }
@@ -39,7 +39,8 @@ async function logout(_, res: Response) {
 
 async function refreshToken(req: Request, res: Response) {
     const token = req.signedCookies[REFRESH_TOKEN_COOKIE_NAME];
-    if (typeof token !== 'string') {
+
+    if (token === false || typeof token !== 'string') {
         throw AppError.new({
             message: ErrorMessages.INVALID_TOKEN,
             status: HttpStatus.UNAUTHORIZED,

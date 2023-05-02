@@ -1,7 +1,8 @@
-import {PaginationQuery} from '../core/dtos/inputs/pagination.query';
+import {PaginationQuery} from '../core/dtos/inputs';
 import {prisma} from '../config/db';
 import {CreateMovieReviewBody} from './dtos/create_movie_review.body';
 import {EditMovieReviewBody} from './dtos/edit_review.body';
+import {MovieRecord, prismaClient, RatingRecord, ReviewRecord, Tx, TxRecord, UserRecord} from "../core/types/tx";
 
 /**
  * 조회(Fetch)
@@ -39,29 +40,33 @@ async function findManyByAuthorId(
     });
 }
 
-async function findById(reviewId: number) {
-    return prisma.review.findUnique({where: {id: reviewId}});
+async function findById({reviewId, tx}: Pick<ReviewRecord, 'reviewId'> & TxRecord) {
+    return prismaClient(tx).review.findUnique({where: {id: reviewId}});
 }
 
-async function isExists(reviewId: number) {
-    const review = await findById(reviewId);
+async function isExists({reviewId, tx}: Pick<ReviewRecord, 'reviewId'> & TxRecord) {
+    const review = await findById({reviewId, tx});
     return review !== null && review.deletedAt === null;
 }
 
-async function isAuthor(userId: number, reviewId: number) {
-    const review = await findById(reviewId);
+async function isAuthor({
+                            userId,
+                            reviewId,
+                            tx
+                        }: Pick<UserRecord, 'userId'> & Pick<ReviewRecord, 'reviewId'> & TxRecord) {
+    const review = await findById({reviewId, tx});
     return review !== null && review.authorId === userId;
 }
+
 
 /**
  * 생성 및 수정(Mutation)
  */
 async function create(
-    userId: number,
-    movieId: number,
+    {userId, movieId, tx}: Pick<UserRecord, 'userId'> & Pick<MovieRecord, 'movieId'> & TxRecord,
     {title, content, rating}: CreateMovieReviewBody,
 ) {
-    const {id} = await prisma.review.create({
+    const {id} = await prismaClient(tx).review.create({
         data: {
             title,
             content,
@@ -77,23 +82,27 @@ async function create(
     return id;
 }
 
-async function update(reviewId: number, editReviewInput: EditMovieReviewBody) {
-    await prisma.review.update({
+
+async function update(
+    {reviewId, tx}: TxRecord & Pick<ReviewRecord, 'reviewId'>,
+    body: EditMovieReviewBody) {
+
+    await prismaClient(tx).review.update({
         where: {
             id: reviewId,
         },
         data: {
-            ...editReviewInput,
+            ...body,
             // content가 존재할 경우에만 overview를 재생성
-            ...(editReviewInput.content && {
-                overview: editReviewInput.content.slice(0, 100),
+            ...(body.content && {
+                overview: body.content.slice(0, 100),
             }),
         },
         select: {id: true},
     });
 }
 
-async function remove(reviewId: number) {
+async function remove(tx: Tx, reviewId: number) {
     await prisma.review.update({
         where: {
             id: reviewId,
@@ -101,15 +110,44 @@ async function remove(reviewId: number) {
         data: {
             deletedAt: new Date(),
         },
-        select: {
-            id: true,
-        },
     });
+}
+
+/**
+ * RATING
+ */
+async function createRating({
+                                tx,
+                                movieId,
+                                rating
+                            }: Pick<MovieRecord, 'movieId'> & Pick<RatingRecord, 'rating'> & TxRecord) {
+    await prismaClient(tx).rating.create({
+        data: {
+            rating,
+            movieId,
+        }
+    });
+}
+
+
+async function totalRatingByMovieId({movieId, tx}: TxRecord & Pick<MovieRecord, 'movieId'>) {
+    const ratings = await prismaClient(tx).rating.findMany({
+        where: {
+            movieId,
+        },
+        select: {
+            rating: true,
+        }
+    });
+
+    return ratings.reduce((acc, cur) => acc + cur.rating, 0);
 }
 
 export default {
     findById,
     findManyByAuthorId,
+    createRating,
+    totalRatingByMovieId,
     isExists,
     isAuthor,
     create,

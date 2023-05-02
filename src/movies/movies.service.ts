@@ -1,37 +1,37 @@
-import { PaginationQuery } from '../core/dtos/inputs/pagination.query';
+import {PaginationQuery} from '../core/dtos/inputs';
 import moviesRepository from './movies.repository';
 
 async function getFavorites(userId: number, paginationInput: PaginationQuery) {
-  return moviesRepository.getFavorites(userId, paginationInput);
+    return moviesRepository.getFavorites(userId, paginationInput);
 }
 
 async function getRecentlyViewed(
-  userId: number,
-  paginationInput: PaginationQuery,
+    userId: number,
+    paginationInput: PaginationQuery,
 ) {
-  return moviesRepository.getRecentlyViewed(userId, paginationInput);
+    return moviesRepository.getRecentlyViewed(userId, paginationInput);
 }
 
 async function getPopularMovies(paginationInput: PaginationQuery) {
-  return moviesRepository.getPopularMovies(paginationInput);
+    return moviesRepository.getPopularMovies(paginationInput);
 }
 
 async function getMovieDetail(userId: number | undefined, movieId: number) {
-  if (userId) {
-    await moviesRepository.updateViewedAt(userId, movieId);
-  }
+    if (userId) {
+        await moviesRepository.updateViewedAt(userId, movieId);
+    }
 
-  return moviesRepository.getMovieDetail(movieId);
+    return moviesRepository.getMovieDetail(movieId);
 }
 
 async function toggleFavoriteMovie(userId: number, movieId: number) {
-  await moviesRepository.toggleFavoriteMovie(userId, movieId);
+    await moviesRepository.toggleFavoriteMovie(userId, movieId);
 }
 
 export default {
-  getPopularMovies,
-  getMovieDetail,
-  getFavorites,
-  getRecentlyViewed,
-  toggleFavoriteMovie,
+    getPopularMovies,
+    getMovieDetail,
+    getFavorites,
+    getRecentlyViewed,
+    toggleFavoriteMovie,
 };

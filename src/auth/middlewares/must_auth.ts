@@ -20,8 +20,7 @@ export function mustAuth(req: AuthRequest, res: Response, next: NextFunction) {
         );
     }
     try {
-        const userId = verifyAccessToken(accessToken);
-        req.userId = userId;
+        req.userId = verifyAccessToken(accessToken);
         next();
     } catch (e) {
         next(e);

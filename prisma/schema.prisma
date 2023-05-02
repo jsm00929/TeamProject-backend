@@ -76,7 +76,6 @@ model Movie {
   users       UserMovie[]
 }
 
-// automatically created [many to many] relation
 model Genre {
   id     Int     @id // tmdb의 id를 따름
   name   String  @unique
@@ -91,7 +90,11 @@ model Review {
   title     String    @db.VarChar(100)
   overview  String    @db.VarChar(100)
   content   String    @db.Text
-  rating    Int?      @db.Int
+  // prev
+  // rating    Int?      @db.Int
+  rating    Int?      @db.UnsignedTinyInt // 0 ~ 255
+  //
+  // next
   comments  Comment[]
   authorId  Int
   movieId   Int
@@ -101,6 +104,15 @@ model Review {
   deletedAt DateTime? @db.Timestamp()
 
   @@index([authorId, deletedAt], name: "authorIdDeletedAt")
+}
+
+// TODO: before migration
+model Rating {
+  id      Int @id @default(autoincrement())
+  movieId Int
+  rating  Int
+
+  @@index(movieId, name: "movieId")
 }
 
 model Comment {

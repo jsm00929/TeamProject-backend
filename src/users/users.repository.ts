@@ -1,111 +1,111 @@
-import { prisma } from '../config/db';
-import { ErrorMessages, HttpStatus } from '../core/constants';
-import { AppError } from '../core/types';
-import { CreateUserBody } from './dtos/inputs/create_user.body';
+import {CreateUserBody} from './dtos/inputs/create_user.body';
+import {prismaClient, TxRecord, UserRecord} from "../core/types/tx";
 
 /**
- * 조회(Fetch)
+ * Fetch
  */
 
 /**
  * @description
  * 사용자 정보 가져오기(by Id)
  */
-async function findById(userId: number) {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+async function findById({userId: id, tx}: Pick<UserRecord, 'userId'> & TxRecord) {
+    const user = await prismaClient(tx).user.findUnique({where: {id}});
 
-  if (user === null || user.deletedAt !== null) {
-    return null;
-  }
-  return user;
+    if (user === null || user.deletedAt !== null) {
+        return null;
+    }
+    return user;
 }
 
-async function findByEmail(email: string) {
-  const user = await prisma.user.findUnique({ where: { email } });
+async function findByEmail({email, tx}: Pick<UserRecord, 'email'> & TxRecord) {
+    const user = await prismaClient(tx).user.findUnique({where: {email}});
 
-  if (user === null || user.deletedAt !== null) {
-    return null;
-  }
-  return user;
+    if (user === null || user.deletedAt !== null) {
+        return null;
+    }
+    return user;
 }
 
 /**
  * @description
  * 사용자 존재 여부 확인(by Id)
  */
-async function isExistsById(userId: number) {
-  return (await findById(userId)) !== null;
+async function isExistsById({userId, tx}: Pick<UserRecord, 'userId'> & TxRecord) {
+    return (await findById({userId, tx})) !== null;
 }
 
 /**
  * @description
  * 사용자 존재 여부 확인(by Email)
  */
-async function isExistsByEmail(email: string) {
-  return (await findByEmail(email)) !== null;
+async function isExistsByEmail({email, tx}: Pick<UserRecord, 'email'> & TxRecord) {
+    return (await findByEmail({email, tx})) !== null;
 }
 
 /**
  * 생성 및 수정(Mutation)
  */
-async function create({ email, name, password }: CreateUserBody) {
-  const user = await prisma.user.create({
-    data: {
-      email,
-      name,
-      password,
-    },
-  });
-  return user.id;
+async function create({email, name, password, tx}: CreateUserBody & TxRecord) {
+    const user = await prismaClient(tx).user.create({
+        data: {
+            email,
+            name,
+            password,
+        },
+    });
+    return user.id;
 }
 
-async function createWithoutPassword({
-  email,
-  name,
-  avatarUrl,
-}: {
-  email: string;
-  name: string;
-  avatarUrl?: string;
-}) {
-  const user = await prisma.user.create({
-    data: {
-      email,
-      name,
-      avatarUrl,
-    },
-  });
-  return user.id;
+async function createWithoutPassword(
+    {tx}: TxRecord,
+    {
+        email,
+        name,
+        avatarUrl,
+    }: Pick<UserRecord, 'name' | 'avatarUrl' | 'email'>) {
+    const user = await prismaClient(tx).user.create({
+        data: {
+            email,
+            name,
+            avatarUrl,
+        },
+    });
+    return user.id;
 }
 
-async function update(userId: number, updateUserInput) {
-  await prisma.user.update({
-    where: {
-      id: userId,
-    },
-    data: updateUserInput,
-  });
+async function update(
+    {userId, tx}: Pick<UserRecord, 'userId'> & TxRecord,
+    data: Omit<Partial<UserRecord>, 'email'>) {
+
+    await prismaClient(tx).user.update({
+        where: {
+            id: userId,
+        },
+        data: data,
+    });
 }
 
-async function remove(userId: number) {
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      deletedAt: new Date(),
-    },
-  });
+async function remove({userId, tx}: Pick<UserRecord, 'userId'> & TxRecord) {
+
+    await prismaClient(tx).user.update({
+        where: {id: userId},
+        data: {
+            deletedAt: new Date(),
+        },
+    });
 }
 
 /**
- * 내보내기(export)
+ * export
  */
 export default {
-  findById,
-  findByEmail,
-  isExistsById,
-  isExistsByEmail,
-  create,
-  createWithoutPassword,
-  update,
-  remove,
+    findById,
+    findByEmail,
+    isExistsById,
+    isExistsByEmail,
+    create,
+    createWithoutPassword,
+    update,
+    remove,
 };
