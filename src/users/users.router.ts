@@ -19,7 +19,7 @@ const usersRouter = Router();
 usersRouter.get(
   '/me',
   handle({
-    authLevel: 'must',
+    authLevel: 'optional',
     controller: usersController.me,
   }),
 );

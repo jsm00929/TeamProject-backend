@@ -1,25 +1,24 @@
 import usersService from './users.service';
-import {
-  AppError,
-  AuthRequest,
-  AuthRequestWith,
-  RequestWith,
-} from '../core/types';
-import { AppResult } from '../core/types/app_result';
-import { UserIdParams } from './dtos/inputs/user_id.params';
+import {AppError, AuthRequest, AuthRequestWith, OptionalAuthRequest, RequestWith,} from '../core/types';
+import {AppResult} from '../core/types/app_result';
+import {UserIdParams} from './dtos/inputs/user_id.params';
 import reviewsService from '../reviews/reviews.service';
-import { PaginationQuery } from '../core/dtos/inputs';
+import {PaginationQuery} from '../core/dtos/inputs';
 import moviesService from '../movies/movies.service';
-import { UpdateMyPasswordBody } from './dtos/inputs/update_my_password.body';
-import { UpdateMyNameBody } from './dtos/inputs/update_my_name.body';
-import { ErrorMessages, HttpStatus } from '../core/constants';
-import { UpdateAvatarOutput } from './dtos/outputs/update_avatar.output';
-import { clearAuthCookies } from '../utils/cookie_store';
-import { Response } from 'express';
-import { DeleteUserBody } from './dtos/inputs/delete_user.body';
+import {UpdateMyPasswordBody} from './dtos/inputs/update_my_password.body';
+import {UpdateMyNameBody} from './dtos/inputs/update_my_name.body';
+import {ErrorMessages, HttpStatus} from '../core/constants';
+import {UpdateAvatarOutput} from './dtos/outputs/update_avatar.output';
+import {clearAuthCookies} from '../utils/cookie_store';
+import {Response} from 'express';
+import {DeleteUserBody} from './dtos/inputs/delete_user.body';
 
-async function me(req: AuthRequest, res: Response) {
+async function me(req: OptionalAuthRequest, res: Response) {
   const userId = req.userId;
+  if (userId === undefined) {
+    return AppResult.new({ body: null, status: HttpStatus.UNAUTHORIZED });
+  }
+
   const me = await usersService.userById(userId);
 
   if (me === null) {

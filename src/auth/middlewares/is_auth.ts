@@ -15,6 +15,7 @@ export function isAuth(req: OptionalAuthRequest, res: Response, next: NextFuncti
       const userId = verifyAccessToken(accessToken);
       req.userId = userId;
     } catch (e) {
+      clearAuthCookies(res);
       return next(
         AppError.new({
           message: ErrorMessages.INVALID_TOKEN,
@@ -22,8 +23,6 @@ export function isAuth(req: OptionalAuthRequest, res: Response, next: NextFuncti
         }),
       );
     }
-  } else {
-    clearAuthCookies(res);
   }
   next();
 }
