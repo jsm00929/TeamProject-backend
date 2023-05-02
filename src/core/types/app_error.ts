@@ -7,6 +7,7 @@ interface AppErrorArgs {
 
 export class AppError extends Error {
   status: HttpStatus;
+  code?: number;
 
   private constructor(message: string, status: HttpStatus) {
     super(message);
@@ -25,5 +26,11 @@ export class AppError extends Error {
    */
   static new({ message, status = HttpStatus.BAD_REQUEST }: AppErrorArgs) {
     return new this(message, status);
+  }
+
+  static newWithCode({ message, status = HttpStatus.BAD_REQUEST ,code }: AppErrorArgs & { code: number }) {
+    const n = new this(message, status);
+    n.code = code;
+    return n;
   }
 }

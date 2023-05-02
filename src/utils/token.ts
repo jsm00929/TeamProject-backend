@@ -45,9 +45,10 @@ export function verifyAccessToken(accessToken: string) {
   }
 
   if (isExpiredToken(payload)) {
-    throw AppError.new({
+    throw AppError.newWithCode({
       message: ErrorMessages.EXPIRED_ACCESS_TOKEN,
       status: HttpStatus.UNAUTHORIZED,
+      code: -1
     });
   }
 
@@ -66,9 +67,10 @@ export function verifyRefreshToken(refreshToken: string) {
   }
 
   if (isExpiredToken(payload)) {
-    throw AppError.new({
+    throw AppError.newWithCode({
       message: ErrorMessages.EXPIRED_REFRESH_TOKEN,
       status: HttpStatus.UNAUTHORIZED,
+      code:-1,
     });
   }
 
