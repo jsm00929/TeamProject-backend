@@ -4,4 +4,5 @@ export enum ErrorMessages {
   INTERNAL_SERVER_ERROR = '알 수 없는 오류인대요?',
   INVALID_TOKEN = '말 같지도 않은 토큰을 주셨내요?',
   UNAUTHORIZED_USER = '로그인 꼮 하새요?',
+  DUPLICATE_EMAIL = '이미 가입한 이매일이내요',
 }
