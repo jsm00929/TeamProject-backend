@@ -1,12 +1,13 @@
-import { NextFunction } from 'express';
+import {NextFunction, Response} from 'express';
 import { AppError } from '../../core/types/app_error';
 import { ErrorMessages } from '../../core/constants/error_messages';
 import { ACCESS_TOKEN_COOKIE_NAME } from '../../config/constants';
 import { verifyAccessToken } from '../../utils/token';
 import { OptionalAuthRequest } from '../../core/types';
 import { HttpStatus } from '../../core/constants';
+import {clearAuthCookies} from "../../utils/cookie_store";
 
-export function isAuth(req: OptionalAuthRequest, _, next: NextFunction) {
+export function isAuth(req: OptionalAuthRequest, res: Response, next: NextFunction) {
   const accessToken = req.cookies[ACCESS_TOKEN_COOKIE_NAME];
 
   if (accessToken) {
@@ -21,6 +22,8 @@ export function isAuth(req: OptionalAuthRequest, _, next: NextFunction) {
         }),
       );
     }
+  } else {
+    clearAuthCookies(res);
   }
   next();
 }
