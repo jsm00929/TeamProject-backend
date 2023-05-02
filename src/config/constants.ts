@@ -8,8 +8,8 @@ export const ACCESS_TOKEN_COOKIE_NAME = 'ACCESS_TOKEN';
 export const REFRESH_TOKEN_COOKIE_NAME = 'REFRESH_TOKEN';
 export const ACCESS_TOKEN_COOKIE_MAX_AGE = 2 * HOUR;
 export const REFRESH_TOKEN_COOKIE_MAX_AGE = 2 * WEEK;
-export const ACCESS_TOKEN_MAX_AGE = -1; // 1h(MILLI_SECS)
-// export const ACCESS_TOKEN_MAX_AGE = HOUR;
+
+export const ACCESS_TOKEN_MAX_AGE = HOUR;
 export const REFRESH_TOKEN_MAX_AGE = 2 * WEEK;
 
 export const STATIC_AVATARS_PATH = '/public/uploads/images/avatars';
