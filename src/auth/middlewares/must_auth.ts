@@ -5,6 +5,7 @@ import { HttpStatus } from '../../core/constants/http_status';
 import { ACCESS_TOKEN_COOKIE_NAME } from '../../config/constants';
 import { verifyAccessToken } from '../../utils/token';
 import { AuthRequest } from '../../core/types';
+import {clearAuthCookies} from "../../utils/cookie_store";
 
 export function mustAuth(req: AuthRequest, res: Response, next: NextFunction) {
   const accessToken = req.signedCookies[ACCESS_TOKEN_COOKIE_NAME];
@@ -21,6 +22,7 @@ export function mustAuth(req: AuthRequest, res: Response, next: NextFunction) {
     req.userId = userId;
     next();
   } catch (e) {
+      clearAuthCookies(res);
     next(
       AppError.new({
         message: ErrorMessages.INVALID_TOKEN,

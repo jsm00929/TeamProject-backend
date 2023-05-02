@@ -15,6 +15,7 @@ import {DeleteUserBody} from './dtos/inputs/delete_user.body';
 
 async function me(req: OptionalAuthRequest, res: Response) {
   const userId = req.userId;
+  // 로그인 되어 있지 않은 경우
   if (userId === undefined) {
     return AppResult.new({ body: null, status: HttpStatus.UNAUTHORIZED });
   }
@@ -22,6 +23,7 @@ async function me(req: OptionalAuthRequest, res: Response) {
   const me = await usersService.userById(userId);
 
   if (me === null) {
+    // 이미 탈퇴한 회원인 경우 쿠키를 지우고 에러를 던진다.
     clearAuthCookies(res);
     AppError.new({
       message: ErrorMessages.USER_NOT_FOUND,
