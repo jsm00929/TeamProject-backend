@@ -12,6 +12,7 @@ import {UpdateAvatarOutput} from './dtos/outputs/update_avatar.output';
 import {clearAuthCookies} from '../utils/cookie_store';
 import {Response} from 'express';
 import {DeleteUserBody} from './dtos/inputs/delete_user.body';
+import {UserMoviesPaginationQuery} from "../movies/movies_pagination.query";
 
 async function me(req: AuthRequest, res: Response) {
     const userId = req.userId;
@@ -101,7 +102,7 @@ async function updateMyAvatar(
         file: {filename},
     } = req;
 
-    const avatarUrl = await usersService.updateAvatar(userId, filename);
+    const avatarUrl = await usersService.updateAvatar({userId, filename});
 
     return AppResult.new({
         body: {avatarUrl} as UpdateAvatarOutput,
@@ -118,35 +119,32 @@ async function withdraw(req: AuthRequestWith<DeleteUserBody>) {
 /**
  * REVIEWS
  */
-
+// TODO:
 async function getMyReviewOverviews(req: AuthRequestWith<PaginationQuery>) {
     const {userId} = req;
-    const {skip, take} = req.unwrap();
+    const {count} = req.unwrap();
+    //
+    // const myReviews = await reviewsService.getReviewOverviewsByUserId({
+    //     userId,
+    //     // TODO:
+    //     // skip,
+    //     // take: count + 1,
+    // });
 
-    const myReviews = await reviewsService.getReviewOverviewsByUserId(
-        {
-            userId,
-            skip,
-            take,
-        }
-    );
-
-    return AppResult.new({body: myReviews});
+    return AppResult.new({body: {}});
 }
 
 async function getReviewOverviews(
     req: RequestWith<PaginationQuery, UserIdParams>,
 ) {
     const {userId} = req.unwrapParams();
-    const {skip, take} = req.unwrap();
+    const {after, count} = req.unwrap();
 
-    const reviews = await reviewsService.getReviewOverviewsByUserId(
-        {
-            userId,
-            skip,
-            take,
-        }
-    );
+    const reviews = await reviewsService.getReviewOverviewsByUserId({
+        userId,
+        after,
+        count,
+    });
 
     return AppResult.new({body: reviews});
 }
@@ -154,26 +152,18 @@ async function getReviewOverviews(
 /**
  * MOVIES
  */
-
-async function getMyRecentlyViewedMovies(
-    req: AuthRequestWith<PaginationQuery>,
-) {
+async function myMovies(req: AuthRequestWith<UserMoviesPaginationQuery>) {
     const {userId} = req;
-    const query = req.unwrap();
+    const {count, after, filter, include} = req.unwrap();
 
-    const movies = await moviesService.getRecentlyViewed(userId, query);
+    const movies = await moviesService.userMovies(
+        {userId},
+        {count, after, filter, include},
+    );
 
     return AppResult.new({body: movies});
 }
 
-async function getMyFavoriteMovies(req: AuthRequestWith<PaginationQuery>) {
-    const {userId} = req;
-    const query = req.unwrap();
-
-    const movies = await moviesService.getFavorites(userId, query);
-
-    return AppResult.new({body: movies});
-}
 
 /**
  * EXPORT
@@ -188,6 +178,5 @@ export default {
     withdraw,
     getMyReviewOverviews,
     getReviewOverviews,
-    getMyFavoriteMovies,
-    getMyRecentlyViewedMovies,
+    myMovies,
 };

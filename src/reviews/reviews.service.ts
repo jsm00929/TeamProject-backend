@@ -1,12 +1,11 @@
-import {ErrorMessages} from '../core/constants/error_messages';
-import {HttpStatus} from '../core/constants/http_status';
-import {PaginationQuery} from '../core/dtos/inputs/pagination.query';
-import {AppError} from '../core/types/app_error';
+import {ErrorMessages, HttpStatus} from '../core/constants';
+import {AppError} from '../core/types';
 import {CreateMovieReviewBody} from './dtos/create_movie_review.body';
 import {EditMovieReviewBody} from './dtos/edit_review.body';
 import reviewsRepository from './reviews.repository';
 import {prisma} from "../config/db";
 import {MovieRecord, ReviewRecord, UserRecord} from "../core/types/tx";
+import {PaginationQuery} from "../core/dtos/inputs";
 
 async function getReviewDetail({reviewId}: Pick<ReviewRecord, 'reviewId'>) {
     return reviewsRepository.findById({reviewId});
@@ -16,12 +15,10 @@ async function getReviewDetail({reviewId}: Pick<ReviewRecord, 'reviewId'>) {
 async function getReviewOverviewsByUserId(
     {
         userId,
-        skip,
-        take,
     }
         : Pick<UserRecord, 'userId'> & PaginationQuery,
 ) {
-    return reviewsRepository.findManyByAuthorId(userId, {skip, take});
+    // return reviewsRepository.findManyByAuthorId({userId, skip, take});
 }
 
 async function write(

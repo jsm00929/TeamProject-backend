@@ -44,9 +44,12 @@ async function isExistsByEmail({email, tx}: Pick<UserRecord, 'email'> & TxRecord
 }
 
 /**
- * 생성 및 수정(Mutation)
+ * CREATE
  */
-async function create({email, name, password, tx}: CreateUserBody & TxRecord) {
+async function create(
+    {tx}: TxRecord,
+    {email, name, password}: CreateUserBody
+) {
     const user = await prismaClient(tx).user.create({
         data: {
             email,
@@ -74,15 +77,19 @@ async function createWithoutPassword(
     return user.id;
 }
 
+/**
+ * UPDATE
+ */
 async function update(
     {userId, tx}: Pick<UserRecord, 'userId'> & TxRecord,
-    data: Omit<Partial<UserRecord>, 'email'>) {
+    data: Omit<Partial<UserRecord>, 'email'>
+) {
 
     await prismaClient(tx).user.update({
         where: {
             id: userId,
         },
-        data: data,
+        data,
     });
 }
 

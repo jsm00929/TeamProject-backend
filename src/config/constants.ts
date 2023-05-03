@@ -16,6 +16,7 @@ export const STATIC_AVATARS_PATH = '/public/uploads/images/avatars';
 export const STATIC_AVATARS_URL = '/images/avatars';
 export const UPLOADS_TEMP_PATH = '/public/uploads/temp';
 
+export const MAX_IMAGE_SIZE = 1024 * 1024 * 10;
 export const IMAGE_EXT_REGEX =
     /^(jpg|jpeg|jpe|jfif|png|gif|bmp|dib|tif|tiff|webp|heif|heic|avif|ico|cur|svg)$/i;
 

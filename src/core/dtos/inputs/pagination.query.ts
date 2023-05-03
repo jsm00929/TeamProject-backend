@@ -1,36 +1,32 @@
-import { Max, Min } from 'class-validator';
+import {IsNumber, IsOptional, Max, Min} from 'class-validator';
+
+export type Cursor = {
+    id: number;
+};
 
 export class PaginationQuery {
-  @Min(0)
-  skip: number;
 
-  @Min(10)
-  @Max(100)
-  take: number;
+    @IsNumber()
+    @Min(10)
+    @Max(100)
+    count: number;
 
-  constructor(skip: number = 0, take: number = 20) {
-    this.skip = skip;
-    this.take = take;
-  }
+    @IsOptional()
+    @IsNumber()
+    @Min(1)
+    after?: number;
+
+    constructor(after?: number, count = 20) {
+        this.after = after;
+        this.count = count;
+    }
+
+    // public unwrapCursor(): Cursor | null {
+    //     if (this.after === undefined || this.after === null) {
+    //         return null;
+    //     }
+    //     return {
+    //         id: this.after,
+    //     };
+    // }
 }
-
-// export class PaginationWith<T> extends PaginationDto {
-//   options: T;
-
-//   private constructor(skip: number, take: number, options: T) {
-//     super(skip, take);
-//     this.options = options;
-//   }
-
-//   static create<T>({
-//     skip = 0,
-//     take = 20,
-//     options,
-//   }: {
-//     skip?: number;
-//     take?: number;
-//     options: T;
-//   }) {
-//     return new PaginationWith<T>(skip, take, options);
-//   }
-// }

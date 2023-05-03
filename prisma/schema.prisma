@@ -51,6 +51,7 @@ model UserMovie {
   isFavorite Boolean  @default(false)
 
   @@index([userId, movieId])
+  @@index(userId)
 }
 
 model Movie {

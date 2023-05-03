@@ -11,6 +11,7 @@ import {UpdateMyPasswordBody} from './dtos/inputs/update_my_password.body';
 import {handleUploadAvatars} from '../core/middlewares/handle_upload_avatars';
 import {handleResponse} from '../core/middlewares';
 import {DeleteUserBody} from './dtos/inputs/delete_user.body';
+import {UserMoviesPaginationQuery} from "../movies/movies_pagination.query";
 
 const usersRouter = Router();
 
@@ -93,26 +94,17 @@ usersRouter.delete(
  */
 /**
  * @description
- * TODO:
- * 현재 로그인 한 사용자가 최근 조회한 영화(movie detail) 목록 조회(Pagination)
+ * 현재 로그인 된 사용자가 최근 본 영화
+ * or 즐겨찾기에 추가한 영화
+ * - filter: 'recentlyViewed' | 'favorite'
  */
-//@ts-ignore
-usersRouter.get(
-    // TODO: query?
-    '/me/movies/recent',
+usersRouter.get('/me/movies',
     handle({
         authLevel: 'must',
-        queryCls: PaginationQuery,
-        controller: usersController.getMyRecentlyViewedMovies,
-    }),
-);
-/**
- * @description
- * TODO:
- * 현재 로그인 한 사용자의 favorite 영화 목록 조회(Pagination)
- */
-//@ts-ignore
-usersRouter.get('/me/movies/favorite');
+        queryCls: UserMoviesPaginationQuery,
+        controller: usersController.myMovies
+    }));
+
 
 /**
  * USER REVIEW

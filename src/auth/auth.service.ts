@@ -11,7 +11,7 @@ async function signUp({email, name, password}: SignupBody) {
 
     return prisma.$transaction(async (tx) => {
 
-        const exists = await usersRepository.isExistsByEmail({email});
+        const exists = await usersRepository.isExistsByEmail({email, tx});
         // 이미 가입된 사용자
         if (exists) {
             throw AppError.new({
@@ -20,7 +20,7 @@ async function signUp({email, name, password}: SignupBody) {
             });
         }
 
-        return usersRepository.create({
+        return usersRepository.create({tx}, {
             email,
             name,
             password: await hashPassword(password),
@@ -107,7 +107,7 @@ async function googleLoginRedirect(code: string) {
 
     return prisma.$transaction(async (tx) => {
 
-        const user = await usersRepository.findByEmail({email});
+        const user = await usersRepository.findByEmail({email, tx});
 
         if (!user) {
             throw AppError.new({

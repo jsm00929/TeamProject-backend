@@ -1,3 +1,3 @@
-export function isNotEmpty(o: object) {
-  return Object.keys(o).length > 0;
+export function isEmptyObject(o: object) {
+    return Object.keys(o).length === 0;
 }

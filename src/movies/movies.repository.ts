@@ -1,9 +1,155 @@
-import {PaginationQuery} from '../core/dtos/inputs';
 import {prisma} from '../config/db';
 import {CreateMovieInput} from './dtos/inputs/create_movie.input';
 import {GenreOutput} from './dtos/outputs/genre.output';
+import {MovieRecord, prismaClient, TxRecord, UserMovieRecord, UserRecord,} from '../core/types/tx';
+import {MoviesPaginationQuery, UserMoviesPaginationQuery} from './movies_pagination.query';
+import {Genre} from './genre.enum';
 
-async function toggleFavoriteMovie(userId: number, movieId: number) {
+// FETCH
+async function findById(
+    {movieId, tx}: Pick<MovieRecord, 'movieId'> & TxRecord,
+    include?: Partial<{ genres: boolean }>,
+) {
+    return prismaClient(tx).movie.findUnique({
+        where: {
+            id: movieId,
+        },
+        ...(include !== undefined && {include}),
+    });
+}
+
+async function findMany(
+    {tx}: TxRecord,
+    {
+        criteria,
+        genre,
+        count,
+        order,
+        after,
+        include,
+    }: MoviesPaginationQuery,
+) {
+
+    const movies = await prismaClient(tx).movie.findMany({
+        orderBy: {
+            [criteria]: order,
+        },
+        where:
+            genre !== Genre.ALL
+                ? {
+                    genres: {
+                        some: {
+                            name: genre,
+                        },
+                    },
+                }
+                : {},
+        ...(after !== undefined && {cursor: {id: after}}),
+        skip: after !== undefined ? 1 : 0,
+        take: count + 1,
+        include: {
+            genres: true,
+            ...(include !== undefined && {[include]: true})
+        },
+    });
+
+    const res = {
+        movies,
+        hasMore: false,
+    };
+
+
+    if (movies.length > count) {
+        res.hasMore = true;
+        movies.pop();
+    }
+
+    return res;
+}
+
+async function findManyByUserId(
+    {userId, tx}: Pick<UserRecord, 'userId'> & TxRecord,
+    {
+        count,
+        after,
+        filter,
+        include,
+    }: UserMoviesPaginationQuery,
+) {
+    const movies = await prismaClient(tx).userMovie.findMany({
+        orderBy: {
+            viewedAt: 'desc',
+        },
+        where:
+            {
+                userId,
+
+            },
+        ...(after !== undefined && {cursor: {id: after}}),
+        skip: after !== undefined ? 1 : 0,
+        take: count + 1,
+
+    });
+
+    console.log(movies);
+
+    const res = {
+        movies,
+        hasMore: false,
+    };
+
+
+    if (movies.length > count) {
+        res.hasMore = true;
+        movies.pop();
+    }
+
+    return res;
+}
+
+async function findMovieDetailById({
+                                       movieId,
+                                       tx,
+                                   }: Pick<MovieRecord, 'movieId'> & TxRecord) {
+    return findById({movieId, tx}, {genres: true});
+}
+
+
+async function findUserMovies({
+                                  userId,
+                                  movieId,
+                                  tx,
+                              }: Pick<UserRecord, 'userId'> & Pick<MovieRecord, 'movieId'> & TxRecord) {
+    return prismaClient(tx).userMovie.findFirst({
+        where: {
+            userId,
+            movieId,
+        },
+    });
+}
+
+// MUTATION
+async function updateUserMovie(
+    {
+        userId,
+        movieId,
+        tx,
+    }: Pick<UserRecord, 'userId'> & Pick<MovieRecord, 'movieId'> & TxRecord,
+    data: Partial<UserMovieRecord>,
+) {
+    await prismaClient(tx).userMovie.update({
+        where: {
+            id: (await findUserMovies({userId, movieId, tx}))!.id,
+        },
+        data,
+    });
+}
+
+// TODO:
+async function toggleFavoriteMovie({
+                                       userId,
+                                       movieId,
+                                   }: Pick<UserRecord, 'userId'> & Pick<MovieRecord, 'movieId'>) {
     await prisma.$transaction(async (prisma) => {
         let userMovie = await prisma.userMovie.findFirst({
             where: {
@@ -32,9 +178,13 @@ async function toggleFavoriteMovie(userId: number, movieId: number) {
     });
 }
 
-async function updateViewedAt(userId: number, movieId: number) {
-    await prisma.$transaction(async (prisma) => {
-        let userMovie = await prisma.userMovie.findFirst({
+async function updateViewedAt({
+                                  userId,
+                                  movieId,
+                                  tx,
+                              }: Pick<UserRecord, 'userId'> & Pick<MovieRecord, 'movieId'> & TxRecord) {
+    await prisma.$transaction(async (tx) => {
+        let userMovie = await prismaClient(tx).userMovie.findFirst({
             where: {
                 userId,
                 movieId,
@@ -42,7 +192,7 @@ async function updateViewedAt(userId: number, movieId: number) {
         });
 
         if (!userMovie) {
-            userMovie = await prisma.userMovie.create({
+            userMovie = await prismaClient(tx).userMovie.create({
                 data: {
                     userId,
                     movieId,
@@ -50,7 +200,7 @@ async function updateViewedAt(userId: number, movieId: number) {
             });
         }
 
-        await prisma.userMovie.update({
+        await prismaClient(tx).userMovie.update({
             where: {
                 id: userMovie.id,
             },
@@ -61,52 +211,45 @@ async function updateViewedAt(userId: number, movieId: number) {
     });
 }
 
-async function getRecentlyViewed(
-    userId: number,
-    {skip, take}: PaginationQuery,
-) {
-    return prisma.userMovie.findMany({
-        where: {
-            userId,
-        },
-        orderBy: {
-            viewedAt: 'desc',
-        },
-        include: {
-            movie: true,
-        },
-        skip,
-        take,
-    });
-}
+// 최근 본 영화 목록 지우기
 
-async function getFavorites(userId: number, {skip, take}: PaginationQuery) {
-    return prisma.userMovie.findMany({
-        where: {
-            userId,
-            isFavorite: true,
-        },
-        orderBy: {
-            viewedAt: 'desc',
-        },
-        include: {
-            movie: true,
-        },
-        skip,
-        take,
-    });
-}
+// async function getRecentlyViewed(
+//     {userId, tx}: Pick<UserRecord, 'userId'> & TxRecord,
+//     {skip, take}: PaginationQuery,
+// ) {
+//     return prisma.userMovie.findMany({
+//         where: {
+//             userId,
+//         },
+//         orderBy: {
+//             viewedAt: 'desc',
+//         },
+//         include: {
+//             movie: true,
+//         },
+//         skip,
+//         take,
+//     });
+// }
 
-async function getMovieDetail(movieId: number) {
-    return prisma.movie.findUnique({
-        where: {
-            id: movieId,
-        },
-        include: {
-            genres: true,
-        },
-    });
-}
+// async function favorites(
+//     {userId, tx}: Pick<UserRecord, 'userId'> & TxRecord,
+//     {skip, take}: PaginationQuery) {
+//     return prisma.userMovie.findMany({
+//         where: {
+//             userId,
+//             isFavorite: true,
+//         },
+//         orderBy: {
+//             viewedAt: 'desc',
+//         },
+//         include: {
+//             movie: true,
+//         },
+//         skip,
+//         take,
+//     });
+// }
 
 // async function getRecentlyViewedMovies(
 //   userId: number,
@@ -133,25 +276,8 @@ async function getMovieDetail(movieId: number) {
 //   return movies.map((m) => m.movie);
 // }
 
-async function getPopularMovies({skip, take}: PaginationQuery) {
-    return prisma.movie.findMany({
-        orderBy: [
-            {
-                popularity: 'desc',
-            },
-            {
-                releaseDate: 'desc',
-            },
-        ],
-        skip,
-        take,
-        include: {
-            genres: true,
-        },
-    });
-}
 
-async function createMany(createMovieDtos: CreateMovieInput[]) {
+async function createMany({tx}: TxRecord, data: CreateMovieInput[]) {
     await prisma.movie.createMany({
         data: [],
     });
@@ -227,14 +353,15 @@ async function upsertGenre({id, name}: GenreOutput) {
 }
 
 export default {
+    findById,
+    findMany,
+    findManyByUserId,
+    findMovieDetailById,
     toggleFavoriteMovie,
+    updateUserMovie,
     updateViewedAt,
-    getMovieDetail,
-    getPopularMovies,
     createMany,
     findAllGenres,
     upsert,
     upsertGenre,
-    getRecentlyViewed,
-    getFavorites,
 };

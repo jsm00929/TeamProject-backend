@@ -1,15 +1,22 @@
-import {PaginationQuery} from '../core/dtos/inputs';
 import {prisma} from '../config/db';
 import {CreateMovieReviewBody} from './dtos/create_movie_review.body';
 import {EditMovieReviewBody} from './dtos/edit_review.body';
-import {MovieRecord, prismaClient, RatingRecord, ReviewRecord, Tx, TxRecord, UserRecord} from "../core/types/tx";
+import {
+    MovieRecord,
+    PaginationRecord,
+    prismaClient,
+    RatingRecord,
+    ReviewRecord,
+    Tx,
+    TxRecord,
+    UserRecord
+} from "../core/types/tx";
 
 /**
  * 조회(Fetch)
  */
 async function findManyByAuthorId(
-    userId: number,
-    {skip, take}: PaginationQuery,
+    {userId, skip, take}: Pick<UserRecord, 'userId'> & PaginationRecord,
 ) {
     return prisma.review.findMany({
         where: {

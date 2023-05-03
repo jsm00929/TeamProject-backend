@@ -63,7 +63,9 @@ async function updatePassword(
 
 }
 
-async function updateAvatar(userId: number, filename: string) {
+async function updateAvatar(
+    {userId, filename}: Pick<UserRecord, 'userId'> & { filename: string | null }
+) {
 
     let user: User | null = null;
     let absoluteAvatarPath: string | null = null;
@@ -84,7 +86,7 @@ async function updateAvatar(userId: number, filename: string) {
 
             const prevAvatarUrl = user.avatarUrl;
 
-            avatarUrl = filenameIntoStaticUrl(filename, 'avatars');
+            avatarUrl = filename !== null ? filenameIntoStaticUrl(filename, 'avatars') : null;
 
             await usersRepository.update({userId, tx}, {avatarUrl});
 
@@ -97,6 +99,9 @@ async function updateAvatar(userId: number, filename: string) {
                 await removeFile(prevAbsoluteAvatarPath);
             }
 
+            if (filename === null) {
+                return null;
+            }
             const absoluteTempPath = filenameIntoAbsoluteTempPath(filename);
             absoluteAvatarPath = filenameIntoStaticPath(filename, 'avatars', true);
 
@@ -110,10 +115,14 @@ async function updateAvatar(userId: number, filename: string) {
         if (absoluteAvatarPath !== null) {
             await removeFileOrThrow(absoluteAvatarPath);
         }
+        throw error;
     }
 }
 
-async function updateName({userId}: Pick<UserRecord, 'userId'>, {name}: UpdateMyNameBody) {
+async function updateName(
+    {userId}: Pick<UserRecord, 'userId'>,
+    {name}: UpdateMyNameBody
+) {
 
     return prisma.$transaction(async (tx) => {
 
@@ -132,7 +141,9 @@ async function updateName({userId}: Pick<UserRecord, 'userId'>, {name}: UpdateMy
 
 }
 
-async function withdraw({userId, password}: Pick<UserRecord, 'userId'> & Pick<Partial<UserRecord>, 'password'>) {
+async function withdraw(
+    {userId, password}: Pick<UserRecord, 'userId'> & Pick<Partial<UserRecord>, 'password'>
+) {
 
     return prisma.$transaction(async (tx) => {
 

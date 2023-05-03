@@ -1,6 +1,5 @@
 import moviesService from './movies.service';
 import {AuthRequestWith, RequestWith} from '../core/types/request_with';
-import {PaginationQuery} from '../core/dtos/inputs/pagination.query';
 import {MovieIdParams} from './dtos/inputs/get_movie_detail.params';
 import {AppResult} from '../core/types/app_result';
 import reviewsService from '../reviews/reviews.service';
@@ -8,18 +7,32 @@ import {EditMovieReviewBody} from '../reviews/dtos/edit_review.body';
 import {ReviewIdParams} from '../reviews/dtos/review_id.params';
 import {CreateMovieReviewBody} from '../reviews/dtos/create_movie_review.body';
 import {HttpStatus} from '../core/constants';
+import {MoviesPaginationQuery} from './movies_pagination.query';
 
-async function getPopularMovies(req: RequestWith<PaginationQuery>) {
-    const paginationInput = req.unwrap();
-    const movies = await moviesService.getPopularMovies(paginationInput);
+async function movies(req: RequestWith<MoviesPaginationQuery>) {
+    const {after, count, include, genre, order, criteria} = req.unwrap();
+    const movies = await moviesService.movies({criteria, order, genre, include, count, after});
 
-    return AppResult.new({body: movies});
+    return AppResult.new({
+        body: movies,
+    })
 }
 
-async function getMovieDetail(req: AuthRequestWith<never, MovieIdParams>) {
+// async function popularMovies(req: RequestWith<PaginationQuery>) {
+//     const {unwrapCursor, after: skip, count: take} = req.unwrap();
+//     const movies = await moviesService.popularMovies({
+//         after: skip,
+//         count: take,
+//         unwrapCursor,
+//     });
+//
+//     return AppResult.new({body: movies});
+// }
+
+async function movieDetail(req: AuthRequestWith<never, MovieIdParams>) {
     const userId = req.userId;
     const {movieId} = req.unwrapParams();
-    const movieDetail = await moviesService.getMovieDetail(userId, movieId);
+    const movieDetail = await moviesService.movieDetail({userId, movieId});
 
     return AppResult.new({body: movieDetail});
 }
@@ -38,7 +51,7 @@ async function writeReview(
     const reviewId = await reviewsService.write(
         {
             userId,
-            movieId
+            movieId,
         },
         body,
     );
@@ -67,8 +80,8 @@ async function removeReview(req: AuthRequestWith<never, ReviewIdParams>) {
 }
 
 export default {
-    getPopularMovies,
-    getMovieDetail,
+    movies,
+    movieDetail,
     writeReview,
     editReview,
     removeReview,
