@@ -1,17 +1,18 @@
 import express, {Express, Router} from 'express';
-import usersRouter from './users/users.router';
 import {Config} from './config/env';
 import {handleErrors, handleNotFoundError} from './core/middlewares';
 import {log} from './utils/logger';
 import cookieParser from 'cookie-parser';
-import authRouter from './auth/auth.router';
-import moviesRouter from './movies/movies.router';
 import swaggerUi from 'swagger-ui-express';
 import cors from 'cors';
-import reviewsRouter from './reviews/reviews.router';
 import {STATIC_AVATARS_PATH, STATIC_AVATARS_URL} from './config/constants';
 import {parseSwaggerDoc} from './utils/parsers';
 import path from 'path';
+import {moviesRouter} from "./movies/controllers/movies.controller";
+import {usersRouter} from "./users/controllers/users.controller";
+import {authRouter} from "./auth/auth.controller";
+import {moviesReviewsRouter} from "./movies/controllers/movies.reviews.controller";
+
 
 // Singleton App instance
 export class App {
@@ -65,7 +66,6 @@ export class App {
 
     private setCors() {
         if (['dev', 'ngrok'].includes(this.config.env)) {
-            console.log(this.config.env);
             this.app.use(
                 cors({
                     origin: this.config.allowedOrigins,
@@ -82,13 +82,14 @@ export class App {
                 res.send('<h1>HOME: 서버가 잘 작동하고 있음</h1>'),
             );
         }
-        const apiRouter = Router();
-        this.app.use('/api', apiRouter);
-        apiRouter.use('/auth', authRouter);
-        apiRouter.use('/users', usersRouter);
-        apiRouter.use('/movies', moviesRouter);
-        apiRouter.use('/reviews', reviewsRouter);
-        // apiRouter.use('/comments', moviesRouter);
+
+        const api = Router();
+        this.app.use('/api', api);
+        api.use('/auth', authRouter);
+        api.use('/users', usersRouter);
+        api.use('/movies', moviesRouter);
+        api.use('/movies', moviesReviewsRouter);
+        // api.use('/reviews', router.reviews);
     }
 
     // 오류 처리 미들웨어, 404 미들웨어 로드

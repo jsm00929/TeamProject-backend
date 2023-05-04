@@ -1,11 +1,10 @@
-import { ClassConstructor } from 'class-transformer';
-import { plainToClass } from 'class-transformer';
-import { validate } from 'class-validator';
-import { NextFunction } from 'express';
-import { RequestWith } from '../types/request_with';
-import { AppError } from '../types/app_error';
-import { ErrorMessages } from '../constants/error_messages';
-import { parseIntProps } from '../../utils/parsers';
+import {ClassConstructor, plainToClass} from 'class-transformer';
+import {validate} from 'class-validator';
+import {NextFunction} from 'express';
+import {RequestWith} from '../types/request_with';
+import {AppError} from '../types/app_error';
+import {ErrorMessages} from '../enums/error_messages';
+import {parseIntProps} from '../../utils/parsers';
 
 /**
  *
@@ -22,21 +21,21 @@ import { parseIntProps } from '../../utils/parsers';
  * RequestWith<ClassName>으로 명시해야 함.
  */
 export function mustValidBody<I>(cls: ClassConstructor<I>) {
-  return async (req: RequestWith<I>, _, next: NextFunction) => {
-    const body = plainToClass(cls, req.body);
+    return async (req: RequestWith<I>, _, next: NextFunction) => {
+        const body = plainToClass(cls, req.body);
 
-    const errors = await validate(body as object);
-    if (errors.length > 0) {
-      return next(
-        AppError.new({
-          message: ErrorMessages.INVALID_REQUEST_BODY,
-        }),
-      );
-    }
+        const errors = await validate(body as object);
+        if (errors.length > 0) {
+            return next(
+                AppError.new({
+                    message: ErrorMessages.INVALID_REQUEST_BODY,
+                }),
+            );
+        }
 
-    req.unwrap = () => body;
-    next();
-  };
+        req.unwrap = () => body;
+        next();
+    };
 }
 
 /**
@@ -54,21 +53,21 @@ export function mustValidBody<I>(cls: ClassConstructor<I>) {
  * RequestWith<ClassName>으로 명시해야 함.
  */
 export function mustValidQuery<Q>(cls: ClassConstructor<Q>) {
-  return async (req: RequestWith<Q>, _, next: NextFunction) => {
-    const query = plainToClass(cls, parseIntProps(req.query));
+    return async (req: RequestWith<Q>, _, next: NextFunction) => {
+        const query = plainToClass(cls, parseIntProps(req.query));
 
-    const errors = await validate(query as object);
-    if (errors.length > 0) {
-      return next(
-        AppError.new({
-          message: ErrorMessages.INVALID_REQUEST_QUERY,
-        }),
-      );
-    }
+        const errors = await validate(query as object);
+        if (errors.length > 0) {
+            return next(
+                AppError.new({
+                    message: ErrorMessages.INVALID_REQUEST_QUERY,
+                }),
+            );
+        }
 
-    req.unwrap = () => query;
-    next();
-  };
+        req.unwrap = () => query;
+        next();
+    };
 }
 
 /**
@@ -86,21 +85,21 @@ export function mustValidQuery<Q>(cls: ClassConstructor<Q>) {
  * RequestWith<ClassName>으로 명시해야 함.
  */
 export function mustValidParams<P>(cls: ClassConstructor<P>) {
-  return async (req: RequestWith<never, P>, _, next: NextFunction) => {
-    const params = plainToClass(cls, parseIntProps(req.params));
+    return async (req: RequestWith<never, P>, _, next: NextFunction) => {
+        const params = plainToClass(cls, parseIntProps(req.params));
 
-    const errors = await validate(params as object);
-    if (errors.length > 0) {
-      return next(
-        AppError.new({
-          message: ErrorMessages.INVALID_REQUEST_PARAMS,
-        }),
-      );
-    }
+        const errors = await validate(params as object);
+        if (errors.length > 0) {
+            return next(
+                AppError.new({
+                    message: ErrorMessages.INVALID_REQUEST_PARAMS,
+                }),
+            );
+        }
 
-    req.unwrapParams = () => params;
-    next();
-  };
+        req.unwrapParams = () => params;
+        next();
+    };
 }
 
 // export function _mustValid<T, P>(

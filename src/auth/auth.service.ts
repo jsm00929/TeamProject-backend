@@ -20,7 +20,7 @@ async function signUp({email, name, password}: SignupBody) {
             });
         }
 
-        return usersRepository.create({tx}, {
+        return usersRepository.createUser({tx}, {
             email,
             name,
             password: await hashPassword(password),
@@ -33,7 +33,7 @@ async function login({email, password}: LoginBody) {
 
     return prisma.$transaction(async (tx) => {
 
-        const user = await usersRepository.findByEmail({email, tx});
+        const user = await usersRepository.findUserWithPasswordByEmail({email, tx});
 
         // 로그인 하려는 계정이 DB에 없음
         if (user === null) {
@@ -75,7 +75,7 @@ async function googleSignupRedirect(code: string) {
 
 
     return prisma.$transaction(async (tx) => {
-            const user = await usersRepository.findByEmail({tx, email});
+            const user = await usersRepository.findUserByEmail({tx, email});
             if (user !== null) {
                 throw AppError.new({
                     message: ErrorMessages.DUPLICATE_USER,
@@ -83,7 +83,7 @@ async function googleSignupRedirect(code: string) {
                 });
             }
 
-            return usersRepository.createWithoutPassword({
+            return usersRepository.createUserWithoutPassword({
                     tx,
                 },
                 {
@@ -107,7 +107,7 @@ async function googleLoginRedirect(code: string) {
 
     return prisma.$transaction(async (tx) => {
 
-        const user = await usersRepository.findByEmail({email, tx});
+        const user = await usersRepository.findUserByEmail({email, tx});
 
         if (!user) {
             throw AppError.new({

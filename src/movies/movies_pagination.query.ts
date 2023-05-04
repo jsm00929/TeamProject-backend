@@ -1,6 +1,6 @@
 import {IsEnum, IsIn, IsOptional, IsString,} from 'class-validator';
 import {PaginationQuery} from '../core/dtos/inputs';
-import {Genre} from './genre.enum';
+import {Genre} from './dtos/genre.enum';
 
 enum MovieSortingCriteria {
     POPULARITY = 'popularity',

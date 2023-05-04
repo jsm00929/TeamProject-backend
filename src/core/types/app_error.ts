@@ -1,4 +1,4 @@
-import {HttpStatus} from '../constants/http_status';
+import {HttpStatus} from '../enums/http_status';
 
 interface AppErrorArgs {
     message: string;

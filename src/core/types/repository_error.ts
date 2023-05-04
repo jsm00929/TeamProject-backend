@@ -1,28 +1,44 @@
-import { HttpStatus } from '../constants/http_status';
+import {HttpStatus} from '../enums/http_status';
+import {Into} from "./into";
+import {AppError} from "./app_error";
+import {ErrorMessages} from "../constants";
+import {RepositoryErrorKind} from "../enums/repository_error_kind";
+import {RepositoryKind} from "../enums/repository_kind";
 
 interface RepositoryErrorArgs {
-  message: string;
-  query: string;
+    repositoryKind: RepositoryKind;
+    errorKind: RepositoryErrorKind;
 }
 
-export class RepositoryError extends Error {
-  status: HttpStatus;
+export class RepositoryError extends Error implements Into<AppError> {
+    repositoryKind: RepositoryKind;
+    errorKind: RepositoryErrorKind;
 
-  private constructor(message: string) {
-    super(message);
-  }
+    private constructor({repositoryKind, errorKind}: RepositoryErrorArgs) {
+        const message = `DB ERROR at ${repositoryKind},
+        ERROR KIND: ${errorKind}`;
+        super(message);
+        this.repositoryKind = repositoryKind;
+        this.errorKind = errorKind;
+    }
 
-  /**
-   * @description status 생략 가능, default = 400 BAD_REQUEST
-   * @example
-   * const someError = AppError.new({
-   *    message: '뭔가 이상해요. 오류 났음',
-   *    status: HttpStatus.BAD_REQUEST,
-   * });
-   *
-   * throw someError;
-   */
-  static new({ message }: RepositoryErrorArgs) {
-    return new this(message);
-  }
+
+    public static new(args: RepositoryErrorArgs) {
+        return new this(args);
+    }
+
+    public into(): AppError {
+        if (this.errorKind === RepositoryErrorKind.NOT_FOUND_ERROR) {
+            return AppError.new({
+                message: ErrorMessages.NOT_FOUND,
+                status: HttpStatus.NOT_FOUND,
+            });
+        }
+
+        return AppError.new({
+            message: ErrorMessages.INTERNAL_SERVER_ERROR,
+            status: HttpStatus.INTERNAL_SERVER_ERROR,
+        });
+
+    }
 }

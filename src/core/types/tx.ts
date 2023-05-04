@@ -55,6 +55,18 @@ export interface MovieRecord {
     movieId: number;
 }
 
+export interface LikeMovieRecord {
+    likeMovieId: number;
+}
+
+export interface FavoriteMovieRecord {
+    favoriteMovieId: number;
+}
+
+export interface MovieHistoryId {
+    movieHistoryId: number;
+}
+
 export interface RatingRecord {
     ratingId: number;
     rating: number;

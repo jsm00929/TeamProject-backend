@@ -3,6 +3,7 @@ import {AppError} from '../types';
 import {ErrorMessages, HttpStatus} from '../constants';
 import {clearAuthCookies} from '../../utils/cookie_store';
 import {log} from '../../utils/logger';
+import {RepositoryError} from "../types/repository_error";
 
 const {
     EXPIRED_REFRESH_TOKEN,
@@ -14,8 +15,9 @@ const {
 export function handleErrors(error: Error, _, res: Response, __) {
     log.debug(error);
 
-
-    if (error instanceof AppError) {
+    if (error instanceof RepositoryError) {
+        error = error.into();
+    } else if (error instanceof AppError) {
         // 유효하지 않은 쿠키
         if (error.message === INVALID_TOKEN) {
             clearAuthCookies(res);
@@ -34,8 +36,6 @@ export function handleErrors(error: Error, _, res: Response, __) {
 
         return res.status(error.status).json(body);
     }
-
-    log.error(error);
 
     res.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({

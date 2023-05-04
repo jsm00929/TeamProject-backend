@@ -1,5 +1,6 @@
 import {CreateUserBody} from './dtos/inputs/create_user.body';
 import {prismaClient, TxRecord, UserRecord} from "../core/types/tx";
+import {UserOutput, UserWithPasswordOutput} from "../auth/dtos/outputs/user.output";
 
 /**
  * Fetch
@@ -9,47 +10,80 @@ import {prismaClient, TxRecord, UserRecord} from "../core/types/tx";
  * @description
  * 사용자 정보 가져오기(by Id)
  */
-async function findById({userId: id, tx}: Pick<UserRecord, 'userId'> & TxRecord) {
+
+async function findUserById(
+    {userId: id, tx}: Pick<UserRecord, 'userId'> & TxRecord
+): Promise<UserOutput | null> {
     const user = await prismaClient(tx).user.findUnique({where: {id}});
 
     if (user === null || user.deletedAt !== null) {
         return null;
     }
-    return user;
+    return UserOutput.from(user);
 }
 
-async function findByEmail({email, tx}: Pick<UserRecord, 'email'> & TxRecord) {
+async function findUserWithPasswordById(
+    {userId: id, tx}: Pick<UserRecord, 'userId'> & TxRecord
+): Promise<UserWithPasswordOutput | null> {
+    const user = await prismaClient(tx).user.findUnique({where: {id}});
+
+    if (user === null || user.deletedAt !== null) {
+        return null;
+    }
+    return UserWithPasswordOutput.from(user);
+}
+
+async function findUserWithPasswordByEmail(
+    {email, tx}: Pick<UserRecord, 'email'> & TxRecord
+): Promise<UserWithPasswordOutput | null> {
     const user = await prismaClient(tx).user.findUnique({where: {email}});
 
     if (user === null || user.deletedAt !== null) {
         return null;
     }
-    return user;
+    return UserWithPasswordOutput.from(user);
+}
+
+
+async function findUserByEmail(
+    {email, tx}: Pick<UserRecord, 'email'> & TxRecord
+): Promise<UserOutput | null> {
+
+    const user = await prismaClient(tx).user.findUnique({where: {email}});
+
+    if (user === null || user.deletedAt !== null) {
+        return null;
+    }
+    return UserOutput.from(user);
 }
 
 /**
  * @description
  * 사용자 존재 여부 확인(by Id)
  */
-async function isExistsById({userId, tx}: Pick<UserRecord, 'userId'> & TxRecord) {
-    return (await findById({userId, tx})) !== null;
+async function isExistsById(
+    {userId, tx}: Pick<UserRecord, 'userId'> & TxRecord
+): Promise<boolean> {
+    return (await findUserById({userId, tx})) !== null;
 }
 
 /**
  * @description
  * 사용자 존재 여부 확인(by Email)
  */
-async function isExistsByEmail({email, tx}: Pick<UserRecord, 'email'> & TxRecord) {
-    return (await findByEmail({email, tx})) !== null;
+async function isExistsByEmail(
+    {email, tx}: Pick<UserRecord, 'email'> & TxRecord
+): Promise<boolean> {
+    return (await findUserByEmail({email, tx})) !== null;
 }
 
 /**
  * CREATE
  */
-async function create(
+async function createUser(
     {tx}: TxRecord,
     {email, name, password}: CreateUserBody
-) {
+): Promise<number> {
     const user = await prismaClient(tx).user.create({
         data: {
             email,
@@ -60,7 +94,7 @@ async function create(
     return user.id;
 }
 
-async function createWithoutPassword(
+async function createUserWithoutPassword(
     {tx}: TxRecord,
     {
         email,
@@ -80,7 +114,7 @@ async function createWithoutPassword(
 /**
  * UPDATE
  */
-async function update(
+async function updateUser(
     {userId, tx}: Pick<UserRecord, 'userId'> & TxRecord,
     data: Omit<Partial<UserRecord>, 'email'>
 ) {
@@ -93,7 +127,7 @@ async function update(
     });
 }
 
-async function remove({userId, tx}: Pick<UserRecord, 'userId'> & TxRecord) {
+async function removeUser({userId, tx}: Pick<UserRecord, 'userId'> & TxRecord) {
 
     await prismaClient(tx).user.update({
         where: {id: userId},
@@ -107,12 +141,14 @@ async function remove({userId, tx}: Pick<UserRecord, 'userId'> & TxRecord) {
  * export
  */
 export default {
-    findById,
-    findByEmail,
+    findUserById,
+    findUserByEmail,
+    findUserWithPasswordById,
+    findUserWithPasswordByEmail,
     isExistsById,
     isExistsByEmail,
-    create,
-    createWithoutPassword,
-    update,
-    remove,
+    createUser,
+    createUserWithoutPassword,
+    updateUser,
+    removeUser,
 };

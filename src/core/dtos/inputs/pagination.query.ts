@@ -21,12 +21,5 @@ export class PaginationQuery {
         this.count = count;
     }
 
-    // public unwrapCursor(): Cursor | null {
-    //     if (this.after === undefined || this.after === null) {
-    //         return null;
-    //     }
-    //     return {
-    //         id: this.after,
-    //     };
-    // }
 }
+

@@ -1,7 +1,6 @@
 import {AppError} from '../core/types';
 import {ErrorMessages, HttpStatus} from '../core/constants';
 import usersRepository from './users.repository';
-import {userEntityIntoUserOutput,} from './dtos/outputs/user.output';
 import {UpdateMyPasswordBody} from './dtos/inputs/update_my_password.body';
 import {UpdateMyNameBody} from './dtos/inputs/update_my_name.body';
 import {comparePassword, hashPassword} from '../utils/hash';
@@ -15,16 +14,14 @@ import {
 import {moveFile, removeFile, removeFileOrThrow} from '../utils/file_utils';
 import {log} from '../utils/logger';
 import {UserRecord} from "../core/types/tx";
-import {User} from "@prisma/client";
+import {UserOutput} from "../auth/dtos/outputs/user.output";
 
-async function userById({userId}: Pick<UserRecord, 'userId'>) {
-    const user = await usersRepository.findById({userId});
-    return user !== null ? userEntityIntoUserOutput(user) : null;
+async function userById({userId}: Pick<UserRecord, 'userId'>): Promise<UserOutput | null> {
+    return usersRepository.findUserById({userId});
 }
 
 async function userByEmail({email}: Pick<UserRecord, 'email'>) {
-    const user = await usersRepository.findByEmail({email});
-    return user !== null ? userEntityIntoUserOutput(user) : null;
+    return usersRepository.findUserByEmail({email});
 }
 
 async function updatePassword(
@@ -33,7 +30,7 @@ async function updatePassword(
 ) {
     return prisma.$transaction(async (tx) => {
 
-        const user = await usersRepository.findById({userId, tx});
+        const user = await usersRepository.findUserWithPasswordById({userId, tx});
 
         if (!user) {
             throw AppError.new({
@@ -57,7 +54,7 @@ async function updatePassword(
         }
 
         const hashedPassword = await hashPassword(newPassword);
-        await usersRepository.update({userId, tx}, {password: hashedPassword});
+        await usersRepository.updateUser({userId, tx}, {password: hashedPassword});
     });
 
 
@@ -67,7 +64,7 @@ async function updateAvatar(
     {userId, filename}: Pick<UserRecord, 'userId'> & { filename: string | null }
 ) {
 
-    let user: User | null = null;
+    let user: UserOutput | null = null;
     let absoluteAvatarPath: string | null = null;
     let avatarUrl: string | null = null;
 
@@ -75,7 +72,7 @@ async function updateAvatar(
     try {
         return prisma.$transaction(async (tx) => {
 
-            user = await usersRepository.findById({userId, tx});
+            user = await usersRepository.findUserById({userId, tx});
 
             if (!user) {
                 throw AppError.new({
@@ -88,7 +85,7 @@ async function updateAvatar(
 
             avatarUrl = filename !== null ? filenameIntoStaticUrl(filename, 'avatars') : null;
 
-            await usersRepository.update({userId, tx}, {avatarUrl});
+            await usersRepository.updateUser({userId, tx}, {avatarUrl});
 
             if (prevAvatarUrl) {
                 const prevAbsoluteAvatarPath = staticUrlIntoPath(
@@ -135,7 +132,7 @@ async function updateName(
             });
         }
 
-        await usersRepository.update({userId, tx}, {name});
+        await usersRepository.updateUser({userId, tx}, {name});
 
     });
 
@@ -147,7 +144,7 @@ async function withdraw(
 
     return prisma.$transaction(async (tx) => {
 
-        const user = await usersRepository.findById({userId, tx});
+        const user = await usersRepository.findUserWithPasswordById({userId, tx});
 
         if (!user) {
             throw AppError.new({
@@ -165,7 +162,7 @@ async function withdraw(
             }
         }
 
-        await usersRepository.remove({userId, tx});
+        await usersRepository.removeUser({userId, tx});
     });
 
 }

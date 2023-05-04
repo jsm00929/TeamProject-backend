@@ -7,7 +7,6 @@ import {
     prismaClient,
     RatingRecord,
     ReviewRecord,
-    Tx,
     TxRecord,
     UserRecord
 } from "../core/types/tx";
@@ -109,8 +108,10 @@ async function update(
     });
 }
 
-async function remove(tx: Tx, reviewId: number) {
-    await prisma.review.update({
+async function remove(
+    {tx, reviewId}: TxRecord & Pick<ReviewRecord, 'reviewId'>
+) {
+    await prismaClient(tx).review.update({
         where: {
             id: reviewId,
         },

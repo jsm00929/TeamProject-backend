@@ -62,7 +62,7 @@ async function edit(
             });
         }
 
-        await reviewsRepository.update({reviewId}, body);
+        await reviewsRepository.update({reviewId, tx}, body);
     });
 
 }
@@ -90,7 +90,7 @@ async function remove({userId, reviewId}: Pick<UserRecord, 'userId'> & Pick<Revi
 
         const {rating, movieId} = review
 
-        await reviewsRepository.remove(tx, reviewId);
+        await reviewsRepository.remove({tx, reviewId});
 
         if (rating !== null) {
             await reviewsRepository.createRating({movieId, rating: -rating, tx});

@@ -1,9 +1,9 @@
 import {JwtPayload, sign, verify} from 'jsonwebtoken';
 import {Config} from '../config/env';
-import {ErrorMessages} from '../core/constants/error_messages';
+import {ErrorMessages} from '../core/enums/error_messages';
 import {ACCESS_TOKEN_MAX_AGE, REFRESH_TOKEN_MAX_AGE,} from '../config/constants';
-import {AppError} from '../core/types/app_error';
-import {HttpStatus} from '../core/constants/http_status';
+import {AppError} from '../core/types';
+import {HttpStatus} from '../core/enums/http_status';
 
 const {accessTokenSecret, refreshTokenSecret} = Config.env;
 

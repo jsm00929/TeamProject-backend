@@ -1,19 +1,32 @@
-import {Request, Response} from 'express';
-import {RequestWith} from '../core/types/request_with';
+import {Request, Response, Router} from 'express';
+import {AppError, RequestWith} from '../core/types';
 import {SignupBody} from './dtos/inputs/signup.body';
 import authService from './auth.service';
-import {HttpStatus} from '../core/constants/http_status';
+import {ErrorMessages, HttpStatus} from '../core/constants';
 import {LoginBody} from './dtos/inputs/login.body';
 import {clearAuthCookies, setAccessTokenCookie, setAuthCookies,} from '../utils/cookie_store';
 import {GOOGLE_LOGIN_OAUTH2_URL, GOOGLE_SIGNUP_OAUTH2_URL, REFRESH_TOKEN_COOKIE_NAME,} from '../config/constants';
 import {verifyRefreshToken} from '../utils/token';
 import {AppResult} from '../core/types/app_result';
-import {AppError} from '../core/types';
-import {ErrorMessages} from '../core/constants';
 import {GoogleLoginCodeQuery} from './dtos/inputs/google_login_code.query';
 import {Config} from '../config/env';
+import {handle} from "../core/handle";
 
 const {clientHost, clientPort} = Config.env;
+
+export const authRouter = Router();
+
+/**
+ * @description
+ * 회원 가입
+ */
+authRouter.post(
+    '/signup',
+    handle({
+        bodyCls: SignupBody,
+        controller: signup,
+    }),
+);
 
 async function signup(req: RequestWith<SignupBody>, res: Response) {
     const signupInput = req.unwrap();
@@ -26,6 +39,18 @@ async function signup(req: RequestWith<SignupBody>, res: Response) {
     });
 }
 
+/**
+ * @description
+ * 로그인
+ */
+authRouter.post(
+    '/login',
+    handle({
+        bodyCls: LoginBody,
+        controller: login,
+    }),
+);
+
 async function login(req: RequestWith<LoginBody>, res: Response) {
     const {email, password} = req.unwrap();
     const userId = await authService.login({email, password});
@@ -33,9 +58,28 @@ async function login(req: RequestWith<LoginBody>, res: Response) {
     setAuthCookies(userId, res);
 }
 
+/**
+ * @description
+ * 로그아웃
+ */
+authRouter.post('/logout',
+    handle({
+        controller: logout,
+    }));
+
 async function logout(_, res: Response) {
     clearAuthCookies(res);
 }
+
+/**
+ * @description
+ * AccessToken 재발급
+ */
+authRouter.patch(
+    '/refresh-token',
+    handle({
+        controller: refreshToken
+    }));
 
 async function refreshToken(req: Request, res: Response) {
     const token = req.signedCookies[REFRESH_TOKEN_COOKIE_NAME];
@@ -51,13 +95,46 @@ async function refreshToken(req: Request, res: Response) {
     setAccessTokenCookie(userId, res);
 }
 
+/**
+ * @description
+ * Google Signup
+ */
+authRouter.get(
+    '/signup/google',
+    handle({
+        controller: googleSignup
+    }));
+
 async function googleSignup(req: Request, res: Response) {
     res.redirect(GOOGLE_SIGNUP_OAUTH2_URL);
 }
 
+/**
+ * @description
+ * Google Login
+ */
+authRouter.get(
+    '/login/google',
+    handle({
+        controller: googleLogin
+    }));
+
+
 async function googleLogin(req: Request, res: Response) {
     res.redirect(GOOGLE_LOGIN_OAUTH2_URL);
 }
+
+/**
+ * @description
+ * Google Login Redirect
+ */
+authRouter.get(
+    '/login/google/redirect',
+    handle({
+        queryCls: GoogleLoginCodeQuery,
+        controller: googleLoginRedirect,
+    }),
+);
 
 async function googleLoginRedirect(
     req: RequestWith<GoogleLoginCodeQuery>,
@@ -77,6 +154,19 @@ async function googleLoginRedirect(
     return AppResult.redirect(`http://${clientHost}:${clientPort}/`);
 }
 
+/**
+ * @description
+ * Google Signup Redirect
+ */
+authRouter.get(
+    '/signup/google/redirect',
+    handle({
+        queryCls: GoogleLoginCodeQuery,
+        controller: googleSignupRedirect,
+    }),
+);
+
+
 async function googleSignupRedirect(
     req: RequestWith<GoogleLoginCodeQuery>,
     res: Response,
@@ -93,13 +183,3 @@ async function googleSignupRedirect(
     return AppResult.redirect(`http://${clientHost}:${clientPort}/`);
 }
 
-export default {
-    signup,
-    login,
-    logout,
-    refreshToken,
-    googleLogin,
-    googleLoginRedirect,
-    googleSignup,
-    googleSignupRedirect,
-};

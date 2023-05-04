@@ -1,5 +1,5 @@
-export interface BaseOutput {
-  id: number;
-  createdAt: Date;
-  updatedAt: Date;
+export class BaseOutput {
+    id: number;
+    createdAt: Date;
+    updatedAt: Date;
 }

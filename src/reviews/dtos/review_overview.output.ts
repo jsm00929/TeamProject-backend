@@ -1,11 +1,11 @@
-import { BaseOutput } from '../../core/dtos/outputs/base_output';
-import { UserSimpleInfoOutput } from '../../users/dtos/outputs/user_simple_info.output';
+import {BaseOutput} from '../../core/dtos/outputs/base_output';
+import {UserSimpleInfoOutput} from '../../users/dtos/outputs/user_simple_info.output';
 
 export interface ReviewOverviewOutput extends BaseOutput {
-  title: string;
-  overview: string;
-  rating: number | null;
-  author: UserSimpleInfoOutput;
+    title: string;
+    overview: string;
+    rating: number | null;
+    author: UserSimpleInfoOutput;
 }
 
 // export class ReviewOutput extends BaseOutput {
