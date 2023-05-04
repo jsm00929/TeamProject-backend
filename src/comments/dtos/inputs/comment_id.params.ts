@@ -1,7 +1,7 @@
 import { IsNumber, Min } from 'class-validator';
 
-export class ReviewIdParams {
+export class CommentIdParams {
   @IsNumber()
   @Min(1)
-  reviewId: number;
+  commentId: number;
 }

@@ -1,6 +1,5 @@
 import { Response } from 'express';
-import { ErrorMessages } from '../constants/error_messages';
-import { HttpStatus } from '../constants/http_status';
+import { ErrorMessages, HttpStatus } from '../constants';
 
 export function handleNotFoundError(_, res: Response) {
   res.status(HttpStatus.NOT_FOUND).json({

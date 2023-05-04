@@ -1,10 +1,8 @@
 import { Router } from 'express';
-import { handleResponse } from '../core/middlewares/handle_response';
 import { SignupBody } from './dtos/inputs/signup.body';
 import authController from './auth.controller';
 import { LoginBody } from './dtos/inputs/login.body';
 import { handle } from '../core/handle';
-import { mustAuth } from './middlewares/must_auth';
 import { GoogleLoginCodeQuery } from './dtos/inputs/google_login_code.query';
 
 const authRouter = Router();

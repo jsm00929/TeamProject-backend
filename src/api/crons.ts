@@ -12,8 +12,6 @@ import moviesRepository from '../movies/movies.repository';
 import { prisma } from '../config/db';
 import { CreateUserBody } from '../users/dtos/inputs/create_user.body';
 import { randomEmail, randomNumber, randomString } from '../utils/rand';
-import { CreateMovieReviewBody } from '../reviews/dtos/create_movie_review.body';
-import { CreateMovieReviewDto } from './dtos/create_movie_review.dto';
 import { setTimeout } from 'timers';
 
 const pagePath = path.join(__dirname, 'page.json');

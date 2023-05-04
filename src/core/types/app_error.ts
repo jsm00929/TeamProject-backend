@@ -1,4 +1,4 @@
-import { HttpStatus } from '../constants/http_status';
+import { HttpStatus } from '../constants';
 
 interface AppErrorArgs {
   message: string;
@@ -23,7 +23,7 @@ export class AppError extends Error {
    *
    * throw someError;
    */
-  static new({ message, status = HttpStatus.BAD_REQUEST }: AppErrorArgs) {
+  static new({ message, status = HttpStatus.OK }: AppErrorArgs) {
     return new this(message, status);
   }
 }

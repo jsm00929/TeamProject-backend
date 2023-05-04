@@ -1,18 +1,50 @@
 import { prisma } from '../config/db';
-import { UpdateMovieReviewCommentBody as UpdateMovieCommentBody } from './dtos/inputs/create_movie_review_comment.body';
+import { PaginationQuery } from '../core/dtos/inputs';
+import { CreateMovieReviewCommentBody } from './dtos/inputs/create_movie_review_comment.body';
+import { UpdateMovieReviewCommentBody } from './dtos/inputs/update_movie_review_comment.body';
 
 /**
  * 조회
  */
 async function findById(commentId: number) {
-  return prisma.comment.findUnique({
+  const comment = await prisma.comment.findUnique({
     where: {
       id: commentId,
     },
   });
+
+  return comment === null || comment.deletedAt !== null ? null : comment;
 }
 
-async function exists(commentId: number) {
+async function findManyByReviewId(
+  reviewId: number,
+  { skip, take }: PaginationQuery,
+) {
+  return prisma.comment.findMany({
+    where: {
+      reviewId,
+      deletedAt: null,
+    },
+    skip,
+    take,
+  });
+}
+
+async function findManyByAuthorId(
+  authorId: number,
+  { skip, take }: PaginationQuery,
+) {
+  return prisma.comment.findMany({
+    where: {
+      authorId,
+      deletedAt: null,
+    },
+    skip,
+    take,
+  });
+}
+
+async function isExists(commentId: number) {
   const comment = await findById(commentId);
   return comment !== null;
 }
@@ -28,7 +60,7 @@ async function isAuthor(userId: number, commentId: number) {
 async function create(
   userId: number,
   reviewId: number,
-  { content }: UpdateMovieCommentBody,
+  { content }: CreateMovieReviewCommentBody,
 ) {
   const { id } = await prisma.comment.create({
     data: {
@@ -45,7 +77,7 @@ async function create(
 
 async function update(
   commentId: number,
-  updateMovieCommentBody: UpdateMovieCommentBody,
+  updateMovieCommentBody: UpdateMovieReviewCommentBody,
 ) {
   return prisma.comment.update({
     where: {
@@ -71,7 +103,9 @@ async function remove(reviewId: number) {
 
 export default {
   findById,
-  exists,
+  findManyByAuthorId,
+  findManyByReviewId,
+  isExists,
   isAuthor,
   create,
   update,

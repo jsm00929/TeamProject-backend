@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import moviesController from './movies.controller';
-import { PaginationQuery } from '../core/dtos/inputs/pagination.query';
+import { PaginationQuery } from '../core/dtos/inputs';
 import { MovieIdParams } from './dtos/inputs/get_movie_detail.params';
 import { handle } from '../core/handle';
-import { CreateMovieReviewBody } from '../reviews/dtos/create_movie_review.body';
-import { EditMovieReviewBody } from '../reviews/dtos/edit_review.body';
-import { ReviewIdParams } from '../reviews/dtos/review_id.params';
+import { CreateMovieReviewBody } from '../reviews/dtos/inputs/create_movie_review.body';
+import { EditMovieReviewBody } from '../reviews/dtos/inputs/edit_review.body';
+import { ReviewIdParams } from '../reviews/dtos/inputs/review_id.params';
+import { MoviesPaginationQuery } from './dtos/inputs/movies_pagination.query';
 
 /**
  * BASE_URL: /api/movies
@@ -15,6 +16,17 @@ const moviesRouter = Router();
 /**
  * 조회
  */
+/**
+ * @description
+ * 유명 영화 순으로 가져오기(Pagination)
+ */
+moviesRouter.get(
+  '/',
+  handle({
+    queryCls: MoviesPaginationQuery,
+    controller: moviesController.movies,
+  }),
+);
 /**
  * @description
  * 유명 영화 순으로 가져오기(Pagination)
@@ -99,4 +111,14 @@ moviesRouter.delete(
   }),
 );
 
+/**
+ * COMMENTS
+ */
+moviesRouter.get(
+  '/reviews/:reviewId/comments',
+  handle({
+    paramsCls: ReviewIdParams,
+    controller: moviesController.getMovieReviewComments,
+  }),
+);
 export default moviesRouter;

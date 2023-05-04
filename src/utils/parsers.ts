@@ -2,7 +2,35 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import yaml from 'yaml';
 
-export function parseIntProps(obj: Record<string, any>) {
+export function parseProps(obj: Record<string, any>) {
+  return parseBoolProps(parseIntProps(obj));
+}
+
+// function commasSeperatedStringIntoArray(obj: Record<string, any>) {
+//   return Object.entries(obj).reduce((prev, curr) => {
+//     const [k, v] = curr;
+//     if (','.includes(v)) {
+//       prev[k] = v.split(',');
+//     } else {
+//       prev[k] = v;
+//     }
+//     return prev;
+//   }, {});
+// }
+
+function parseBoolProps(obj: Record<string, any>) {
+  return Object.entries(obj).reduce((prev, curr) => {
+    const [k, v] = curr;
+    if (['true', 'false'].includes(v)) {
+      prev[k] = Boolean(v);
+    } else {
+      prev[k] = v;
+    }
+    return prev;
+  }, {});
+}
+
+function parseIntProps(obj: Record<string, any>) {
   return Object.entries(obj).reduce((prev, curr) => {
     const [k, v] = curr;
     if (!isNaN(+v)) {

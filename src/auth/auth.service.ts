@@ -1,6 +1,5 @@
-import { AppError } from '../core/types/app_error';
-import { ErrorMessages } from '../core/constants/error_messages';
-import { HttpStatus } from '../core/constants/http_status';
+import { AppError } from '../core/types';
+import { ErrorMessages, HttpStatus } from '../core/constants';
 import usersRepository from '../users/users.repository';
 import { comparePassword, hashPassword } from '../utils/hash';
 import { LoginBody } from './dtos/inputs/login.body';
@@ -20,25 +19,25 @@ async function signUp({ email, name, password }: SignupBody) {
     });
   }
 
-  const userId = await usersRepository.create({
+  return usersRepository.create({
     email,
     name,
     password: await hashPassword(password),
   });
-  return userId;
 }
 
 async function login({ email, password }: LoginBody) {
   const user = await usersRepository.findByEmail(email);
 
   // 로그인 하려는 계정이 DB에 없음
-  if (!user) {
+  if (user === null) {
     throw AppError.new({
       message: ErrorMessages.USER_NOT_FOUND,
       status: HttpStatus.NOT_FOUND,
     });
   }
 
+  // 비밀번호가 설정되지 않은 계정 (OAuth Login만 한 경우)
   if (user.password === null) {
     throw AppError.new({
       message: ErrorMessages.NOT_SET_PASSWORD,
@@ -47,7 +46,7 @@ async function login({ email, password }: LoginBody) {
   }
 
   // 비번이 맞지가 않음
-  if (!comparePassword(password, user.password)) {
+  if (!(await comparePassword(password, user.password))) {
     throw AppError.new({
       message: ErrorMessages.INVALID_PASSWORD,
       status: HttpStatus.UNAUTHORIZED,
@@ -74,13 +73,11 @@ async function googleSignupRedirect(code: string) {
     });
   }
 
-  const userId = await usersRepository.createWithoutPassword({
+  return usersRepository.createWithoutPassword({
     email,
     name,
     avatarUrl,
   });
-
-  return userId;
 }
 
 async function googleLoginRedirect(code: string) {
