@@ -2,13 +2,14 @@ import moviesService from '../services/movies.service';
 import {AuthRequestWith, OptionalAuthRequestWith, RequestWith} from '../../core/types';
 import {MovieIdParams} from '../dtos/inputs/get_movie_detail.params';
 import {AppResult} from '../../core/types/app_result';
-import {MoviesPaginationQuery, UserMoviesPaginationQuery} from '../movies_pagination.query';
+import {MoviesPaginationQuery} from '../dtos/inputs/movies_pagination.query';
 import {handle} from "../../core/handle";
 import moviesLikeService from "../services/movies.like.service";
 import moviesFavoriteService from "../services/movies.favorite.service";
 import moviesHistoryService from "../services/movies.history.service";
 import {PaginationQuery} from "../../core/dtos/inputs";
 import {Router} from "express";
+import {ToggleMovieLikeBody} from "../dtos/inputs/toggle_movie_like.body";
 
 export const moviesRouter = Router();
 /**
@@ -24,8 +25,8 @@ moviesRouter.get(
 );
 
 async function movies(req: RequestWith<MoviesPaginationQuery>) {
-    const {after, count, include, genre, order, criteria} = req.unwrap();
-    const movies = await moviesService.movies({criteria, order, genre, include, count, after});
+    const q = req.unwrap();
+    const movies = await moviesService.movies(q);
 
     return AppResult.new({
         body: movies,
@@ -41,18 +42,16 @@ async function movies(req: RequestWith<MoviesPaginationQuery>) {
 moviesRouter.get('/histories',
     handle({
         authLevel: 'must',
-        queryCls: UserMoviesPaginationQuery,
+        queryCls: PaginationQuery,
         controller: histories,
     }));
 
 async function histories(req: AuthRequestWith<PaginationQuery>) {
     const {userId} = req;
-    const {count, after} = req.unwrap();
+    const q = req.unwrap();
 
-    const movies = await moviesHistoryService.histories(
-        {userId},
-        {count, after},
-    );
+    const movies =
+        await moviesHistoryService.histories({userId}, q);
 
     return AppResult.new({body: movies});
 }
@@ -66,6 +65,7 @@ async function histories(req: AuthRequestWith<PaginationQuery>) {
 moviesRouter.get(
     '/:movieId/detail',
     handle({
+        authLevel: 'optional',
         paramsCls: MovieIdParams,
         controller: detail,
     }),
@@ -89,37 +89,21 @@ moviesRouter.post('/:movieId/like',
     handle({
         authLevel: 'must',
         paramsCls: MovieIdParams,
-        controller: like,
+        bodyCls: ToggleMovieLikeBody,
+        controller: toggleMovieLike,
     }));
 
-async function like(req: AuthRequestWith<never, MovieIdParams>) {
+async function toggleMovieLike(req: AuthRequestWith<ToggleMovieLikeBody, MovieIdParams>) {
     const userId = req.userId;
     const {movieId} = req.unwrapParams();
 
-    await moviesLikeService.like({userId, movieId});
+    const body = req.unwrap();
+
+    await moviesLikeService.toggleMovieLike({userId, movieId}, body);
 
     return AppResult.default();
 }
 
-/**
- * @description
- * 영화 좋아요 해제
- */
-moviesRouter.delete('/:movieId/like',
-    handle({
-        authLevel: 'must',
-        paramsCls: MovieIdParams,
-        controller: unlike,
-    }));
-
-async function unlike(req: AuthRequestWith<never, MovieIdParams>) {
-    const userId = req.userId;
-    const {movieId} = req.unwrapParams();
-
-    await moviesLikeService.unlike({userId, movieId});
-
-    return AppResult.default();
-}
 
 /**
  * @description
@@ -129,14 +113,14 @@ moviesRouter.post('/:movieId/favorite',
     handle({
         authLevel: 'must',
         paramsCls: MovieIdParams,
-        controller: addFavorite,
+        controller: toggleFavorite,
     }));
 
-async function addFavorite(req: AuthRequestWith<never, MovieIdParams>) {
+async function toggleFavorite(req: AuthRequestWith<never, MovieIdParams>) {
     const userId = req.userId;
     const {movieId} = req.unwrapParams();
 
-    await moviesFavoriteService.addFavorite({userId, movieId});
+    await moviesFavoriteService.toggleFavorite({userId, movieId});
 
     return AppResult.default();
 }
@@ -179,7 +163,7 @@ async function removeHistory(req: AuthRequestWith<never, MovieIdParams>) {
     const userId = req.userId;
     const {movieId} = req.unwrapParams();
 
-    await moviesHistoryService.remove({userId, movieId});
+    await moviesHistoryService.removeMovieHistory({userId, movieId});
 
     return AppResult.default();
 }

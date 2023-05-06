@@ -1,15 +1,8 @@
 import {prisma} from '../config/db';
 import {CreateMovieReviewBody} from './dtos/create_movie_review.body';
 import {EditMovieReviewBody} from './dtos/edit_review.body';
-import {
-    MovieRecord,
-    PaginationRecord,
-    prismaClient,
-    RatingRecord,
-    ReviewRecord,
-    TxRecord,
-    UserRecord
-} from "../core/types/tx";
+import {PaginationRecord, UserRecord} from "../core/types/tx";
+import {PickIdsWithTx} from "../core/types/pick_ids";
 
 /**
  * 조회(Fetch)
@@ -46,20 +39,22 @@ async function findManyByAuthorId(
     });
 }
 
-async function findById({reviewId, tx}: Pick<ReviewRecord, 'reviewId'> & TxRecord) {
-    return prismaClient(tx).review.findUnique({where: {id: reviewId}});
+async function findById({reviewId, tx}: PickIdsWithTx<'review'>) {
+    return tx.review.findUnique({where: {id: reviewId}});
 }
 
-async function isExists({reviewId, tx}: Pick<ReviewRecord, 'reviewId'> & TxRecord) {
+async function isExists({reviewId, tx}: PickIdsWithTx<'review'>) {
     const review = await findById({reviewId, tx});
     return review !== null && review.deletedAt === null;
 }
 
-async function isAuthor({
-                            userId,
-                            reviewId,
-                            tx
-                        }: Pick<UserRecord, 'userId'> & Pick<ReviewRecord, 'reviewId'> & TxRecord) {
+async function isAuthor(
+    {
+        userId,
+        reviewId,
+        tx
+    }: PickIdsWithTx<'user' | 'review'>,
+) {
     const review = await findById({reviewId, tx});
     return review !== null && review.authorId === userId;
 }
@@ -69,10 +64,10 @@ async function isAuthor({
  * 생성 및 수정(Mutation)
  */
 async function create(
-    {userId, movieId, tx}: Pick<UserRecord, 'userId'> & Pick<MovieRecord, 'movieId'> & TxRecord,
+    {userId, movieId, tx}: PickIdsWithTx<'user' | 'movie'>,
     {title, content, rating}: CreateMovieReviewBody,
 ) {
-    const {id} = await prismaClient(tx).review.create({
+    const {id} = await tx.review.create({
         data: {
             title,
             content,
@@ -90,18 +85,18 @@ async function create(
 
 
 async function update(
-    {reviewId, tx}: TxRecord & Pick<ReviewRecord, 'reviewId'>,
-    body: EditMovieReviewBody) {
+    {reviewId, tx}: PickIdsWithTx<'review'>,
+    data: EditMovieReviewBody) {
 
-    await prismaClient(tx).review.update({
+    await tx.review.update({
         where: {
             id: reviewId,
         },
         data: {
-            ...body,
+            ...data,
             // content가 존재할 경우에만 overview를 재생성
-            ...(body.content && {
-                overview: body.content.slice(0, 100),
+            ...(data.content && {
+                overview: data.content.slice(0, 100),
             }),
         },
         select: {id: true},
@@ -109,9 +104,9 @@ async function update(
 }
 
 async function remove(
-    {tx, reviewId}: TxRecord & Pick<ReviewRecord, 'reviewId'>
+    {tx, reviewId}: PickIdsWithTx<'review'>,
 ) {
-    await prismaClient(tx).review.update({
+    await tx.review.update({
         where: {
             id: reviewId,
         },
@@ -124,12 +119,13 @@ async function remove(
 /**
  * RATING
  */
-async function createRating({
-                                tx,
-                                movieId,
-                                rating
-                            }: Pick<MovieRecord, 'movieId'> & Pick<RatingRecord, 'rating'> & TxRecord) {
-    await prismaClient(tx).rating.create({
+async function createRating(
+    {
+        tx,
+        movieId,
+        rating
+    }: PickIdsWithTx<'movie'> & { rating: number }) {
+    await tx.rating.create({
         data: {
             rating,
             movieId,
@@ -138,8 +134,8 @@ async function createRating({
 }
 
 
-async function totalRatingByMovieId({movieId, tx}: TxRecord & Pick<MovieRecord, 'movieId'>) {
-    const ratings = await prismaClient(tx).rating.findMany({
+async function totalRatingByMovieId({movieId, tx}: PickIdsWithTx<'movie'>) {
+    const ratings = await tx.rating.findMany({
         where: {
             movieId,
         },

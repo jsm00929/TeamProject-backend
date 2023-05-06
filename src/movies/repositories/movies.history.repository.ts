@@ -1,62 +1,77 @@
 // FETCH
-import {MovieHistoryId, MovieRecord, prismaClient, TxRecord, UserRecord} from "../../core/types/tx";
-import {PaginationQuery} from "../../core/dtos/inputs";
-import {PaginationOutputWith} from "../../core/dtos/outputs/pagination_output";
-import {MovieHistory} from "@prisma/client";
+import {PaginationQuery} from '../../core/dtos/inputs';
+import {PaginationOutput} from '../../core/dtos/outputs/pagination_output';
+import {PickIdsWithTx} from '../../core/types/pick_ids';
+import {MovieHistoryOutput, MovieWithHistory,} from '../dtos/outputs/movie_history.output';
 
-async function findByUserIdAndMovieId(
-    {userId, movieId, tx}: Pick<UserRecord, 'userId'> & Pick<MovieRecord, 'movieId'> & TxRecord,
-) {
-    return prismaClient(tx).movieHistory.findFirst({
+async function findMovieHistoryByUserIdAndMovieId(
+    {
+        userId,
+        movieId,
+        tx,
+    }: PickIdsWithTx<'user' | 'movie'>) {
+    return tx.movieHistory.findFirst({
         where: {
             movieId,
             userId,
-        }
+        },
     });
 }
 
-async function findManyByUserId(
-    {userId, tx}: Pick<UserRecord, 'userId'> & TxRecord,
+async function findManyMovieHistoriesByUserId(
+    {userId, tx}: PickIdsWithTx<'user'>,
     {count, after}: PaginationQuery,
-): Promise<PaginationOutputWith<MovieHistory>> {
-
-    const data = await prismaClient(tx).movieHistory.findMany({
+): Promise<PaginationOutput<MovieHistoryOutput>> {
+    const entities: MovieWithHistory[] = await tx.movieHistory.findMany({
         where: {
             userId,
         },
-        skip: 1,
+        skip: after ? 1 : 0,
         take: count + 1,
         ...(after !== undefined && {cursor: {id: after}}),
+        include: {
+            movie: true,
+        },
     });
 
-    return PaginationOutputWith.from({data, count});
+    const data = entities.map((e) => MovieHistoryOutput.from(e));
+    return PaginationOutput.from({data, count: entities.length});
 }
 
-async function create(
-    {userId, movieId, tx}: Pick<UserRecord, 'userId'> & Pick<MovieRecord, 'movieId'> & TxRecord,
-) {
-    return prismaClient(tx).movieHistory.create({
-        data: {
-            movieId,
-            userId,
-        }
-    });
+async function createMovieHistory(
+    {
+        userId,
+        movieId,
+        tx,
+    }: PickIdsWithTx<'user' | 'movie'>) {
+    const movieHistory =
+        await tx.movieHistory.create({
+            data: {
+                movieId,
+                userId,
+            },
+        });
+    return movieHistory.id;
 }
 
-async function removeById(
-    {movieHistoryId, tx}: Pick<MovieHistoryId, 'movieHistoryId'> & TxRecord,
-) {
-    return prismaClient(tx).movieHistory.delete({
+async function removeMovieHistoryById(
+    {
+        movieHistoryId,
+        tx,
+    }: PickIdsWithTx<'movieHistory'>) {
+    await tx.movieHistory.delete({
         where: {
             id: movieHistoryId,
-        }
+        },
     });
 }
 
-async function updateById(
-    {movieHistoryId, tx}: Pick<MovieHistoryId, 'movieHistoryId'> & TxRecord,
-) {
-    return prismaClient(tx).movieHistory.update({
+async function updateMovieHistoryLastViewedAtById(
+    {
+        movieHistoryId,
+        tx,
+    }: PickIdsWithTx<'movieHistory'>) {
+    await tx.movieHistory.update({
         where: {
             id: movieHistoryId,
         },
@@ -67,9 +82,9 @@ async function updateById(
 }
 
 export default {
-    findByUserIdAndMovieId,
-    findManyByUserId,
-    create,
-    removeById,
-    updateById,
-}
+    findMovieHistoryByUserIdAndMovieId,
+    findManyMovieHistoriesByUserId,
+    createMovieHistory,
+    removeMovieHistoryById,
+    updateMovieHistoryLastViewedAtById,
+};

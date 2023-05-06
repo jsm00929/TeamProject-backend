@@ -4,15 +4,19 @@ import {CreateMovieReviewBody} from './dtos/create_movie_review.body';
 import {EditMovieReviewBody} from './dtos/edit_review.body';
 import reviewsRepository from './reviews.repository';
 import {prisma} from "../config/db";
-import {MovieRecord, ReviewRecord, UserRecord} from "../core/types/tx";
+import {UserRecord} from "../core/types/tx";
 import {PaginationQuery} from "../core/dtos/inputs";
+import {PickIds} from "../core/types/pick_ids";
 
-async function getReviewDetail({reviewId}: Pick<ReviewRecord, 'reviewId'>) {
-    return reviewsRepository.findById({reviewId});
+// TODO:
+async function reviewDetail({reviewId}: PickIds<'review'>) {
+    return prisma.$transaction(async tx => {
+        return reviewsRepository.findById({reviewId, tx});
+    });
 }
 
 // TODO: Pagination
-async function getReviewOverviewsByUserId(
+async function reviewOverviewsByUserId(
     {
         userId,
     }
@@ -22,7 +26,7 @@ async function getReviewOverviewsByUserId(
 }
 
 async function write(
-    {userId, movieId}: Pick<UserRecord, 'userId'> & Pick<MovieRecord, 'movieId'>,
+    {userId, movieId}: PickIds<'user' | 'movie'>,
     {rating, content, title}: CreateMovieReviewBody,
 ) {
     let reviewId: number | undefined;
@@ -40,7 +44,7 @@ async function edit(
     {
         userId,
         reviewId,
-    }: Pick<ReviewRecord, 'reviewId'> & Pick<UserRecord, 'userId'>,
+    }: PickIds<'user' | 'review'>,
     body: EditMovieReviewBody,
 ) {
 
@@ -67,7 +71,7 @@ async function edit(
 
 }
 
-async function remove({userId, reviewId}: Pick<UserRecord, 'userId'> & Pick<ReviewRecord, 'reviewId'>) {
+async function remove({userId, reviewId}: PickIds<'user' | 'review'>) {
 
     return prisma.$transaction(async tx => {
 
@@ -100,8 +104,8 @@ async function remove({userId, reviewId}: Pick<UserRecord, 'userId'> & Pick<Revi
 }
 
 export default {
-    getReviewOverviewsByUserId,
-    getReviewDetail,
+    reviewOverviewsByUserId,
+    reviewDetail,
     write,
     edit,
     remove,

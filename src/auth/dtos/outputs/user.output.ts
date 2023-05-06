@@ -1,4 +1,5 @@
 import {User} from "@prisma/client";
+import {isNullOrDeleted} from "../../../utils/is_null_or_deleted";
 
 export class UserOutput {
     id: number;
@@ -13,20 +14,28 @@ export class UserOutput {
         this.avatarUrl = avatarUrl;
     }
 
-    public static from(user: User): UserOutput {
-        return new this(user);
+    public static nullOrFrom(u: User | null): UserOutput | null {
+        return isNullOrDeleted(u) ? null : this.from(u!);
+    }
+
+    public static from(u: User): UserOutput {
+        return new this(u);
     }
 }
 
 export class UserWithPasswordOutput extends UserOutput {
     password: string | null;
 
-    protected constructor(user: User) {
-        super(user);
-        this.password = user.password;
+    protected constructor(u: User) {
+        super(u);
+        this.password = u.password;
     }
 
-    public static from(user: User): UserWithPasswordOutput {
-        return new this(user);
+    public static nullOrFrom(u: User | null): UserWithPasswordOutput | null {
+        return isNullOrDeleted(u) ? null : this.from(u!);
+    }
+
+    public static from(u: User): UserWithPasswordOutput {
+        return new this(u);
     }
 }

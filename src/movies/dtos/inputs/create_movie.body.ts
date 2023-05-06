@@ -1,4 +1,4 @@
-export interface CreateMovieInput {
+export interface CreateMovieBody {
   id: number;
   title: string;
   titleKo?: string;

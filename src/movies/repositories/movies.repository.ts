@@ -1,48 +1,48 @@
 import {prisma} from '../../config/db';
-import {CreateMovieInput} from '../dtos/inputs/create_movie.input';
+import {CreateMovieBody} from '../dtos/inputs/create_movie.body';
 import {GenreOutput} from '../dtos/outputs/genre.output';
-import {MovieRecord, prismaClient, TxRecord,} from '../../core/types/tx';
-import {MoviesPaginationQuery} from '../movies_pagination.query';
+import {Tx, UserRecord} from '../../core/types/tx';
+import {MoviesPaginationQuery} from '../dtos/inputs/movies_pagination.query';
 import {Genre} from '../dtos/genre.enum';
-import {PaginationOutputWith} from "../../core/dtos/outputs/pagination_output";
-import {MovieOutput, MovieWithGenresOutput} from "../dtos/outputs/movie.output";
-import {RepositoryError} from "../../core/types/repository_error";
-import {RepositoryErrorKind} from "../../core/enums/repository_error_kind";
-import {RepositoryKind} from "../../core/enums/repository_kind";
+import {PaginationOutput} from '../../core/dtos/outputs/pagination_output';
+import {MovieOutput} from '../dtos/outputs/movie.output';
+import {PickIdsWithTx} from '../../core/types/pick_ids';
+import {MovieWithGenres} from '../dtos/movie_with_genres';
+import {MovieWithGenresOutput} from '../dtos/outputs/movie_with_genres.output';
 
 // FETCH
 async function findMovieById(
-    {movieId, tx}: Pick<MovieRecord, 'movieId'> & TxRecord,
+    {
+        userId,
+        movieId,
+        tx,
+    }: Partial<Pick<UserRecord, 'userId'>> & PickIdsWithTx<'movie'>
 ): Promise<MovieOutput | null> {
-    const movie = await prismaClient(tx).movie.findUnique({
-        where: {
-            id: movieId,
-        },
-    });
+    const queries: any[] = [
+        tx.movie.findUnique({
+            where: {
+                id: movieId,
+            },
+        }),
+    ];
 
-    if (movie === null) return null;
-
-    return MovieOutput.from(movie);
-}
-
-async function findMovieByIdOrThrow(
-    {movieId, tx}: Pick<MovieRecord, 'movieId'> & TxRecord,
-): Promise<MovieOutput | null> {
-    const movieOutput = await findMovieById({movieId, tx});
-    if (movieOutput === null) {
-        throw RepositoryError.new({
-            errorKind: RepositoryErrorKind.NOT_FOUND_ERROR,
-            repositoryKind: RepositoryKind.MOVIES_REPOSITORY,
-        });
+    if (userId) {
+        queries.push(tx.likeMovie.findFirst({where: {movieId, userId}}));
+        queries.push(tx.favoriteMovie.findFirst({where: {movieId, userId}}));
     }
-    return movieOutput;
-}
 
+    const [entity, isLiked, isFavorite] = await Promise.all(queries);
+
+    await tx.likeMovie.findFirst({where: {movieId}});
+    return MovieOutput.nullOrFrom(entity, {isLiked, isFavorite});
+}
 
 async function findMovieWithGenresById(
-    {movieId, tx}: Pick<MovieRecord, 'movieId'> & TxRecord,
-): Promise<MovieOutput | null> {
-    const movieWithGenres = await prismaClient(tx).movie.findUnique({
+    {
+        movieId,
+        tx,
+    }: PickIdsWithTx<'movie'>): Promise<MovieWithGenresOutput | null> {
+    const entity: MovieWithGenres | null = await tx.movie.findUnique({
         where: {
             id: movieId,
         },
@@ -50,51 +50,65 @@ async function findMovieWithGenresById(
             genres: true,
         },
     });
-
-    if (movieWithGenres === null) return null;
-
-    return MovieWithGenresOutput.from(movieWithGenres);
+    return MovieWithGenresOutput.nullOrFrom(entity);
 }
 
 async function findManyMovies(
-    {tx}: TxRecord,
-    {
-        criteria,
-        genre,
-        count,
-        order,
-        after,
-        include,
-    }: MoviesPaginationQuery,
-): Promise<PaginationOutputWith<MovieOutput>> {
-
-    const data = await prismaClient(tx).movie.findMany(
-        {
-            orderBy: {
-                [criteria]: order,
-            },
-            where:
-                genre !== Genre.ALL
-                    ? {
-                        genres: {
-                            some: {
-                                name: genre,
-                            },
+    {tx}: { tx: Tx },
+    {criteria, genre, count, order, after, include}: MoviesPaginationQuery,
+): Promise<PaginationOutput<MovieOutput>> {
+    const entities = await tx.movie.findMany({
+        orderBy: {
+            [criteria]: order,
+        },
+        where:
+            genre !== Genre.ALL
+                ? {
+                    genres: {
+                        some: {
+                            name: genre,
                         },
-                    }
-                    : {},
-            ...(after !== undefined && {cursor: {id: after}}),
-            skip: after !== undefined ? 1 : 0,
-            take: count + 1,
-            include: {
-                genres: true,
-                ...(include !== undefined && {[include]: true})
-            },
-        });
+                    },
+                }
+                : {},
+        ...(after !== undefined && {cursor: {id: after}}),
+        skip: after ? 1 : 0,
+        take: count + 1,
+    });
 
-    const movieOutputs = data.map((movie) => MovieOutput.from(movie));
+    const data = entities.map((entity) => MovieOutput.from(entity));
+    return PaginationOutput.from({data, count});
+}
 
-    return PaginationOutputWith.from<MovieOutput>({data: movieOutputs, count});
+async function findManyMoviesWithGenres(
+    {tx}: { tx: Tx },
+    {criteria, genre, count, order, after, include}: MoviesPaginationQuery,
+): Promise<PaginationOutput<MovieWithGenresOutput>> {
+    const entities: MovieWithGenres[] = await tx.movie.findMany({
+        orderBy: {
+            [criteria]: order,
+        },
+        where:
+            genre !== Genre.ALL
+                ? {
+                    genres: {
+                        some: {
+                            name: genre,
+                        },
+                    },
+                }
+                : {},
+        ...(after !== undefined && {cursor: {id: after}}),
+        skip: after ? 1 : 0,
+        take: count + 1,
+        include: {
+            genres: true,
+            ...(include !== undefined && {[include]: true}),
+        },
+    });
+
+    const data = entities.map((e) => MovieWithGenresOutput.from(e));
+    return PaginationOutput.from({data, count});
 }
 
 //
@@ -107,7 +121,7 @@ async function findManyMovies(
 //         include,
 //     }: UserMoviesPaginationQuery,
 // ) {
-//     const movies = await prismaClient(tx).userMovie.findMany({
+//     const movies = await tx.userMovie.findMany({
 //         orderBy: {
 //             viewedAt: 'desc',
 //         },
@@ -141,7 +155,7 @@ async function findManyMovies(
 // async function findUserMovie(
 //     {userId, movieId, tx}: Pick<UserRecord, 'userId'> & Pick<MovieRecord, 'movieId'> & TxRecord,
 // ) {
-//     return prismaClient(tx).userMovie.findFirst({
+//     return tx.userMovie.findFirst({
 //         where: {
 //             userId,
 //             movieId,
@@ -149,17 +163,14 @@ async function findManyMovies(
 //     });
 // }
 
-async function findMovieDetailById(
-    {
-        movieId,
-        tx,
-    }: Pick<MovieRecord, 'movieId'> & TxRecord
-): Promise<MovieOutput | null> {
+async function findMovieDetailById({
+                                       movieId,
+                                       tx,
+                                   }: PickIdsWithTx<'movie'>): Promise<MovieOutput | null> {
     return findMovieById({movieId, tx});
 }
 
-
-async function createMany({tx}: TxRecord, data: CreateMovieInput[]) {
+async function createMany({tx}: { tx: Tx }, data: CreateMovieBody[]) {
     await prisma.movie.createMany({
         data: [],
     });
@@ -169,23 +180,22 @@ async function findAllGenres() {
     return prisma.genre.findMany();
 }
 
-async function upsert(
-    {
-        adult,
-        backdropUrl,
-        genreIds,
-        id,
-        lang,
-        overview,
-        popularity,
-        posterUrl,
-        releaseDate,
-        title,
-        voteAverage,
-        voteCount,
-        overviewKo,
-        titleKo,
-    }: CreateMovieInput) {
+async function upsert({
+                          adult,
+                          backdropUrl,
+                          genreIds,
+                          id,
+                          lang,
+                          overview,
+                          popularity,
+                          posterUrl,
+                          releaseDate,
+                          title,
+                          voteAverage,
+                          voteCount,
+                          overviewKo,
+                          titleKo,
+                      }: CreateMovieBody) {
     await prisma.$transaction(async (prisma) => {
         await prisma.movie.upsert({
             create: {
@@ -239,6 +249,7 @@ export default {
     findMovieById,
     findMovieWithGenresById,
     findManyMovies,
+    findManyMoviesWithGenres,
     findMovieDetailById,
     createMany,
     findAllGenres,

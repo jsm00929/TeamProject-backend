@@ -2,28 +2,29 @@ import usersService from '../users.service';
 import {AppError, AuthRequest, AuthRequestWith, RequestWith,} from '../../core/types';
 import {AppResult} from '../../core/types/app_result';
 import {UserIdParams} from '../dtos/inputs/user_id.params';
-import {UpdateMyPasswordBody} from '../dtos/inputs/update_my_password.body';
-import {UpdateMyNameBody} from '../dtos/inputs/update_my_name.body';
+import {UpdateUserPasswordBody} from '../dtos/inputs/update_my_password.body';
+import {UpdateUserNameBody} from '../dtos/inputs/update_my_name.body';
 import {ErrorMessages, HttpStatus} from '../../core/constants';
 import {UpdateAvatarOutput} from '../dtos/outputs/update_avatar.output';
 import {clearAuthCookies} from '../../utils/cookie_store';
 import {Response, Router} from 'express';
-import {DeleteUserBody} from '../dtos/inputs/delete_user.body';
-import {handle} from "../../core/handle";
-import {handleUploadAvatars} from "../../core/middlewares/handle_upload_avatars";
-import {mustAuth} from "../../auth/middlewares/must_auth";
-import {handleResponse} from "../../core/middlewares";
+import {RemoveUserBody} from '../dtos/inputs/remove_user.body';
+import {handle} from '../../core/handle';
+import {handleUploadAvatars} from '../../core/middlewares/handle_upload_avatars';
+import {mustAuth} from '../../auth/middlewares/must_auth';
+import {handleResponse} from '../../core/middlewares';
 
 export const usersRouter = Router();
 /**
  * @description
  * 현재 로그인 된 사용자의 정보 가져오기
  */
-usersRouter.get('/me',
+usersRouter.get(
+    '/me',
     handle({
         authLevel: 'must',
         controller: me,
-    })
+    }),
 );
 
 async function me(req: AuthRequest, res: Response) {
@@ -70,13 +71,13 @@ usersRouter.patch(
     '/me/password',
     handle({
         authLevel: 'must',
-        bodyCls: UpdateMyPasswordBody,
+        bodyCls: UpdateUserPasswordBody,
         controller: updateMyPassword,
     }),
 );
 
 async function updateMyPassword(
-    req: AuthRequestWith<UpdateMyPasswordBody>,
+    req: AuthRequestWith<UpdateUserPasswordBody>,
     res: Response,
 ) {
     const {userId} = req;
@@ -103,13 +104,13 @@ usersRouter.patch(
     '/me/name',
     handle({
         authLevel: 'must',
-        bodyCls: UpdateMyNameBody,
+        bodyCls: UpdateUserNameBody,
         controller: updateMyName,
     }),
 );
 
 async function updateMyName(
-    req: AuthRequestWith<UpdateMyNameBody>,
+    req: AuthRequestWith<UpdateUserNameBody>,
     res: Response,
 ) {
     const {userId} = req;
@@ -163,12 +164,12 @@ usersRouter.delete(
     '/me',
     handle({
         authLevel: 'must',
-        bodyCls: DeleteUserBody,
+        bodyCls: RemoveUserBody,
         controller: withdraw,
     }),
 );
 
-async function withdraw(req: AuthRequestWith<DeleteUserBody>) {
+async function withdraw(req: AuthRequestWith<RemoveUserBody>) {
     const {userId} = req;
     const {password} = req.unwrap();
     await usersService.withdraw({userId, password});

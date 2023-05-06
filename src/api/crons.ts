@@ -5,7 +5,7 @@ import {writeFile} from 'fs';
 import {createGenresIfNotExists} from './tasks';
 import {fetchAllGenres, fetchReviewsByMovieId} from './tmdb_fetcher';
 import {log} from '../utils/logger';
-import {CreateMovieInput} from '../movies/dtos/inputs/create_movie.input';
+import {CreateMovieBody} from '../movies/dtos/inputs/create_movie.body';
 import {FetchMoviePageDto} from './dtos/fetch_movie_page.dto';
 import {tmdbClient} from './tmdb_client';
 import moviesRepository from '../movies/repositories/movies.repository';
@@ -70,7 +70,7 @@ export async function upsertMovies() {
                        voteAverage,
                        voteCount,
                    }) => {
-                const createMovieDto: CreateMovieInput = {
+                const createMovieDto: CreateMovieBody = {
                     adult,
                     backdropUrl: backdropPath,
                     id,

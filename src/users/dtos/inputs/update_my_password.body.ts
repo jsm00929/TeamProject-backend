@@ -1,6 +1,6 @@
 import { IsString, MaxLength, MinLength } from 'class-validator';
 
-export class UpdateMyPasswordBody {
+export class UpdateUserPasswordBody {
   oldPassword?: string | null;
 
   @IsString()

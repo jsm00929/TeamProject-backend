@@ -1,90 +1,57 @@
 import {CreateUserBody} from './dtos/inputs/create_user.body';
-import {prismaClient, TxRecord, UserRecord} from "../core/types/tx";
-import {UserOutput, UserWithPasswordOutput} from "../auth/dtos/outputs/user.output";
-
-/**
- * Fetch
- */
+import {Tx, UserRecord} from '../core/types/tx';
+import {UserOutput, UserWithPasswordOutput,} from '../auth/dtos/outputs/user.output';
+import {EmailWithTx, PickIdsWithTx} from '../core/types/pick_ids';
+import {CreateUserWithoutPasswordBody} from './dtos/inputs/create_user_without_password.body';
+import {UpdateUserNameBody} from './dtos/inputs/update_my_name.body';
 
 /**
  * @description
- * 사용자 정보 가져오기(by Id)
+ * FIND
  */
-
-async function findUserById(
-    {userId: id, tx}: Pick<UserRecord, 'userId'> & TxRecord
-): Promise<UserOutput | null> {
-    const user = await prismaClient(tx).user.findUnique({where: {id}});
-
-    if (user === null || user.deletedAt !== null) {
-        return null;
-    }
-    return UserOutput.from(user);
+async function findUserById({userId, tx,}: PickIdsWithTx<'user'>): Promise<UserOutput | null> {
+    const user = await tx.user.findUnique({where: {id: userId}});
+    return UserOutput.nullOrFrom(user);
 }
 
-async function findUserWithPasswordById(
-    {userId: id, tx}: Pick<UserRecord, 'userId'> & TxRecord
-): Promise<UserWithPasswordOutput | null> {
-    const user = await prismaClient(tx).user.findUnique({where: {id}});
-
-    if (user === null || user.deletedAt !== null) {
-        return null;
-    }
-    return UserWithPasswordOutput.from(user);
+async function findUserWithPasswordById({userId, tx,}: PickIdsWithTx<'user'>): Promise<UserWithPasswordOutput | null> {
+    const user = await tx.user.findUnique({where: {id: userId}});
+    return UserWithPasswordOutput.nullOrFrom(user);
 }
 
-async function findUserWithPasswordByEmail(
-    {email, tx}: Pick<UserRecord, 'email'> & TxRecord
-): Promise<UserWithPasswordOutput | null> {
-    const user = await prismaClient(tx).user.findUnique({where: {email}});
-
-    if (user === null || user.deletedAt !== null) {
-        return null;
-    }
-    return UserWithPasswordOutput.from(user);
+async function findUserWithPasswordByEmail({email, tx}: EmailWithTx): Promise<UserWithPasswordOutput | null> {
+    const user = await tx.user.findUnique({where: {email}});
+    return UserWithPasswordOutput.nullOrFrom(user);
 }
 
-
-async function findUserByEmail(
-    {email, tx}: Pick<UserRecord, 'email'> & TxRecord
-): Promise<UserOutput | null> {
-
-    const user = await prismaClient(tx).user.findUnique({where: {email}});
-
-    if (user === null || user.deletedAt !== null) {
-        return null;
-    }
-    return UserOutput.from(user);
+async function findUserByEmail({email, tx,}: EmailWithTx): Promise<UserOutput | null> {
+    const user = await tx.user.findUnique({where: {email}});
+    return UserOutput.nullOrFrom(user);
 }
 
 /**
  * @description
- * 사용자 존재 여부 확인(by Id)
+ * IS_EXISTS
  */
-async function isExistsById(
-    {userId, tx}: Pick<UserRecord, 'userId'> & TxRecord
-): Promise<boolean> {
-    return (await findUserById({userId, tx})) !== null;
+async function isExistsById({userId, tx}: PickIdsWithTx<'user'>): Promise<boolean> {
+    const user = await findUserById({userId, tx});
+    return user !== null;
+}
+
+async function isExistsByEmail({email, tx}: EmailWithTx): Promise<boolean> {
+    const user = await findUserByEmail({email, tx});
+    return user !== null;
 }
 
 /**
  * @description
- * 사용자 존재 여부 확인(by Email)
- */
-async function isExistsByEmail(
-    {email, tx}: Pick<UserRecord, 'email'> & TxRecord
-): Promise<boolean> {
-    return (await findUserByEmail({email, tx})) !== null;
-}
-
-/**
  * CREATE
  */
 async function createUser(
-    {tx}: TxRecord,
-    {email, name, password}: CreateUserBody
+    {tx}: { tx: Tx },
+    {email, name, password}: CreateUserBody,
 ): Promise<number> {
-    const user = await prismaClient(tx).user.create({
+    const user = await tx.user.create({
         data: {
             email,
             name,
@@ -95,13 +62,10 @@ async function createUser(
 }
 
 async function createUserWithoutPassword(
-    {tx}: TxRecord,
-    {
-        email,
-        name,
-        avatarUrl,
-    }: Pick<UserRecord, 'name' | 'avatarUrl' | 'email'>) {
-    const user = await prismaClient(tx).user.create({
+    {tx}: { tx: Tx },
+    {email, name, avatarUrl}: CreateUserWithoutPasswordBody,
+) {
+    const user = await tx.user.create({
         data: {
             email,
             name,
@@ -112,14 +76,14 @@ async function createUserWithoutPassword(
 }
 
 /**
+ * @description
  * UPDATE
  */
 async function updateUser(
-    {userId, tx}: Pick<UserRecord, 'userId'> & TxRecord,
-    data: Omit<Partial<UserRecord>, 'email'>
+    {userId, tx}: PickIdsWithTx<'user'>,
+    data: Omit<Partial<UserRecord>, 'email'>,
 ) {
-
-    await prismaClient(tx).user.update({
+    await tx.user.update({
         where: {
             id: userId,
         },
@@ -127,9 +91,33 @@ async function updateUser(
     });
 }
 
-async function removeUser({userId, tx}: Pick<UserRecord, 'userId'> & TxRecord) {
+async function updateUserName(
+    idWithTx: PickIdsWithTx<'user'>,
+    data: UpdateUserNameBody,
+) {
+    await updateUser(idWithTx, data);
+}
 
-    await prismaClient(tx).user.update({
+async function updateUserPassword(
+    idWithTx: PickIdsWithTx<'user'>,
+    data: Pick<UserRecord, 'password'>,
+) {
+    await updateUser(idWithTx, data);
+}
+
+async function updateUserAvatarUrl(
+    idWithTx: PickIdsWithTx<'user'>,
+    data: Pick<UserRecord, 'avatarUrl'>,
+) {
+    await updateUser(idWithTx, data);
+}
+
+/**
+ * @description
+ * REMOVE
+ */
+async function removeUser({userId, tx}: PickIdsWithTx<'user'>) {
+    await tx.user.update({
         where: {id: userId},
         data: {
             deletedAt: new Date(),
@@ -149,6 +137,8 @@ export default {
     isExistsByEmail,
     createUser,
     createUserWithoutPassword,
-    updateUser,
+    updateUserAvatarUrl,
+    updateUserName,
+    updateUserPassword,
     removeUser,
 };

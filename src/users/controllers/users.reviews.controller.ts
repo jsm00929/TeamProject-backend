@@ -28,7 +28,7 @@ async function getReviewOverviews(
     const {userId} = req.unwrapParams();
     const {after, count} = req.unwrap();
 
-    const reviews = await reviewsService.getReviewOverviewsByUserId({
+    const reviews = await reviewsService.reviewOverviewsByUserId({
         userId,
         after,
         count,

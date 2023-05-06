@@ -108,7 +108,7 @@ moviesReviewsRouter.get(
 
 async function detail(req: RequestWith<never, ReviewIdParams>) {
     const {reviewId} = req.unwrapParams();
-    const reviewDetail = await reviewsService.getReviewDetail({reviewId});
+    const reviewDetail = await reviewsService.reviewDetail({reviewId});
 
     return AppResult.new({body: reviewDetail});
 }

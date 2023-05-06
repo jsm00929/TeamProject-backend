@@ -489,17 +489,15 @@ paths:
           schema:
             $ref: '#/components/schemas/InternalServerError'
 
-  /users/me/movies:
+  /movies/histories:
     get:
       tags:
         - Movies
-      summary: '내가 본 영화를 가져옵니다. query params로 필터링 합니다. 사용 가능한 query params는 열어서 참조'
+      summary: '내가 본 영화 목록을 가져옵니다.'
       # description: 기본 20개씩 가져와요.
       parameters:
         - $ref: '#/components/parameters/AfterQuery'
         - $ref: '#/components/parameters/CountQuery'
-        - $ref: '#/components/parameters/MoviesInclude'
-        - $ref: '#/components/parameters/UserMoviesFilter'
 
       responses:
         200:
@@ -507,7 +505,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/PaginationMoviesOutput'
+              $ref: '#/components/schemas/PaginationMovieHistoriesOutput'
 
         400:
           description: 'take, skip 범위 벗어난 경우..(query의 model 펼쳐서 참조)'
@@ -517,6 +515,64 @@ paths:
               message:
                 type: string
                 example: '입력 값이 구데긴대요?'
+
+        401:
+          description: 'AccessToken이 유효하지 않은 경우'
+          schema:
+            $ref: '#/components/schemas/InvalidTokenError'
+
+        401(2):
+          description: 'AccessToken이 만료된 경우'
+          schema:
+            $ref: '#/components/schemas/ExpiredAccessTokenError'
+
+
+        500:
+          description: '서버 오류가 발생한 경우'
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+
+  /movies/{movieId}/history:
+    delete:
+      tags:
+        - Movies
+      summary: '내가 본 영화 삭제'
+      parameters:
+        - name: movieId
+          in: path
+          description: 기록 삭제할 movie의 id
+          required: true
+          type: integer
+
+      responses:
+        200:
+          description: 성공적으로 영화 기록 삭제한 경우(no response body)
+
+        400:
+          description: 'movieId에 이상한 구데기 거 갖다 박은 경우'
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: '입력 값이 구데긴대요?'
+
+        401:
+          description: 'AccessToken이 유효하지 않은 경우'
+          schema:
+            $ref: '#/components/schemas/InvalidTokenError'
+
+        401(2):
+          description: 'AccessToken이 만료된 경우'
+          schema:
+            $ref: '#/components/schemas/ExpiredAccessTokenError'
+
+        404:
+          description: '이미 지워진 경우'
+          schema:
+            $ref: '#/components/schemas/NotFoundError'
+
+
 
         500:
           description: '서버 오류가 발생한 경우'
@@ -556,6 +612,91 @@ paths:
           schema:
             $ref: '#/components/schemas/InternalServerError'
 
+  /movies/{movieId}/like:
+    post:
+      tags:
+        - Movies
+      summary: 영화 좋아요 추가/해제
+      parameters:
+        - $ref: '#/components/parameters/AccessTokenCookie'
+        - name: movieId
+          in: path
+          description: 좋아요 추가/삭제할 movie의 id
+          required: true
+          type: integer
+
+        - in: 'body'
+          name: 'ToggleLikeBody'
+          description: '해당 movie의 다음 like 상태'
+          required: true
+          schema:
+            $ref: '#/components/schemas/ToggleLikeBody'
+
+      responses:
+
+        200:
+          description: 성공
+
+
+        401:
+          description: 'AccessToken이 유효하지 않은 경우'
+          schema:
+            $ref: '#/components/schemas/InvalidTokenError'
+
+        401(2):
+          description: 'AccessToken이 만료된 경우'
+          schema:
+            $ref: '#/components/schemas/ExpiredAccessTokenError'
+
+        500:
+          description: '서버 오류가 발생한 경우'
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+
+
+
+  /movies/{movieId}/favorite:
+    post:
+      tags:
+        - Movies
+      summary: 영화 즐겨찾기 추가/해제
+      parameters:
+        - $ref: '#/components/parameters/AccessTokenCookie'
+        - name: movieId
+          in: path
+          description: 즐겨찾기 추가/삭제할 movie의 id
+          required: true
+          type: integer
+
+        - in: 'body'
+          name: 'ToggleFavoriteBody'
+          description: '해당 movie의 다음 favorite 상태'
+          required: true
+          schema:
+            $ref: '#/components/schemas/ToggleFavoriteBody'
+
+      responses:
+
+        200:
+          description: 성공
+
+
+        401:
+          description: 'AccessToken이 유효하지 않은 경우'
+          schema:
+            $ref: '#/components/schemas/InvalidTokenError'
+
+        401(2):
+          description: 'AccessToken이 만료된 경우'
+          schema:
+            $ref: '#/components/schemas/ExpiredAccessTokenError'
+
+        500:
+          description: '서버 오류가 발생한 경우'
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+
+
   /movies/detail/{movieId}:
     get:
       tags:
@@ -567,6 +708,7 @@ paths:
           description: 가져올 movie의 id
           required: true
           type: integer
+          example: 502356
 
       responses:
         '200(2)':
@@ -1167,6 +1309,26 @@ components:
           maxLength: 20
           required: true
 
+    ToggleLikeBody:
+      type: object
+      properties:
+        nextLike:
+          type: boolean
+          description: 해당 movie의 다음 like
+          maxLength: 100
+          example: true
+          required: true
+
+    ToggleFavoriteBody:
+      type: object
+      properties:
+        nextFavorite:
+          type: boolean
+          description: 해당 movie의 다음 favorite
+          maxLength: 100
+          example: true
+          required: true
+
     UpdateReviewBody:
       type: object
       properties:
@@ -1208,6 +1370,17 @@ components:
         - content
         - rating
 
+    PaginationMovieHistoriesOutput:
+      type: object
+      properties:
+        meta:
+          type: object
+          $ref: '#/components/schemas/PaginationMeta'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MovieOutput'
+
     PaginationMoviesOutput:
       type: object
       properties:
@@ -1219,6 +1392,7 @@ components:
           items:
             $ref: '#/components/schemas/MovieOutput'
 
+
     PaginationMeta:
       type: object
       properties:
@@ -1228,6 +1402,51 @@ components:
         hasMore:
           type: boolean
           example: true
+
+
+    MovieHistoryOutput:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        titleKo:
+          type: string
+        overview:
+          type: string
+        overviewKo:
+          type: string
+        adult:
+          type: boolean
+        popularity:
+          type: number
+        voteCount:
+          type: integer
+        voteAverage:
+          type: number
+        backdropUrl:
+          type: string
+        posterUrl:
+          type: string
+        lang:
+          type: string
+        lastViewedAt:
+          type: string
+          format: date-time
+        releaseDate:
+          type: string
+          format: date-time
+        genres:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+
 
     MovieOutput:
       type: object

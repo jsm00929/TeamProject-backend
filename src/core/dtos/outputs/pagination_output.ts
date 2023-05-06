@@ -1,4 +1,4 @@
-export class PaginationOutputWith<T> {
+export class PaginationOutput<T> {
     meta: PaginationMeta;
     data: T[];
 
@@ -15,37 +15,32 @@ export class PaginationOutputWith<T> {
             count: number;
             hasMore: boolean;
         }) {
-        const p = new PaginationOutputWith<T>();
+        const p = new PaginationOutput<T>();
         p.meta = new PaginationMeta(count, hasMore);
         p.data = data;
 
         return p;
     }
 
-    // public static fromMoviesEntity(
-    //     {data, count}: { data: (Movie & { genres: string[] })[], count: number }
-    // ): PaginationOutputWith<MovieOutput> {
-    //     const movies = data.map((m) => MovieOutput.fromMovieEntity(m);
-    //    return this.intoPaginationOutput<MovieOutput>({  data:movies,count});
-    // }
-
     public static from<T>(
         {data, count}: { data: T[], count: number }
-    ): PaginationOutputWith<T> {
-        const p = PaginationOutputWith.new<T>({
-            data,
-            count,
-            hasMore: false,
-        });
+    ): PaginationOutput<T> {
+
+        let hasMore = false;
 
         if (data.length > count) {
-            p.meta.hasMore = true;
-            --p.meta.count;
+            --count;
+            hasMore = true;
             data.pop();
         }
 
-        return p;
+        return PaginationOutput.new({
+            data,
+            count,
+            hasMore,
+        });
     }
+
 
 }
 

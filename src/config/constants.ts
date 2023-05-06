@@ -24,3 +24,6 @@ export const GOOGLE_SIGNUP_OAUTH2_URL = `https://accounts.google.com/o/oauth2/v2
 export const GOOGLE_LOGIN_OAUTH2_URL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${Config.env.googleClientId}&redirect_uri=${Config.env.googleLoginRedirectUri}&response_type=code&scope=email profile`;
 export const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 export const GOOGLE_USER_INFO_URL = 'https://www.googleapis.com/userinfo/v2/me';
+
+export const REDIS_BLACKLIST_PREFIX = 'blacklist:';
+export const REDIS_REFRESH_TOKEN_PREFIX = 'refreshToken:';

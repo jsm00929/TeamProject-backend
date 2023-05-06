@@ -1,34 +1,29 @@
 import {prisma} from '../../config/db';
-import {MovieRecord, UserRecord} from '../../core/types/tx';
-import usersRepository from '../../users/users.repository';
 import moviesRepository from '../repositories/movies.repository';
-import {MoviesPaginationQuery,} from '../movies_pagination.query';
+import {MoviesPaginationQuery,} from '../dtos/inputs/movies_pagination.query';
 import moviesHistoryService from './movies.history.service';
-import {PaginationOutputWith} from "../../core/dtos/outputs/pagination_output";
+import {PaginationOutput} from "../../core/dtos/outputs/pagination_output";
 import {MovieOutput} from "../dtos/outputs/movie.output";
+import {PickIds} from "../../core/types/pick_ids";
 
 /**
  * FETCH
  */
-async function movies(q: MoviesPaginationQuery): Promise<PaginationOutputWith<MovieOutput>> {
-    return moviesRepository.findManyMovies({}, q);
+async function movies(q: MoviesPaginationQuery): Promise<PaginationOutput<MovieOutput>> {
+    return prisma.$transaction(async (tx) => {
+        return moviesRepository.findManyMovies({tx}, q);
+    });
 
 }
 
 
-async function movieDetail(
-    {
-        userId,
-        movieId,
-    }: Partial<Pick<UserRecord, 'userId'>> & Pick<MovieRecord, 'movieId'>
+async function movieDetail({userId, movieId}: Partial<PickIds<'user'>> & PickIds<'movie'>,
 ): Promise<MovieOutput | null> {
 
     return prisma.$transaction(async (tx) => {
+        console.log('userId', userId);
         if (userId) {
-            const user = await usersRepository.findUserById({userId, tx});
-            if (user !== null) {
-                await moviesHistoryService.createOrUpdate({userId, movieId, tx});
-            }
+            await moviesHistoryService.createOrUpdate({userId, movieId, tx});
         }
 
         return moviesRepository.findMovieDetailById({movieId, tx});

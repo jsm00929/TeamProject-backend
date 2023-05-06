@@ -1,16 +1,17 @@
 import {MovieRecord, UserRecord} from "../../core/types/tx";
 import {prisma} from "../../config/db";
 import MoviesFavoriteRepository from "../repositories/movies.favorite.repository";
+import {PickIds} from "../../core/types/pick_ids";
 
-async function addFavorite(
-    {userId, movieId}: Pick<UserRecord, 'userId'> & Pick<MovieRecord, 'movieId'>,
+async function toggleFavorite(
+    {userId, movieId}: PickIds<'user' | 'movie'>,
 ) {
-    return prisma.$transaction(async (tx) => {
+    prisma.$transaction(async (tx) => {
 
-        const favorite
+        const prevFavorite
             = await MoviesFavoriteRepository.findByUserIdAndMovieId({userId, movieId, tx});
 
-        if (favorite !== null) return;
+        if (prevFavorite !== null) return;
 
         await MoviesFavoriteRepository.create({userId, movieId, tx});
     });
@@ -31,6 +32,6 @@ async function removeFavorite(
 }
 
 export default {
-    addFavorite,
+    toggleFavorite,
     removeFavorite,
 }

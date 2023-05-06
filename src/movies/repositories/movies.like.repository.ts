@@ -1,10 +1,10 @@
 // FETCH
-import {LikeMovieRecord, MovieRecord, prismaClient, TxRecord, UserRecord} from "../../core/types/tx";
+import {PickIdsWithTx} from "../../core/types/pick_ids";
 
 async function findByUserIdAndMovieId(
-    {userId, movieId, tx}: Pick<UserRecord, 'userId'> & Pick<MovieRecord, 'movieId'> & TxRecord,
+    {userId, movieId, tx}: PickIdsWithTx<'user' | 'movie'>,
 ) {
-    return prismaClient(tx).likeMovie.findFirst({
+    return tx.likeMovie.findFirst({
         where: {
             movieId,
             userId,
@@ -13,9 +13,9 @@ async function findByUserIdAndMovieId(
 }
 
 async function create(
-    {userId, movieId, tx}: Pick<UserRecord, 'userId'> & Pick<MovieRecord, 'movieId'> & TxRecord,
+    {userId, movieId, tx}: PickIdsWithTx<'user' | 'movie'>,
 ) {
-    return prismaClient(tx).likeMovie.create({
+    return tx.likeMovie.create({
         data: {
             movieId,
             userId,
@@ -24,11 +24,11 @@ async function create(
 }
 
 async function removeById(
-    {likeMovieId, tx}: Pick<LikeMovieRecord, 'likeMovieId'> & TxRecord,
+    {movieLikeId, tx}: PickIdsWithTx<'movieLike'>,
 ) {
-    return prismaClient(tx).likeMovie.delete({
+    return tx.likeMovie.delete({
         where: {
-            id: likeMovieId,
+            id: movieLikeId,
         }
     });
 }
