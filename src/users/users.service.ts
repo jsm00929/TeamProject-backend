@@ -6,17 +6,17 @@ import {UpdateUserNameBody} from './dtos/inputs/update_my_name.body';
 import {comparePassword, hashPassword} from '../utils/hash';
 import {prisma} from '../config/db';
 import {
-  filenameIntoAbsoluteTempPath,
-  filenameIntoStaticPath,
-  filenameIntoStaticUrl,
-  staticUrlIntoPath,
+    filenameIntoAbsoluteTempPath,
+    filenameIntoStaticPath,
+    filenameIntoStaticUrl,
+    staticUrlIntoPath,
 } from '../utils/static_path_resolvers';
 import {moveFile, removeFile, removeFileOrThrow} from '../utils/file_utils';
 import {log} from '../utils/logger';
 import {UserRecord} from '../core/types/tx';
-import {UserOutput} from '../auth/dtos/outputs/user.output';
 import {PickIds} from '../core/types/pick_ids';
 import {RemoveUserBody} from "./dtos/inputs/remove_user.body";
+import {UserOutput} from "./dtos/outputs/user.output";
 
 async function userById({userId}: PickIds<'user'>): Promise<UserOutput | null> {
     return prisma.$transaction(async (tx) => {

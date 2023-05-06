@@ -1,50 +1,34 @@
 import {BaseOutput} from '../../core/dtos/outputs/base_output';
-import {UserSimpleInfoOutput} from '../../users/dtos/outputs/user_simple_info.output';
+import {Review, User} from "@prisma/client";
+import {isNullOrDeleted} from "../../utils/is_null_or_deleted";
+import {UserOutput} from "../../users/dtos/outputs/user.output";
 
-export interface ReviewOverviewOutput extends BaseOutput {
+export type ReviewWithAuthor = Review & { author: User };
+
+export class ReviewOutput extends BaseOutput {
     title: string;
     overview: string;
+    content: string;
     rating: number | null;
-    author: UserSimpleInfoOutput;
+    author: UserOutput;
+    movieId: number;
+
+    private constructor(r: ReviewWithAuthor) {
+        super(r.id, r.createdAt, r.updatedAt);
+
+        this.title = r.title;
+        this.overview = r.overview;
+        this.content = r.content;
+        this.rating = r.rating;
+        this.movieId = r.movieId;
+        this.author = UserOutput.from(r.author);
+    }
+
+    static from(r: ReviewWithAuthor): ReviewOutput {
+        return new this(r);
+    }
+
+    static nullOrFrom(r: ReviewWithAuthor | null): ReviewOutput | null {
+        return isNullOrDeleted(r) ? null : this.from(r!);
+    }
 }
-
-// export class ReviewOutput extends BaseOutput {
-//   title: string;
-//   overview: string;
-//   rating: number;
-//   author: UserSimpleInfoOutput;
-
-//   static fromEntity({
-//     id,
-//     title,
-//     overview,
-//     createdAt,
-//     updatedAt,
-//     rating,
-//     author,
-//   }: {
-//     id: number;
-//     title: string;
-//     overview: string;
-//     rating: number;
-//     createdAt: Date;
-//     updatedAt: Date;
-//     author: {
-//       id: number;
-//       name: string;
-//       avatarUrl: string | null;
-//     };
-//   }) {
-//     const r = new ReviewOutput();
-
-//     r.id = id;
-//     r.title = title;
-//     r.overview = overview;
-//     r.rating = rating;
-//     r.createdAt = createdAt;
-//     r.updatedAt = updatedAt;
-//     r.author = UserSimpleInfoOutput.create(author);
-
-//     return r;
-//   }
-// }

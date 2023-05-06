@@ -35,25 +35,25 @@ export class MovieOutput {
     }
 
     static from(
-        entity: Movie,
+        m: Movie,
         {isFavorite, isLiked}:
             {
                 isFavorite?: boolean | null,
                 isLiked?: boolean | null,
             } = {isLiked: false, isFavorite: false},
     ): MovieOutput {
-        return new MovieOutput(entity, isFavorite, isLiked);
+        return new MovieOutput(m, isFavorite, isLiked);
     }
 
     static nullOrFrom(
-        entity: Movie | null,
+        m: Movie | null,
         {isFavorite, isLiked}:
             {
                 isFavorite?: boolean | null,
                 isLiked?: boolean | null,
             } = {isLiked: false, isFavorite: false},
     ): MovieOutput | null {
-        return isNullOrDeleted(entity) ? null : this.from(entity!, {isFavorite, isLiked});
+        return isNullOrDeleted(m) ? null : this.from(m!, {isFavorite, isLiked});
     }
 
 

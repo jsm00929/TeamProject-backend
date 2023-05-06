@@ -3,3 +3,7 @@ export function isNullOrDeleted(o: object | null) {
 
     return (o.hasOwnProperty('deletedAt') && o['deletedAt'] !== null);
 }
+
+export function isDeleted(o: object) {
+    return (o.hasOwnProperty('deletedAt') && o['deletedAt'] !== null);
+}

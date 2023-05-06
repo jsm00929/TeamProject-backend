@@ -77,7 +77,7 @@ async function findManyMovies(
     });
 
     const data = entities.map((entity) => MovieOutput.from(entity));
-    return PaginationOutput.from({data, count});
+    return PaginationOutput.from(data, count);
 }
 
 async function findManyMoviesWithGenres(
@@ -108,7 +108,7 @@ async function findManyMoviesWithGenres(
     });
 
     const data = entities.map((e) => MovieWithGenresOutput.from(e));
-    return PaginationOutput.from({data, count});
+    return PaginationOutput.from(data, count);
 }
 
 //

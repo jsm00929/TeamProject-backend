@@ -1,6 +1,6 @@
 import {Tx} from "./tx";
 
-type Key = 'user' | 'movie' | 'comment' | 'movieHistory' | 'movieLike' | 'favoriteMovie' | 'review';
+type Key = 'user' | 'movie' | 'comment' | 'movieHistory' | 'movieLike' | 'favoriteMovie' | 'review' | 'author';
 
 export type PickIds<T extends Key> = {
     [K in `${T}Id`]: number;

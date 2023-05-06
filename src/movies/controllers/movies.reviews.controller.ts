@@ -11,8 +11,35 @@ import {EditMovieReviewBody} from "../../reviews/dtos/edit_review.body";
 import {ReviewIdParams} from "../../reviews/dtos/review_id.params";
 import {Router} from "express";
 import {handle} from "../../core/handle";
+import {PaginationQuery} from "../../core/dtos/inputs";
+
 
 export const moviesReviewsRouter = Router();
+
+
+/**
+ * @description
+ * 특정 영화에(id로 조회) 작성한 리뷰 조회하기
+ */
+moviesReviewsRouter.get(
+    '/:movieId/reviews',
+    handle({
+        queryCls: PaginationQuery,
+        paramsCls: MovieIdParams,
+        controller: reviews,
+    }),
+);
+
+async function reviews(
+    req: RequestWith<PaginationQuery, MovieIdParams>,
+) {
+    const {movieId} = req.unwrapParams();
+    const p = req.unwrap();
+
+    const reviews = await reviewsService.reviewsByMovieId({movieId}, p);
+
+    return AppResult.new({body: reviews});
+}
 
 /**
  * @description
@@ -51,18 +78,19 @@ async function write(
 
 /**
  * @description
- * 특정 영화 리뷰 삭제하기
+ * 특정 영화 리뷰 수정하기
  */
-moviesReviewsRouter.delete(
+moviesReviewsRouter.patch(
     '/reviews/:reviewId',
     handle({
         authLevel: 'must',
+        bodyCls: EditMovieReviewBody,
         paramsCls: ReviewIdParams,
-        controller: remove,
+        controller: editReview,
     }),
 );
 
-async function edit(
+async function editReview(
     req: AuthRequestWith<EditMovieReviewBody, ReviewIdParams>,
 ) {
     const userId = req.userId;
@@ -82,13 +110,14 @@ moviesReviewsRouter.delete(
     handle({
         authLevel: 'must',
         paramsCls: ReviewIdParams,
-        controller: remove,
+        controller: removeReview,
     }),
 )
 
-async function remove(req: AuthRequestWith<never, ReviewIdParams>) {
-    const userId = req.userId;
+async function removeReview(req: AuthRequestWith<never, ReviewIdParams>) {
+    const {userId} = req;
     const {reviewId} = req.unwrapParams();
+    console.log(reviewId)
 
     await reviewsService.remove({userId, reviewId});
 }

@@ -35,7 +35,7 @@ async function findManyMovieHistoriesByUserId(
     });
 
     const data = entities.map((e) => MovieHistoryOutput.from(e));
-    return PaginationOutput.from({data, count: entities.length});
+    return PaginationOutput.from(data, count);
 }
 
 async function createMovieHistory(

@@ -3,8 +3,10 @@ import {ReviewIdParams} from './dtos/review_id.params';
 import {RequestWith} from '../core/types';
 import {AppResult} from '../core/types/app_result';
 import {Router} from "express";
+import {handle} from "../core/handle";
+import {MovieIdParams} from "../movies/dtos/inputs/get_movie_detail.params";
 
-const reviewsRouter = Router();
+export const reviewsRouter = Router();
 
 // /**
 //  * Movie Reviews
@@ -13,62 +15,19 @@ const reviewsRouter = Router();
  * @description
  * 특정 영화에 대한 리뷰 가져오기(Pagination)
  */
-moviesRouter.get(
-  '/:movieId/reviews',
-  handle({
-    authLevel: 'must',
-    paramsCls: MovieIdParams,
-    controller: moviesController.getMovieDetail,
-  }),
+reviewsRouter.get(
+    '/:movieId/reviews',
+    handle({
+        authLevel: 'must',
+        paramsCls: MovieIdParams,
+        controller: detail,
+    }),
 );
+
 async function detail(req: RequestWith<never, ReviewIdParams>) {
     const {reviewId} = req.unwrapParams();
-    const reviewDetail = await reviewsService.getReviewDetail({reviewId});
+    const reviewDetail = await reviewsService.reviewDetail({reviewId});
 
     return AppResult.new({body: reviewDetail});
 }
 
-
-// /**
-//  * @description
-//  * 특정 영화에 대한 리뷰 작성하기
-//  */
-// moviesRouter.post(
-//     '/:movieId/reviews',
-//     handle({
-//         authLevel: 'must',
-//         bodyCls: CreateMovieReviewBody,
-//         paramsCls: MovieIdParams,
-//         controller: moviesReviewsController.write,
-//     }),
-// );
-//
-// /**
-//  * @description
-//  * 특정 영화 리뷰 수정하기
-//  */
-// moviesRouter.patch(
-//     '/reviews/:reviewId',
-//     handle({
-//         authLevel: 'must',
-//         bodyCls: EditMovieReviewBody,
-//         paramsCls: ReviewIdParams,
-//         controller: moviesReviewsController.edit,
-//     }),
-// );
-//
-// /**
-//  * @description
-//  * 특정 영화 리뷰 삭제하기
-//  */
-// moviesRouter.delete(
-//     '/reviews/:reviewId',
-//     handle({
-//         authLevel: 'must',
-//         paramsCls: ReviewIdParams,
-//         controller: moviesReviewsController.remove,
-//     }),
-// );
-/
-
-export default {};

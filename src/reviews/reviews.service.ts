@@ -7,6 +7,27 @@ import {prisma} from "../config/db";
 import {UserRecord} from "../core/types/tx";
 import {PaginationQuery} from "../core/dtos/inputs";
 import {PickIds} from "../core/types/pick_ids";
+import {PaginationOutput} from "../core/dtos/outputs/pagination_output";
+import {ReviewOutput} from "./dtos/review_overview.output";
+
+async function reviewsByUserId(
+    {userId}: PickIds<'user'>,
+    p: PaginationQuery,
+): Promise<PaginationOutput<ReviewOutput>> {
+    return prisma.$transaction(async tx => {
+        return reviewsRepository.findManyReviewsByUserId({userId, tx}, p);
+    });
+}
+
+async function reviewsByMovieId(
+    {movieId}: PickIds<'movie'>,
+    p: PaginationQuery,
+): Promise<PaginationOutput<ReviewOutput>> {
+    return prisma.$transaction(async tx => {
+        return reviewsRepository.findManyReviewsByMovieId({movieId, tx}, p);
+    });
+}
+
 
 // TODO:
 async function reviewDetail({reviewId}: PickIds<'review'>) {
@@ -83,16 +104,23 @@ async function remove({userId, reviewId}: PickIds<'user' | 'review'>) {
             });
         }
 
-        const isAuthor = await reviewsRepository.isAuthor({userId, reviewId, tx});
-        if (!isAuthor) {
+        if (review.author.id !== userId) {
             throw AppError.new({
                 message: ErrorMessages.PERMISSION_DENIED,
                 status: HttpStatus.FORBIDDEN,
             });
         }
 
+        // const isAuthor = await reviewsRepository.isAuthor({userId, reviewId, tx});
+        // if (!isAuthor) {
+        //     throw AppError.new({
+        //         message: ErrorMessages.PERMISSION_DENIED,
+        //         status: HttpStatus.FORBIDDEN,
+        //     });
+        // }
 
-        const {rating, movieId} = review
+
+        const {rating, movieId} = review;
 
         await reviewsRepository.remove({tx, reviewId});
 
@@ -104,7 +132,8 @@ async function remove({userId, reviewId}: PickIds<'user' | 'review'>) {
 }
 
 export default {
-    reviewOverviewsByUserId,
+    reviewsByUserId,
+    reviewsByMovieId,
     reviewDetail,
     write,
     edit,

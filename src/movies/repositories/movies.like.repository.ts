@@ -23,18 +23,21 @@ async function create(
     });
 }
 
-async function removeById(
+async function softDeleteById(
     {movieLikeId, tx}: PickIdsWithTx<'movieLike'>,
 ) {
-    return tx.likeMovie.delete({
+    return tx.likeMovie.update({
         where: {
             id: movieLikeId,
-        }
+        },
+        data: {
+            deletedAt: new Date(),
+        },
     });
 }
 
 export default {
     findByUserIdAndMovieId,
     create,
-    removeById,
+    softDeleteById,
 }

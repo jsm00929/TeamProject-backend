@@ -31,7 +31,7 @@ export class MovieHistoryOutput {
     }
 
     static from(m: MovieWithHistory): MovieHistoryOutput {
-        return new MovieHistoryOutput(m);
+        return new this(m);
     }
 
     static nullOrFrom(m: MovieWithHistory | null): MovieHistoryOutput | null {

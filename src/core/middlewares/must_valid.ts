@@ -1,8 +1,7 @@
 import {ClassConstructor, plainToClass} from 'class-transformer';
 import {validate} from 'class-validator';
 import {NextFunction} from 'express';
-import {RequestWith} from '../types/request_with';
-import {AppError} from '../types/app_error';
+import {AppError, RequestWith} from '../types';
 import {ErrorMessages} from '../enums/error_messages';
 import {parseIntProps} from '../../utils/parsers';
 

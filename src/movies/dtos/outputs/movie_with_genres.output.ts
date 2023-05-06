@@ -35,7 +35,7 @@ export class MovieWithGenresOutput {
     }
 
     public static from(m: MovieWithGenres): MovieWithGenresOutput {
-        return new MovieWithGenresOutput(m);
+        return new this(m);
     }
 
 

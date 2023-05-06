@@ -24,7 +24,7 @@ async function toggleMovieLike(
 
         // 사용자가 좋아요를 누르려고 하는데, 좋아요를 누른 상태라면 삭제
         if (prevLike) {
-            await MoviesLikeRepository.removeById({movieLikeId: like.id, tx});
+            await MoviesLikeRepository.softDeleteById({movieLikeId: like.id, tx});
         } else {
             // 사용자가 좋아요를 누르려고 하는데, 좋아요를 누르지 않은 상태라면 좋아요를 누름
             await MoviesLikeRepository.create({userId, movieId, tx});

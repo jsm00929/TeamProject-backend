@@ -25,7 +25,6 @@ model User {
   likeMovies           LikeMovie[]
   favoriteMovies       FavoriteMovie[]
   recentlyViewedMovies MovieHistory[]
-  refreshToken         RefreshToken[]
 
   @@index([email], name: "email")
 }
@@ -54,37 +53,40 @@ model Movie {
 // Movie Detail 조회만 하면 자동으로 추가
 // 삭제는 수동
 model MovieHistory {
-  id           Int      @id @default(autoincrement())
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  movie        Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  id           Int       @id @default(autoincrement())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie        Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
   userId       Int
   movieId      Int
-  createdAt    DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
-  lastViewedAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
+  createdAt    DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
+  lastViewedAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
+  deletedAt    DateTime? @db.Timestamp()
 
   @@index([userId, movieId])
 }
 
 model FavoriteMovie {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  id        Int       @id @default(autoincrement())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie     Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
   userId    Int
   movieId   Int
-  createdAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
-  updatedAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
+  createdAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
+  updatedAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
+  deletedAt DateTime? @db.Timestamp()
 
   @@index([userId, movieId])
 }
 
 model LikeMovie {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  id        Int       @id @default(autoincrement())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie     Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
   userId    Int
   movieId   Int
-  createdAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
-  updatedAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
+  createdAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
+  updatedAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
+  deletedAt DateTime? @db.Timestamp()
 
   @@index([userId, movieId])
   @@index(movieId)
@@ -150,14 +152,4 @@ model Comment {
 
   @@index([reviewId], name: "reviewId")
   @@index([authorId, deletedAt], name: "authorIdDeletedAt")
-}
-
-model RefreshToken {
-  id        Int      @id
-  token     String   @db.VarChar(255)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int
-  revoked   Boolean  @default(false)
-  createdAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
-  expiresAt DateTime @db.Timestamp()
 }

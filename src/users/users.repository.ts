@@ -1,9 +1,9 @@
 import {CreateUserBody} from './dtos/inputs/create_user.body';
 import {Tx, UserRecord} from '../core/types/tx';
-import {UserOutput, UserWithPasswordOutput,} from '../auth/dtos/outputs/user.output';
 import {EmailWithTx, PickIdsWithTx} from '../core/types/pick_ids';
 import {CreateUserWithoutPasswordBody} from './dtos/inputs/create_user_without_password.body';
 import {UpdateUserNameBody} from './dtos/inputs/update_my_name.body';
+import {UserOutput, UserWithPasswordOutput} from "./dtos/outputs/user.output";
 
 /**
  * @description

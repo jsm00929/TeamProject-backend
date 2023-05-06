@@ -22,21 +22,18 @@ export class PaginationOutput<T> {
         return p;
     }
 
-    public static from<T>(
-        {data, count}: { data: T[], count: number }
-    ): PaginationOutput<T> {
+    public static from<T>(data: T[], count: number): PaginationOutput<T> {
 
         let hasMore = false;
 
         if (data.length > count) {
-            --count;
             hasMore = true;
             data.pop();
         }
 
         return PaginationOutput.new({
             data,
-            count,
+            count: data.length,
             hasMore,
         });
     }

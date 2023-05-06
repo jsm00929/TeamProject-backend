@@ -30,7 +30,9 @@ async function findManyByUserId(
         take: count + 1,
     });
 
-    return PaginationOutput.from({data: entities, count: entities.length});
+
+    // TODO
+    return PaginationOutput.from(entities, count);
 }
 
 async function create(

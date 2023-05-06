@@ -1,51 +1,80 @@
-import {prisma} from '../config/db';
 import {CreateMovieReviewBody} from './dtos/create_movie_review.body';
 import {EditMovieReviewBody} from './dtos/edit_review.body';
-import {PaginationRecord, UserRecord} from "../core/types/tx";
 import {PickIdsWithTx} from "../core/types/pick_ids";
+import {PaginationQuery} from "../core/dtos/inputs";
+import {ReviewOutput, ReviewWithAuthor} from "./dtos/review_overview.output";
+import {PaginationOutput} from "../core/dtos/outputs/pagination_output";
+import {isDeleted} from "../utils/is_null_or_deleted";
 
 /**
  * 조회(Fetch)
  */
-async function findManyByAuthorId(
-    {userId, skip, take}: Pick<UserRecord, 'userId'> & PaginationRecord,
-) {
-    return prisma.review.findMany({
+async function findManyReviewsByUserId(
+    {userId, tx}: PickIdsWithTx<'user'>,
+    {count, after}: PaginationQuery,
+): Promise<PaginationOutput<ReviewOutput>> {
+    const entities = await tx.review.findMany({
         where: {
             authorId: userId,
-            deletedAt: null,
         },
-        skip,
-        take,
+        ...(after !== undefined && {cursor: {id: after}}),
+        skip: after ? 1 : 0,
+        take: count + 1,
+        include: {
+            author: true,
+        },
         orderBy: {
             createdAt: 'desc',
         },
-
-        select: {
-            id: true,
-            title: true,
-            overview: true,
-            rating: true,
-            createdAt: true,
-            updatedAt: true,
-            author: {
-                select: {
-                    id: true,
-                    name: true,
-                    avatarUrl: true,
-                }
-            }
-        }
     });
+
+    const reviews = entities
+        .filter(r => !isDeleted(r))
+        .map(r => ReviewOutput.from(r));
+    return PaginationOutput.from(reviews, count);
 }
 
-async function findById({reviewId, tx}: PickIdsWithTx<'review'>) {
-    return tx.review.findUnique({where: {id: reviewId}});
+async function findManyReviewsByMovieId(
+    {movieId, tx}: PickIdsWithTx<'movie'>,
+    {count, after}: PaginationQuery,
+): Promise<PaginationOutput<ReviewOutput>> {
+    const entities = await tx.review.findMany({
+        where: {
+            movieId,
+        },
+        ...(after !== undefined && {cursor: {id: after}}),
+        skip: after ? 1 : 0,
+        take: count + 1,
+        include: {
+            author: true,
+        },
+        orderBy: {
+            createdAt: 'desc',
+        },
+    });
+
+    const reviews = entities.map(review => ReviewOutput.from(review));
+    return PaginationOutput.from(reviews, count);
+}
+
+async function findById({reviewId, tx}: PickIdsWithTx<'review'>): Promise<ReviewOutput | null> {
+
+    const review: ReviewWithAuthor | null = await tx.review.findUnique(
+        {
+            where: {
+                id: reviewId,
+            },
+            include: {
+                author: true,
+            },
+        },
+    );
+    return ReviewOutput.nullOrFrom(review);
 }
 
 async function isExists({reviewId, tx}: PickIdsWithTx<'review'>) {
-    const review = await findById({reviewId, tx});
-    return review !== null && review.deletedAt === null;
+    const isReviewExists = await findById({reviewId, tx});
+    return isReviewExists;
 }
 
 async function isAuthor(
@@ -56,7 +85,7 @@ async function isAuthor(
     }: PickIdsWithTx<'user' | 'review'>,
 ) {
     const review = await findById({reviewId, tx});
-    return review !== null && review.authorId === userId;
+    return review !== null && review.author.id === userId;
 }
 
 
@@ -149,7 +178,8 @@ async function totalRatingByMovieId({movieId, tx}: PickIdsWithTx<'movie'>) {
 
 export default {
     findById,
-    findManyByAuthorId,
+    findManyReviewsByUserId,
+    findManyReviewsByMovieId,
     createRating,
     totalRatingByMovieId,
     isExists,

@@ -12,6 +12,8 @@ import {moviesRouter} from "./movies/controllers/movies.controller";
 import {usersRouter} from "./users/controllers/users.controller";
 import {authRouter} from "./auth/auth.controller";
 import {moviesReviewsRouter} from "./movies/controllers/movies.reviews.controller";
+import {usersMovieReviewsRouter} from "./users/controllers/users.reviews.controller";
+import {reviewsRouter} from "./reviews/reviews.controller";
 
 
 // Singleton App instance
@@ -87,9 +89,10 @@ export class App {
         this.app.use('/api', api);
         api.use('/auth', authRouter);
         api.use('/users', usersRouter);
+        api.use('/users', usersMovieReviewsRouter);
         api.use('/movies', moviesRouter);
         api.use('/movies', moviesReviewsRouter);
-        // api.use('/reviews', router.reviews);
+        api.use('/reviews', reviewsRouter);
     }
 
     // 오류 처리 미들웨어, 404 미들웨어 로드
