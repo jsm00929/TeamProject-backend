@@ -4,6 +4,7 @@ import {PaginationOutput} from '../../core/dtos/outputs/pagination_output';
 import {PickIdsWithTx} from '../../core/types/pick_ids';
 import {MovieHistoryOutput, MovieWithHistory,} from '../dtos/outputs/movie_history.output';
 import {isDeleted} from "../../utils/is_null_or_deleted";
+import {nullOrFirst} from "../../utils/null_or_first";
 
 async function findByUserIdAndMovieId(
     {
@@ -17,6 +18,25 @@ async function findByUserIdAndMovieId(
             userId,
         },
     });
+}
+
+async function findNextById(
+    {movieHistoryId, tx}: PickIdsWithTx<'movieHistory'>
+) {
+    const entities = await tx.movieHistory.findMany({
+        where: {
+            id: movieHistoryId,
+        },
+        cursor: {
+            id: movieHistoryId
+        },
+        orderBy: {
+            lastViewedAt: 'desc',
+        },
+        skip: 1,
+        take: 1,
+    });
+    return nullOrFirst(entities);
 }
 
 async function findManyByUserId(
@@ -125,6 +145,7 @@ async function updateLastViewedAtById(
 export default {
     findByUserIdAndMovieId,
     findManyByUserId,
+    findNextById,
     create,
     softDeleteById,
     restoreById,

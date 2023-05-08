@@ -58,6 +58,9 @@ async function login({email, password}: LoginBody) {
             });
         }
 
+        // setAuthCookie (userId) -> 알아서 refresh,access 토큰 발급 뒤 cookie설정
+        // generateAccessToken, genereateRefreshToken -> setAuthCOokie(accessToken,refreshToken) ->
+
         return user.id;
     });
 

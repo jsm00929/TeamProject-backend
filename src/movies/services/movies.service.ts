@@ -25,25 +25,35 @@ async function movieDetail({userId, movieId}: Partial<PickIds<'user'>> & PickIds
         if (userId) {
             // 1. 로그인 된 사용자가 movie detail 조회 시,
             // MovieHistory 생성 or 갱신
-            const movieHistory = await moviesHistoryService.createOrUpdate({userId, movieId, tx});
+            const movieHistory =
+                await moviesHistoryService.createOrUpdateOrRestore({
+                    userId,
+                    movieId,
+                    tx,
+                });
             // MovieMetaData - latestMovieHistoryId 갱신
-            await moviesMetadataRepository.updateLatestHistoryId({userId, movieHistoryId: movieHistory.id, tx});
+            await moviesMetadataRepository.updateLatestHistoryId({
+                nextId: movieHistory.id,
+                userId,
+                tx,
+            });
         }
 
         // 2. movie detail 조회
-        return moviesRepository.findMovieDetailById({movieId, tx});
+        return moviesRepository.findDetailById({movieId, tx});
     });
 }
 
 // 루트페이지, 카테고리별페이지
 // 루트 - sort, 검색 기능
 
-// 최근 본 영화 삭제
-// async function deleteRecentlyViewedMovie(
+// // 최근 본 영화 삭제
+// async function deleteById(
 //     {
 //         userId,
 //         movieId,
-//     }: Pick<UserRecord, 'userId'> & Pick<MovieRecord, 'movieId'>,
+//         tx,
+//     }: PickIdsWithTx<'user' | 'movie'>,
 // ) {
 //     return prisma.$transaction(async (tx) => {
 //         const userMovie = await moviesRepository.findUserMovie({movieId, tx, userId});

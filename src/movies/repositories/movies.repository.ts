@@ -171,10 +171,11 @@ async function findManyMoviesWithGenres(
 //     });
 // }
 
-async function findMovieDetailById({
-                                       movieId,
-                                       tx,
-                                   }: PickIdsWithTx<'movie'>): Promise<MovieOutput | null> {
+async function findDetailById(
+    {
+        movieId,
+        tx,
+    }: PickIdsWithTx<'movie'>): Promise<MovieOutput | null> {
     return findMovieById({movieId, tx});
 }
 
@@ -258,7 +259,7 @@ export default {
     findMovieWithGenresById,
     findManyMovies,
     findManyMoviesWithGenres,
-    findMovieDetailById,
+    findDetailById,
     createMany,
     findAllGenres,
     upsert,

@@ -16,13 +16,16 @@ async function createAndReturn({userId, tx}: PickIdsWithTx<'user'>) {
     });
 }
 
-async function updateLatestHistoryId({userId, movieHistoryId, tx}: PickIdsWithTx<'user' | 'movieHistory'>) {
+async function updateLatestHistoryId(
+    {userId, nextId, tx}: PickIdsWithTx<'user'>
+        & { nextId: number | null }
+) {
     await tx.movieMetaData.update({
         where: {
             userId,
         },
         data: {
-            latestHistoryId: movieHistoryId,
+            latestHistoryId: nextId,
         },
     });
 }
@@ -49,6 +52,84 @@ async function updateLatestMovieLikeId({userId, movieLikeId, tx}: PickIdsWithTx<
     });
 }
 
+async function incrementMovieHistoriesCount({userId, tx}: PickIdsWithTx<'user'>) {
+    await tx.movieMetaData.update({
+        where: {
+            userId,
+        },
+        data: {
+            historiesCount: {
+                increment: 1,
+            },
+        },
+    });
+}
+
+async function incrementMovieLikesCount({userId, tx}: PickIdsWithTx<'user'>) {
+    await tx.movieMetaData.update({
+        where: {
+            userId,
+        },
+        data: {
+            likesCount: {
+                increment: 1,
+            },
+        },
+    });
+}
+
+async function incrementFavoriteMoviesCount({userId, tx}: PickIdsWithTx<'user'>) {
+    await tx.movieMetaData.update({
+        where: {
+            userId,
+        },
+        data: {
+            favoritesCount: {
+                increment: 1,
+            },
+        },
+    });
+}
+
+async function decrementMovieHistoriesCount({userId, tx}: PickIdsWithTx<'user'>) {
+    await tx.movieMetaData.update({
+        where: {
+            userId,
+        },
+        data: {
+            historiesCount: {
+                decrement: 1,
+            },
+        },
+    });
+}
+
+async function decrementMovieLikesCount({userId, tx}: PickIdsWithTx<'user'>) {
+    await tx.movieMetaData.update({
+        where: {
+            userId,
+        },
+        data: {
+            likesCount: {
+                decrement: 1,
+            },
+        },
+    });
+}
+
+async function decrementFavoriteMoviesCount({userId, tx}: PickIdsWithTx<'user'>) {
+    await tx.movieMetaData.update({
+        where: {
+            userId,
+        },
+        data: {
+            favoritesCount: {
+                decrement: 1,
+            },
+        },
+    });
+}
+
 async function softDeleteByUserId({userId, tx}: PickIdsWithTx<'user'>) {
     await tx.movieMetaData.update({
         where: {
@@ -67,4 +148,10 @@ export default {
     updateLatestHistoryId,
     updateLatestMovieLikeId,
     updateLatestFavoriteMovieId,
+    incrementMovieHistoriesCount,
+    incrementMovieLikesCount,
+    incrementFavoriteMoviesCount,
+    decrementMovieHistoriesCount,
+    decrementFavoriteMoviesCount,
+    decrementMovieLikesCount,
 }
