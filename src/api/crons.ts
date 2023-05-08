@@ -13,6 +13,7 @@ import {prisma} from '../config/db';
 import {CreateUserBody} from '../users/dtos/inputs/create_user.body';
 import {randomEmail, randomNumber, randomString} from '../utils/rand';
 import {setTimeout} from 'timers';
+import {AxiosError} from "axios";
 
 const pagePath = path.join(__dirname, 'page.json');
 const movieCountPath = path.join(__dirname, 'movie_count.json');
@@ -39,6 +40,78 @@ async function updateLastMovieCount(nextMovieCount: number) {
     const data = JSON.stringify({movieCount: nextMovieCount});
     await writeFile(movieCountPath, data, {}, (err) => {
     });
+}
+
+export async function updateMoviesGenres(page: number) {
+    // const page = await readLastPage();
+    log.info(page)
+    try {
+        // const {data} = await axios.get<FetchMoviePageDto>(`https://api.themoviedb.org/3/discover/movie?api_key=e3db53fd7d4bcad41e1afc5878bdd2cc&sort_by=popularity.desc&page=${page}`,
+        // );
+        const {data} = await tmdbClient.get<FetchMoviePageDto>(
+            `/discover/movie`,
+            {
+                params: {
+                    sort_by: 'popularity.desc',
+                    page,
+                },
+            },
+        );
+        log.info(data);
+        data.results.forEach(
+            async ({
+                       adult,
+                       backdropPath,
+                       genreIds,
+                       id,
+                       originalLanguage,
+                       originalTitle,
+                       overview,
+                       popularity,
+                       posterPath,
+                       releaseDate,
+                       title,
+                       voteAverage,
+                       voteCount,
+                   }) => {
+
+                await moviesRepository.upsert({
+                    adult,
+                    backdropUrl: backdropPath,
+                    id,
+                    lang: originalLanguage,
+                    overview,
+                    popularity,
+                    posterUrl: posterPath,
+                    releaseDate,
+                    title,
+                    voteAverage,
+                    voteCount,
+                    genreIds,
+                })
+
+
+                log.info(genreIds)
+                await prisma.movie.update({
+                    where: {
+                        id,
+                    },
+                    data: {
+                        genres: {
+                            connect: genreIds.map(g => ({id: g}))
+                        }
+                    }
+                });
+            },
+        );
+    } catch (err) {
+        console.log((err as AxiosError).response)
+        log.error((err as Error).message);
+        throw err;
+    }
+    // await updateLastPage(page + 1);
+
+    // return page;
 }
 
 export async function upsertMovies() {

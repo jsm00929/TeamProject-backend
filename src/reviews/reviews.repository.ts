@@ -53,7 +53,10 @@ async function findManyReviewsByMovieId(
         },
     });
 
-    const reviews = entities.map(review => ReviewOutput.from(review));
+    const reviews = entities
+        .filter(r => !isDeleted(r))
+        .map(r => ReviewOutput.from(r));
+
     return PaginationOutput.from(reviews, count);
 }
 

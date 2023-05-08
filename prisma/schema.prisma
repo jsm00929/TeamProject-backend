@@ -7,30 +7,27 @@ datasource db {
   url      = env("DB_URL")
 }
 
-// email: '',
-// password: '',
-// role: 'AI_ADMIN',
-
 model User {
   id                   Int             @id @default(autoincrement())
   name                 String          @db.VarChar(20)
   email                String          @unique @db.VarChar(255)
   password             String?         @db.VarChar(100)
   avatarUrl            String?         @db.VarChar(255)
-  createdAt            DateTime        @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
-  updatedAt            DateTime        @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
-  deletedAt            DateTime?       @db.Timestamp()
+  createdAt            DateTime        @default(now()) @db.Timestamp(0)
+  updatedAt            DateTime        @default(now()) @updatedAt @db.Timestamp(0)
+  deletedAt            DateTime?       @db.Timestamp(0)
   comments             Comment[]
-  reviews              Review[]
-  likeMovies           LikeMovie[]
   favoriteMovies       FavoriteMovie[]
+  likeMovies           LikeMovie[]
   recentlyViewedMovies MovieHistory[]
+  movieMetaData        MovieMetaData?
+  reviews              Review[]
 
-  @@index([email], name: "email")
+  @@index([email], map: "email")
 }
 
 model Movie {
-  id            Int             @id // tmdb의 id를 따름
+  id            Int             @id
   title         String          @db.VarChar(100)
   titleKo       String?         @db.VarChar(100)
   overview      String          @db.Text
@@ -41,94 +38,108 @@ model Movie {
   voteAverage   Float
   backdropUrl   String?
   posterUrl     String?
-  lang          String // 사용 언어
+  lang          String
   releaseDate   DateTime?       @db.Date
-  reviews       Review[]
-  genres        Genre[]
-  likeMovie     LikeMovie[]
   favoriteMovie FavoriteMovie[]
+  likeMovie     LikeMovie[]
   moviesHistory MovieHistory[]
+  reviews       Review[]
+  genres        Genre[]         @relation("GenreToMovie")
 }
 
-// Movie Detail 조회만 하면 자동으로 추가
-// 삭제는 수동
-model MovieHistory {
-  id           Int       @id @default(autoincrement())
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  movie        Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  userId       Int
-  movieId      Int
-  createdAt    DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
-  lastViewedAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
-  deletedAt    DateTime? @db.Timestamp()
+model MovieMetaData {
+  id               Int            @id @default(autoincrement())
+  userId           Int            @unique
+  latestHistoryId  Int?
+  historiesCount   Int            @default(0)
+  latestLikeId     Int?
+  likesCount       Int            @default(0)
+  latestFavoriteId Int?
+  favoritesCount   Int            @default(0)
+  createdAt        DateTime       @default(now()) @db.Timestamp(0)
+  updatedAt        DateTime       @default(now()) @updatedAt @db.Timestamp(0)
+  deletedAt        DateTime?      @db.Timestamp(0)
+  latestFavorite   FavoriteMovie? @relation(fields: [latestFavoriteId], references: [id], onDelete: Cascade)
+  latestHistory    MovieHistory?  @relation(fields: [latestHistoryId], references: [id], onDelete: Cascade)
+  latestLike       LikeMovie?     @relation(fields: [latestLikeId], references: [id], onDelete: Cascade)
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId, movieId])
+  @@index([latestFavoriteId], map: "MovieMetaData_latestFavoriteId_fkey")
+  @@index([latestHistoryId], map: "MovieMetaData_latestHistoryId_fkey")
+  @@index([latestLikeId], map: "MovieMetaData_latestLikeId_fkey")
+}
+
+model MovieHistory {
+  id            Int             @id @default(autoincrement())
+  userId        Int
+  movieId       Int
+  createdAt     DateTime        @default(now()) @db.Timestamp(0)
+  lastViewedAt  DateTime        @default(now()) @updatedAt @db.Timestamp(0)
+  deletedAt     DateTime?       @db.Timestamp(0)
+  movie         Movie           @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movieMetaData MovieMetaData[]
+
+  @@index([userId])
+  @@index([userId, lastViewedAt])
+  @@index([movieId], map: "MovieHistory_movieId_fkey")
 }
 
 model FavoriteMovie {
-  id        Int       @id @default(autoincrement())
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  movie     Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  userId    Int
-  movieId   Int
-  createdAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
-  updatedAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
-  deletedAt DateTime? @db.Timestamp()
+  id            Int             @id @default(autoincrement())
+  userId        Int
+  movieId       Int
+  createdAt     DateTime        @default(now()) @db.Timestamp(0)
+  updatedAt     DateTime        @default(now()) @updatedAt @db.Timestamp(0)
+  deletedAt     DateTime?       @db.Timestamp(0)
+  movie         Movie           @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movieMetaData MovieMetaData[]
 
   @@index([userId, movieId])
+  @@index([movieId], map: "FavoriteMovie_movieId_fkey")
 }
 
 model LikeMovie {
-  id        Int       @id @default(autoincrement())
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  movie     Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  userId    Int
-  movieId   Int
-  createdAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
-  updatedAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
-  deletedAt DateTime? @db.Timestamp()
+  id            Int             @id @default(autoincrement())
+  userId        Int
+  movieId       Int
+  createdAt     DateTime        @default(now()) @db.Timestamp(0)
+  updatedAt     DateTime        @default(now()) @updatedAt @db.Timestamp(0)
+  deletedAt     DateTime?       @db.Timestamp(0)
+  movie         Movie           @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movieMetaData MovieMetaData[]
 
   @@index([userId, movieId])
-  @@index(movieId)
+  @@index([movieId])
 }
 
 model Genre {
-  id     Int     @id // tmdb의 id를 따름
+  id     Int     @id
   name   String  @unique
-  movies Movie[]
+  movies Movie[] @relation("GenreToMovie")
 
-  @@index([name], name: "name")
+  @@index([name], map: "name")
 }
-
-// model AiAdmin {
-//     id: 'abc', pw:'123',
-// }
-// AI
-// movieId, reviewId, content
-// DB에서 ID,PW 만들어버리기
-//
-// USERNAME: 'abc',
-// PASSWORD: '123',
-//
-// POST /api/ai/review
-// mustAiAdmin
 
 model Review {
   id        Int       @id @default(autoincrement())
-  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  title     String    @db.VarChar(100)
-  overview  String    @db.VarChar(100)
-  content   String    @db.Text
-  rating    Int?      @db.UnsignedTinyInt // 0 ~ 255
-  comments  Comment[]
-  authorId  Int
   movieId   Int
+  authorId  Int
+  content   String    @db.Text
+  rating    Int?      @db.UnsignedTinyInt
+  overview  String    @db.VarChar(100)
+  title     String    @db.VarChar(100)
+  createdAt DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @updatedAt @db.Timestamp(0)
+  deletedAt DateTime? @db.Timestamp(0)
+  comments  Comment[]
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   movie     Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
-  updatedAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
-  deletedAt DateTime? @db.Timestamp()
 
-  @@index([authorId, deletedAt], name: "authorIdDeletedAt")
+  @@index([movieId], map: "Review_movieId_fkey")
+  @@index([authorId, deletedAt], map: "authorIdDeletedAt")
 }
 
 model Rating {
@@ -136,7 +147,7 @@ model Rating {
   movieId Int
   rating  Int
 
-  @@index(movieId, name: "movieId")
+  @@index([movieId], map: "movieId")
 }
 
 model Comment {
@@ -144,12 +155,12 @@ model Comment {
   content   String    @db.VarChar(500)
   reviewId  Int
   authorId  Int
-  review    Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @updatedAt @db.Timestamp(0)
+  deletedAt DateTime? @db.Timestamp(0)
   author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
-  updatedAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
-  deletedAt DateTime? @db.Timestamp()
+  review    Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
-  @@index([reviewId], name: "reviewId")
-  @@index([authorId, deletedAt], name: "authorIdDeletedAt")
+  @@index([reviewId], map: "reviewId")
+  @@index([authorId, deletedAt], map: "authorIdDeletedAt")
 }

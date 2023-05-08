@@ -10,6 +10,7 @@ import moviesHistoryService from "../services/movies.history.service";
 import {PaginationQuery} from "../../core/dtos/inputs";
 import {Router} from "express";
 import {ToggleMovieLikeBody} from "../dtos/inputs/toggle_movie_like.body";
+import {ToggleFavoriteMovieBody} from "../dtos/inputs/toggle_favorite_movie.body";
 
 export const moviesRouter = Router();
 /**
@@ -113,14 +114,16 @@ moviesRouter.post('/:movieId/favorite',
     handle({
         authLevel: 'must',
         paramsCls: MovieIdParams,
+        bodyCls: ToggleFavoriteMovieBody,
         controller: toggleFavorite,
     }));
 
-async function toggleFavorite(req: AuthRequestWith<never, MovieIdParams>) {
+async function toggleFavorite(req: AuthRequestWith<ToggleFavoriteMovieBody, MovieIdParams>) {
     const userId = req.userId;
     const {movieId} = req.unwrapParams();
+    const body = req.unwrap();
 
-    await moviesFavoriteService.toggleFavorite({userId, movieId});
+    await moviesFavoriteService.toggleFavorite({userId, movieId}, body);
 
     return AppResult.default();
 }
@@ -134,15 +137,15 @@ moviesRouter.delete('/:movieId/favorite',
     handle({
         authLevel: 'must',
         paramsCls: MovieIdParams,
-        controller: removeFavorite,
+        controller: deleteFavorite,
     }));
 
 
-async function removeFavorite(req: AuthRequestWith<never, MovieIdParams>) {
+async function deleteFavorite(req: AuthRequestWith<never, MovieIdParams>) {
     const userId = req.userId;
     const {movieId} = req.unwrapParams();
 
-    await moviesFavoriteService.removeFavorite({userId, movieId});
+    await moviesFavoriteService.deleteFavorite({userId, movieId});
 
     return AppResult.default();
 }
@@ -155,15 +158,15 @@ moviesRouter.delete('/:movieId/history',
     handle({
         authLevel: 'must',
         paramsCls: MovieIdParams,
-        controller: removeHistory,
+        controller: deleteHistory,
     }));
 
 
-async function removeHistory(req: AuthRequestWith<never, MovieIdParams>) {
+async function deleteHistory(req: AuthRequestWith<never, MovieIdParams>) {
     const userId = req.userId;
     const {movieId} = req.unwrapParams();
 
-    await moviesHistoryService.removeMovieHistory({userId, movieId});
+    await moviesHistoryService.deleteByUserIdAndMovieId({userId, movieId});
 
     return AppResult.default();
 }

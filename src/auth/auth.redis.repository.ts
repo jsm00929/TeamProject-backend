@@ -1,14 +1,20 @@
-// import {Redis} from "../config/redis";
-// import {REDIS_BLACKLIST_PREFIX, REDIS_REFRESH_TOKEN_PREFIX, REFRESH_TOKEN_MAX_AGE} from "../config/constants";
-//
+// import {redisClient} from "../config/redis";
+// import {REDIS_BLACKLIST_PREFIX, REDIS_REFRESH_TOKEN_PREFIX} from "../config/constants";
+
 // async function isBlackListed(accessToken: string) {
 //     const key = REDIS_BLACKLIST_PREFIX + accessToken;
-//     return (await Redis.accessToken.get(key)) !== null;
+//     return (await redisClient.get(key)) !== null;
 // }
 //
 // async function addToBlackList(accessToken: string, exp: number) {
-//     await Redis.accessToken.setEx(REDIS_BLACKLIST_PREFIX, exp, '');
+//     const key = REDIS_BLACKLIST_PREFIX + accessToken;
+//     await redisClient.setEx(REDIS_BLACKLIST_PREFIX, exp, '');
 // }
+//
+// async function addRefreshToken(accessToken: string, exp: number) {
+//     await redisClient.setEx(REDIS_REFRESH_TOKEN_PREFIX, exp, '');
+// }
+//
 //
 // async function setAccessToken(
 //     userId: number,

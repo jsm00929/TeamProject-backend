@@ -1,9 +1,5 @@
 import {IsNumber, IsOptional, Max, Min} from 'class-validator';
 
-export type Cursor = {
-    id: number;
-};
-
 export class PaginationQuery {
 
     @IsNumber()
@@ -22,4 +18,7 @@ export class PaginationQuery {
     }
 
 }
+
+export type PaginationQueryWithCursor = PaginationQuery & { cursor?: number };
+
 

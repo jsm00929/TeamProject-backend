@@ -1,9 +1,9 @@
 import {Response} from 'express';
 import {
-  ACCESS_TOKEN_COOKIE_MAX_AGE,
-  ACCESS_TOKEN_COOKIE_NAME,
-  REFRESH_TOKEN_COOKIE_MAX_AGE,
-  REFRESH_TOKEN_COOKIE_NAME,
+    ACCESS_TOKEN_COOKIE_MAX_AGE,
+    ACCESS_TOKEN_COOKIE_NAME,
+    REFRESH_TOKEN_COOKIE_MAX_AGE,
+    REFRESH_TOKEN_COOKIE_NAME,
 } from '../config/constants';
 import {generateAccessToken, generateRefreshToken} from './token';
 

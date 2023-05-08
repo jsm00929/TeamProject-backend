@@ -1,10 +1,11 @@
 // FETCH
-import {PaginationQuery} from '../../core/dtos/inputs';
+import {PaginationQueryWithCursor} from '../../core/dtos/inputs';
 import {PaginationOutput} from '../../core/dtos/outputs/pagination_output';
 import {PickIdsWithTx} from '../../core/types/pick_ids';
 import {MovieHistoryOutput, MovieWithHistory,} from '../dtos/outputs/movie_history.output';
+import {isDeleted} from "../../utils/is_null_or_deleted";
 
-async function findMovieHistoryByUserIdAndMovieId(
+async function findByUserIdAndMovieId(
     {
         userId,
         movieId,
@@ -18,60 +19,100 @@ async function findMovieHistoryByUserIdAndMovieId(
     });
 }
 
-async function findManyMovieHistoriesByUserId(
+async function findManyByUserId(
     {userId, tx}: PickIdsWithTx<'user'>,
-    {count, after}: PaginationQuery,
+    {count, after, cursor}: PaginationQueryWithCursor,
 ): Promise<PaginationOutput<MovieHistoryOutput>> {
-    const entities: MovieWithHistory[] = await tx.movieHistory.findMany({
-        where: {
-            userId,
-        },
-        skip: after ? 1 : 0,
-        take: count + 1,
-        ...(after !== undefined && {cursor: {id: after}}),
-        include: {
-            movie: true,
-        },
-    });
 
-    const data = entities.map((e) => MovieHistoryOutput.from(e));
+    let entities: MovieWithHistory[] = [];
+
+    // 1. after === undefined -> 1페이지 페이지네이션
+    //  - 1. cursor === null -> history 없는 사용자 -> query 실행 x
+    //  - 2. cursor !== null -> history 있는 사용자 -> query 실행 o
+    //
+    // 2. after === undefined -> 페이지네이션
+    //  - 1. cursor === null -> history 없는 사용자 -> query 실행 o, 결과 x
+    //  - 2. cursor !== null -> history 있는 사용자 -> query 실행 o
+    if (after || cursor) {
+        entities = await tx.movieHistory.findMany({
+            where: {
+                userId,
+            },
+            orderBy: {
+                lastViewedAt: 'desc',
+            },
+            cursor: {
+                // after | cursor 중 하나 존재
+                // after가 있는 경우는 after 이후의 MovieHistory를 count만큼 가져옴
+                // cursor가 있는 경우는 cursor부터 count만큼 가져옴
+                id: after ? after : cursor,
+            },
+            skip: after ? 1 : 0,
+            take: count + 1,
+            include: {
+                movie: true,
+            },
+        });
+    }
+
+    const data = entities
+        .filter((m) => !isDeleted(m))
+        .map((m) => MovieHistoryOutput.from(m));
+
     return PaginationOutput.from(data, count);
 }
 
-async function createMovieHistory(
+async function create(
     {
         userId,
         movieId,
         tx,
     }: PickIdsWithTx<'user' | 'movie'>) {
-    const movieHistory =
-        await tx.movieHistory.create({
-            data: {
-                movieId,
-                userId,
-            },
-        });
-    return movieHistory.id;
-}
-
-async function removeMovieHistoryById(
-    {
-        movieHistoryId,
-        tx,
-    }: PickIdsWithTx<'movieHistory'>) {
-    await tx.movieHistory.delete({
-        where: {
-            id: movieHistoryId,
+    return tx.movieHistory.create({
+        data: {
+            movieId,
+            userId,
         },
     });
 }
 
-async function updateMovieHistoryLastViewedAtById(
+
+async function softDeleteById(
     {
         movieHistoryId,
         tx,
     }: PickIdsWithTx<'movieHistory'>) {
     await tx.movieHistory.update({
+        where: {
+            id: movieHistoryId,
+        },
+        data: {
+            deletedAt: new Date(),
+        },
+    });
+}
+
+async function restoreById(
+    {
+        movieHistoryId,
+        tx,
+    }: PickIdsWithTx<'movieHistory'>) {
+    await tx.movieHistory.update({
+        where: {
+            id: movieHistoryId,
+        },
+        data: {
+            deletedAt: null,
+        },
+    });
+}
+
+async function updateLastViewedAtById(
+    {
+        movieHistoryId,
+        tx,
+    }: PickIdsWithTx<'movieHistory'>) {
+    return tx.movieHistory.update({
         where: {
             id: movieHistoryId,
         },
@@ -82,9 +123,10 @@ async function updateMovieHistoryLastViewedAtById(
 }
 
 export default {
-    findMovieHistoryByUserIdAndMovieId,
-    findManyMovieHistoriesByUserId,
-    createMovieHistory,
-    removeMovieHistoryById,
-    updateMovieHistoryLastViewedAtById,
+    findByUserIdAndMovieId,
+    findManyByUserId,
+    create,
+    softDeleteById,
+    restoreById,
+    updateLastViewedAtById,
 };

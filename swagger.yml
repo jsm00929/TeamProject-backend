@@ -953,7 +953,7 @@ components:
     AfterQuery:
       in: query
       name: after
-      description: $after(id) 이후 가져오기. 생략 시 정렬순
+      description: $after(id) 이후 가져오기. 생략 시 최신순
       required: false
       type: integer
       default: null

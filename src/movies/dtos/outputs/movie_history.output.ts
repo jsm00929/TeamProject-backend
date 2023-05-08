@@ -5,6 +5,7 @@ export type MovieWithHistory = MovieHistory & { movie: Movie };
 
 export class MovieHistoryOutput {
     id: number;
+    movieId: number;
     title: string;
     overview: string;
     popularity: number;
@@ -16,8 +17,9 @@ export class MovieHistoryOutput {
     releaseDate: Date | null;
     lastViewedAt: Date;
 
-    protected constructor({lastViewedAt, movie: m}: MovieWithHistory) {
-        this.id = m.id;
+    protected constructor({id, lastViewedAt, movie: m}: MovieWithHistory) {
+        this.id = id;
+        this.movieId = m.id;
         this.title = m.title;
         this.overview = m.overview;
         this.popularity = m.popularity;

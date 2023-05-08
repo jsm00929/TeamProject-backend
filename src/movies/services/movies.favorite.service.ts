@@ -2,36 +2,50 @@ import {MovieRecord, UserRecord} from "../../core/types/tx";
 import {prisma} from "../../config/db";
 import MoviesFavoriteRepository from "../repositories/movies.favorite.repository";
 import {PickIds} from "../../core/types/pick_ids";
+import {ToggleFavoriteMovieBody} from "../dtos/inputs/toggle_favorite_movie.body";
 
 async function toggleFavorite(
     {userId, movieId}: PickIds<'user' | 'movie'>,
+    {nextFavorite}: ToggleFavoriteMovieBody,
 ) {
-    prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
 
-        const prevFavorite
+        const favorite
             = await MoviesFavoriteRepository.findByUserIdAndMovieId({userId, movieId, tx});
 
-        if (prevFavorite !== null) return;
+        // 1. 즐겨찾기에 처음 등록하는 경우
+        if (favorite === null && nextFavorite) {
+            await MoviesFavoriteRepository.create({userId, movieId, tx});
+            return;
+        }
 
-        await MoviesFavoriteRepository.create({userId, movieId, tx});
+        if (favorite !== null) {
+            if (!nextFavorite) {
+                // 2. 즐겨찾기에서 삭제하는 경우
+                await MoviesFavoriteRepository.softDeleteById({favoriteMovieId: favorite.id, tx});
+            }
+            // 3. 즐겨찾기에서 삭제 후 다시 추가하는 경우
+            await MoviesFavoriteRepository.restore({favoriteMovieId: favorite.id, tx})
+        }
+
     });
 }
 
-async function removeFavorite(
+async function deleteFavorite(
     {userId, movieId}: Pick<UserRecord, 'userId'> & Pick<MovieRecord, 'movieId'>,
 ) {
-    return prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
 
         const favorite
             = await MoviesFavoriteRepository.findByUserIdAndMovieId({userId, movieId, tx});
 
         if (favorite === null) return;
 
-        await MoviesFavoriteRepository.removeById({favoriteMovieId: favorite.id, tx});
+        await MoviesFavoriteRepository.softDeleteById({favoriteMovieId: favorite.id, tx});
     });
 }
 
 export default {
     toggleFavorite,
-    removeFavorite,
+    deleteFavorite,
 }

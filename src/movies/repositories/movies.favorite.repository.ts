@@ -50,14 +50,32 @@ async function create(
     });
 }
 
-async function removeById(
+async function softDeleteById(
     {
         favoriteMovieId,
         tx,
     }: PickIdsWithTx<'favoriteMovie'>) {
-    return tx.favoriteMovie.delete({
+    return tx.favoriteMovie.update({
         where: {
             id: favoriteMovieId,
+        },
+        data: {
+            deletedAt: new Date(),
+        },
+    });
+}
+
+async function restore(
+    {
+        favoriteMovieId,
+        tx,
+    }: PickIdsWithTx<'favoriteMovie'>) {
+    return tx.favoriteMovie.update({
+        where: {
+            id: favoriteMovieId,
+        },
+        data: {
+            deletedAt: null,
         },
     });
 }
@@ -65,6 +83,6 @@ async function removeById(
 export default {
     findByUserIdAndMovieId,
     create,
-
-    removeById,
+    softDeleteById,
+    restore,
 };

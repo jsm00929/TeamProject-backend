@@ -23,6 +23,19 @@ async function create(
     });
 }
 
+async function restore(
+    {movieLikeId, tx}: PickIdsWithTx<'movieLike'>,
+) {
+    return tx.likeMovie.update({
+        where: {
+            id: movieLikeId,
+        },
+        data: {
+            deletedAt: null,
+        },
+    });
+}
+
 async function softDeleteById(
     {movieLikeId, tx}: PickIdsWithTx<'movieLike'>,
 ) {
@@ -40,4 +53,5 @@ export default {
     findByUserIdAndMovieId,
     create,
     softDeleteById,
+    restore,
 }

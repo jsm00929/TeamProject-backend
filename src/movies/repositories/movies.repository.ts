@@ -9,6 +9,7 @@ import {MovieOutput} from '../dtos/outputs/movie.output';
 import {PickIdsWithTx} from '../../core/types/pick_ids';
 import {MovieWithGenres} from '../dtos/movie_with_genres';
 import {MovieWithGenresOutput} from '../dtos/outputs/movie_with_genres.output';
+import {isDeleted} from "../../utils/is_null_or_deleted";
 
 // FETCH
 async function findMovieById(
@@ -76,7 +77,11 @@ async function findManyMovies(
         take: count + 1,
     });
 
-    const data = entities.map((entity) => MovieOutput.from(entity));
+    const data = entities
+        .filter(m => !isDeleted(m))
+        .map((m) => MovieOutput.from(m));
+
+    console.log(data);
     return PaginationOutput.from(data, count);
 }
 
@@ -107,7 +112,10 @@ async function findManyMoviesWithGenres(
         },
     });
 
-    const data = entities.map((e) => MovieWithGenresOutput.from(e));
+    const data = entities
+        .filter(m => !isDeleted(m))
+        .map((m) => MovieWithGenresOutput.from(m));
+
     return PaginationOutput.from(data, count);
 }
 
