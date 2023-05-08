@@ -1,21 +1,32 @@
 import { Router } from 'express';
-import { mustValid } from '../middlewares/mustValid';
+import { isValid } from './middlewares/isValid';
 import { authController } from './auth.controller';
+import { GoogleLoginCodeQuery } from './dtos/inputs/google_login_code.query';
+import { LoginBody } from './dtos/inputs/login.body';
+import { SignupBody } from './dtos/inputs/signup.body';
 
 export const authRouter = Router();
 
-// // 로그인
-// authRouter.post('/singup', authController.signup);
+// 회원가입
+authRouter.post('/signup', isValid(LoginBody), authController.signup);
 
-// // 회원가입
-// authRouter.post('/login', authController.login);
+// 로그인
+authRouter.post('/login', isValid(SignupBody), authController.login);
 
 // 구글 회원가입
 authRouter.get('/signup/google', authController.googleSignup);
 
-authRouter.post('/signup/google/redirect', authController.googleSignupRedirect);
+authRouter.get(
+  '/signup/google/redirect',
+  isValid(GoogleLoginCodeQuery),
+  authController.googleSignupRedirect,
+);
 
 // 구글 로그인
 authRouter.get('/login/google', authController.googleLogin);
 
-authRouter.post('/login/google/redirect', authController.googleLoginRedirect);
+authRouter.get(
+  '/login/google/redirect',
+  isValid(GoogleLoginCodeQuery),
+  authController.googleLoginRedirect,
+);

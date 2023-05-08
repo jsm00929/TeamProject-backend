@@ -1,20 +1,47 @@
 import { google } from 'googleapis';
+import axios from 'axios';
+import { AppError } from '../types/AppError';
+import process from 'process';
 
-export async function fetchToken() {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_SIGNUP_REDIRECT_URI,
-  );
-  const scopes = [
-    'https://www.googleapis.com/auth/userinfo.email',
-    'https://www.googleapis.com/auth/userinfo.profile',
-  ];
-  const authorizationUrl = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    response_type: 'code',
-    redirect_uri: 'http:localhost:8080/api/auth/signup/google',
-    scope: scopes,
-    include_granted_scopes: true,
-  });
+export async function fetchToken(code, status: string) {
+  try {
+    const redirect_uri =
+      status === 'signup'
+        ? process.env.GOOGLE_SIGNUP_REDIRECT_URI
+        : process.env.GOOGLE_LOGIN_REDIRECT_URI;
+    const { data } = await axios.post(
+      `https://oauth2.googleapis.com/token`,
+      {
+        code: code,
+        redirect_uri: redirect_uri,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        scope: 'email profile',
+        grant_type: 'authorization_code',
+      },
+      {
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      },
+    );
+    return data.access_token;
+  } catch (error) {
+    throw new Error(error);
+  }
+}
+
+export async function getUserInfo(access_token) {
+  try {
+    const userInfoApi = await axios.get(
+      `https://www.googleapis.com/oauth2/v2/userinfo?alt=json`,
+      {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      },
+    );
+    console.log(`userInfo:${userInfoApi.data.email}`);
+    return userInfoApi;
+  } catch (error) {
+    return error;
+  }
 }

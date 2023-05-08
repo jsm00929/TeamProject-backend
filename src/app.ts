@@ -7,6 +7,7 @@ import { authRouter } from './auth/auth.router';
 import swaggerUi from 'swagger-ui-express';
 import cors from 'cors';
 import path from 'path';
+import logger from 'morgan';
 
 // Singleton App instance
 export class App {
@@ -30,6 +31,7 @@ export class App {
 
   // http request 파싱을 위한 모든 parser 로드
   private setRequestParsers() {
+    this.app.use(logger('dev'));
     this.app.use(cookieParser(this.config.cookieSecret));
     this.app.use(express.json());
   }

@@ -1,72 +1,102 @@
-import { NextFunction, Response, RequestHandler } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import Jwt from 'jsonwebtoken';
-import { RequestWith } from '../types/RequestWith';
+import { CustomRequest } from '../types/CustomRequest';
 import { authService } from './auth.service';
-import { GoogleLoginCodeQuery } from './dtos/inputs/google_login_code.query';
 import { LoginBody } from './dtos/inputs/login.body';
 import { SignupBody } from './dtos/inputs/signup.body';
 
 export const authController = {
-  // async singup(
-  //   req: RequestWith<SignupBody>,
-  //   res: Response,
-  //   next: NextFunction,
-  // ) {
-  //   const createUser = req.unwrap();
-  //   console.log(createUser);
-  //   const createdUser = await authService.signup();
-  //   res.json(createdUser);
-  // },
-
-  // async login(req: RequestWith<LoginBody>, res: Response) {
-
-  // },
-  //https://accounts.google.com/o/oauth2/v2/auth/oauthchooseaccount?redirect_uri=https%3A%2F%2Fdevelopers.google.com%2Foauthplayground&prompt=consent&response_type=code&client_id=407408718192.apps.googleusercontent.com&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&access_type=offline&service=lso&o2v=2&flowName=GeneralOAuthFlow
-  //https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=https%3A%2F%2Fdevelopers.google.com%2Foauthplayground&prompt=consent&response_type=code&client_id=407408718192.apps.googleusercontent.com&scope=&access_type=offline
-  //oauth 로그인
-  //1. authorization 서버에 로그인 요청
-  //2. authorization 서버가 인가해주고 토큰 발급을 위한 code를 redirect url에 반환
-  //3. 요청받은 redirect에서 code로 리소스 서버에서 토큰 발급
-  //4. 토큰반환해서 로그인 완료
-
-  async googleSignup(req: RequestWith<Request>, res: Response) {
-    //const authorizationUrl = await authService.googleSignup();
-    const authorizationUrl = `https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${process.env.GOOGLE_SIGNUP_REDIRECT_URI}&response_type=code&client_id=${process.env.GOOGLE_CLIENT_ID}&scope=email profile`;
-    res.writeHead(302, { Location: authorizationUrl });
+  async signup(req: CustomRequest<SignupBody>, res: Response) {
+    try {
+      const createUser = req.body;
+      console.log(createUser);
+      const createdUser = await authService.signup(createUser);
+      const accessToken = Jwt.sign(
+        { userId: createdUser.id },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' },
+      );
+      res
+        .cookie('accessToken', accessToken, {
+          maxAge: 7200,
+          httpOnly: true,
+          signed: true,
+        })
+        .json('가입 성공');
+    } catch (error) {
+      throw new Error(error);
+    }
   },
 
-  async googleSignupRedirect(
-    req: RequestWith<GoogleLoginCodeQuery>,
-    res: Response,
-  ) {
-    const { code } = req.unwrap();
-    const createdUser = await authService.googleSignupRedirect(code);
+  async login(req: CustomRequest<LoginBody>, res: Response) {
+    const loginUser = req.body;
+    console.log(loginUser);
+    const loginedUser = await authService.login(loginUser);
     const accessToken = Jwt.sign(
-      { userId: createdUser.id },
+      { userId: loginedUser.id },
       process.env.JWT_SECRET,
       { expiresIn: '1h' },
     );
-    res.cookie('accessToken', accessToken, {
-      maxAge: 7200,
-      httpOnly: true,
-      signed: true,
-    });
+    res
+      .cookie('accessToken', accessToken, {
+        maxAge: 7200,
+        httpOnly: true,
+        signed: true,
+      })
+      .json('로그인 성공');
   },
 
-  async googleLogin(req: RequestWith<Request>, res: Response) {
-    const uri =
-      `https://api.solapi.net/oauth2/v1/authorize?` +
-      `client_id=${process.env.GOOGLE_CLIENT_ID}` +
-      `redirect_uri=${process.env.GOOGLE_LOGIN_REDIRECT_URI}&` +
-      `response_type=code&` +
-      `scope=message:write`;
-    return res.redirect(uri);
+  async googleSignup(req: Request, res: Response) {
+    const authorizationUrl = `https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${process.env.GOOGLE_SIGNUP_REDIRECT_URI}&response_type=code&client_id=${process.env.GOOGLE_CLIENT_ID}&scope=email profile&access_type=offline`;
+    res.redirect(authorizationUrl);
   },
 
-  async googleLoginRedirect(
-    req: RequestWith<GoogleLoginCodeQuery>,
-    res: Response,
-  ) {
-    const { code } = req.unwrap();
+  async googleSignupRedirect(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { code } = req.query;
+      const createdUser = await authService.googleSignupRedirect(code);
+      console.log(createdUser);
+      const accessToken = Jwt.sign(
+        { userId: createdUser.id },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' },
+      );
+      res
+        .cookie('accessToken', accessToken, {
+          maxAge: 7200,
+          httpOnly: true,
+          signed: true,
+        })
+        .json('가입 성공');
+    } catch (error) {
+      throw new Error(error);
+    }
+  },
+
+  async googleLogin(req: Request, res: Response) {
+    const authorizationUrl = `https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${process.env.GOOGLE_LOGIN_REDIRECT_URI}&response_type=code&client_id=${process.env.GOOGLE_CLIENT_ID}&scope=email profile&access_type=offline`;
+    res.redirect(authorizationUrl);
+  },
+
+  async googleLoginRedirect(req: Request, res: Response) {
+    try {
+      const { code } = req.query;
+      const loginedUser = await authService.googleLoginRedirect(code);
+      console.log(loginedUser);
+      const accessToken = Jwt.sign(
+        { userId: loginedUser.id },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' },
+      );
+      res
+        .cookie('accessToken', accessToken, {
+          maxAge: 7200,
+          httpOnly: true,
+          signed: true,
+        })
+        .json('로그인 성공');
+    } catch (error) {
+      throw new Error(error);
+    }
   },
 };

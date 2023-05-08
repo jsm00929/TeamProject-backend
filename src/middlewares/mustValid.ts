@@ -23,6 +23,7 @@ import { ErrorMessages } from '../types/ErrorMessages';
  */
 export function mustValid<T>(cls: ClassConstructor<T>) {
   return async (req: RequestWith<T>, _, next: NextFunction) => {
+    console.log('valid start');
     const dto = plainToClass(cls, req.body);
     const errors = await validate(dto as object);
     if (errors.length > 0) {
