@@ -34,7 +34,8 @@ async function createOrUpdateOrRestore(
         userId,
         movieId,
         tx,
-    }: PickIdsWithTx<'user' | 'movie'>) {
+    }: PickIdsWithTx<'user' | 'movie'>
+) {
     let movieHistory = await MoviesHistoryRepository.findByUserIdAndMovieId({
         userId,
         movieId,

@@ -154,7 +154,7 @@ async function deleteFavorite(req: AuthRequestWith<never, MovieIdParams>) {
  * @description
  * 영화 기록 삭제
  */
-moviesRouter.delete('/:movieId/history',
+moviesRouter.delete('/:movieId/histories',
     handle({
         authLevel: 'must',
         paramsCls: MovieIdParams,

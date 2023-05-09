@@ -532,7 +532,7 @@ paths:
           schema:
             $ref: '#/components/schemas/InternalServerError'
 
-  /movies/{movieId}/history:
+  /movies/{movieId}/histories:
     delete:
       tags:
         - Movies
@@ -770,12 +770,12 @@ paths:
           schema:
             $ref: '#/components/schemas/InternalServerError'
 
-  /users/me/movies/reviews:
+  /users/me/reviews:
     get:
       summary: 내가 작성한 영화 리뷰 전부 보기
       tags:
         - Users
-        - Movies
+        - Reviews
       parameters:
         - $ref: '#/components/parameters/AfterQuery'
         - $ref: '#/components/parameters/CountQuery'

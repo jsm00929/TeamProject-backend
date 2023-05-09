@@ -3,6 +3,7 @@ import {prisma} from "../../config/db";
 import MoviesFavoriteRepository from "../repositories/movies.favorite.repository";
 import {PickIds} from "../../core/types/pick_ids";
 import {ToggleFavoriteMovieBody} from "../dtos/inputs/toggle_favorite_movie.body";
+import {isNullOrDeleted} from "../../utils/is_null_or_deleted";
 
 async function toggleFavorite(
     {userId, movieId}: PickIds<'user' | 'movie'>,
@@ -39,9 +40,10 @@ async function deleteFavorite(
         const favorite
             = await MoviesFavoriteRepository.findByUserIdAndMovieId({userId, movieId, tx});
 
-        if (favorite === null) return;
+        // TODO:
+        if (isNullOrDeleted(favorite)) return;
 
-        await MoviesFavoriteRepository.softDeleteById({favoriteMovieId: favorite.id, tx});
+        await MoviesFavoriteRepository.softDeleteById({favoriteMovieId: favorite!.id, tx});
     });
 }
 

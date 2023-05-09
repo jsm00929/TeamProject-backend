@@ -6,11 +6,12 @@ import {PaginationOutput} from "../../core/dtos/outputs/pagination_output";
 import {MovieOutput} from "../dtos/outputs/movie.output";
 import {PickIds} from "../../core/types/pick_ids";
 import moviesMetadataRepository from "../repositories/movies.metadata.repository";
+import {MovieWithGenresOutput} from "../dtos/outputs/movie_with_genres.output";
 
 /**
  * FETCH
  */
-async function movies(q: MoviesPaginationQuery): Promise<PaginationOutput<MovieOutput>> {
+async function movies(q: MoviesPaginationQuery): Promise<PaginationOutput<MovieWithGenresOutput>> {
     return prisma.$transaction(async (tx) => {
         return moviesRepository.findManyMovies({tx}, q);
     });

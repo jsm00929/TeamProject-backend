@@ -57,7 +57,7 @@ async function findMovieWithGenresById(
 async function findManyMovies(
     {tx}: { tx: Tx },
     {criteria, genre, count, order, after, include}: MoviesPaginationQuery,
-): Promise<PaginationOutput<MovieOutput>> {
+): Promise<PaginationOutput<MovieWithGenresOutput>> {
     const entities = await tx.movie.findMany({
         orderBy: {
             [criteria]: order,
@@ -75,13 +75,15 @@ async function findManyMovies(
         ...(after !== undefined && {cursor: {id: after}}),
         skip: after ? 1 : 0,
         take: count + 1,
+        include: {
+            genres: true,
+        },
     });
 
     const data = entities
         .filter(m => !isDeleted(m))
-        .map((m) => MovieOutput.from(m));
+        .map((m) => MovieWithGenresOutput.from(m));
 
-    console.log(data);
     return PaginationOutput.from(data, count);
 }
 

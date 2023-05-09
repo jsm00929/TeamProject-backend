@@ -3,7 +3,6 @@ import MoviesLikeRepository from "../repositories/movies.like.repository";
 import {PickIds} from "../../core/types/pick_ids";
 import {ToggleMovieLikeBody} from "../dtos/inputs/toggle_movie_like.body";
 
-
 async function toggleMovieLike(
     {userId, movieId}: PickIds<'user' | 'movie'>,
     {nextLike}: ToggleMovieLikeBody,
