@@ -183,3 +183,9 @@ async function googleSignupRedirect(
     return AppResult.redirect(`http://${clientHost}:${clientPort}/`);
 }
 
+
+// RTR 1회용 리프레시 토큰
+// 1. 로그인 -> accessToken 쿠키 발급, refreshToken Redis 저장-> key: accessToken?, value: refreshToken
+// 2. accessToken 만료-> accessToken 서버에 보내서 refresh
+// 이 때, RTR 방식이기 때문에 기존 refresh Token이 '있으면' 발급 후 삭제
+// 3. accessToken 발급 및 refreshToken 새로 저장

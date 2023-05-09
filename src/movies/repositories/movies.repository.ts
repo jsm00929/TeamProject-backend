@@ -24,6 +24,9 @@ async function findMovieById(
             where: {
                 id: movieId,
             },
+            include: {
+                genres: true,
+            },
         }),
     ];
 
@@ -34,8 +37,8 @@ async function findMovieById(
 
     const [entity, isLiked, isFavorite] = await Promise.all(queries);
 
-    await tx.likeMovie.findFirst({where: {movieId}});
-    return MovieOutput.nullOrFrom(entity, {isLiked, isFavorite});
+    await tx.likeMovie.findFirst({where: {movieId, userId}});
+    return MovieWithGenresOutput.nullOrFrom(entity, {isLiked, isFavorite});
 }
 
 async function findMovieWithGenresById(

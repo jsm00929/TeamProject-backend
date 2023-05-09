@@ -29,7 +29,7 @@ async function histories(
     });
 }
 
-async function createOrUpdateOrRestore(
+async function createOrRestoreAndUpdate(
     {
         userId,
         movieId,
@@ -116,6 +116,6 @@ async function deleteByUserIdAndMovieId({userId, movieId}: PickIds<'user' | 'mov
 
 export default {
     histories,
-    createOrUpdateOrRestore,
+    createOrRestoreAndUpdate,
     deleteByUserIdAndMovieId,
 };

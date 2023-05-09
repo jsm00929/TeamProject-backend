@@ -5,8 +5,8 @@ import moviesHistoryService from './movies.history.service';
 import {PaginationOutput} from "../../core/dtos/outputs/pagination_output";
 import {MovieOutput} from "../dtos/outputs/movie.output";
 import {PickIds} from "../../core/types/pick_ids";
-import moviesMetadataRepository from "../repositories/movies.metadata.repository";
 import {MovieWithGenresOutput} from "../dtos/outputs/movie_with_genres.output";
+import moviesMetadataService from "./movies.metadata.service";
 
 /**
  * FETCH
@@ -27,13 +27,13 @@ async function movieDetail({userId, movieId}: Partial<PickIds<'user'>> & PickIds
             // 1. 로그인 된 사용자가 movie detail 조회 시,
             // MovieHistory 생성 or 갱신
             const movieHistory =
-                await moviesHistoryService.createOrUpdateOrRestore({
+                await moviesHistoryService.createOrRestoreAndUpdate({
                     userId,
                     movieId,
                     tx,
                 });
             // MovieMetaData - latestMovieHistoryId 갱신
-            await moviesMetadataRepository.updateLatestHistoryId({
+            await moviesMetadataService.updateLatestHistoryIfIsLatest({
                 nextId: movieHistory.id,
                 userId,
                 tx,
