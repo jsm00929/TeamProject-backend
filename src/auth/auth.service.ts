@@ -51,7 +51,8 @@ async function login({email, password}: LoginBody) {
         }
 
         // 비번이 맞지가 않음
-        if (!(await comparePassword(password, user.password))) {
+        const isMatchedPassword = await comparePassword(password, user.password);
+        if (!isMatchedPassword) {
             throw AppError.new({
                 message: ErrorMessages.INVALID_PASSWORD,
                 status: HttpStatus.UNAUTHORIZED,
@@ -95,8 +96,7 @@ async function googleSignupRedirect(code: string) {
                     avatarUrl,
                 });
         }
-    )
-        ;
+    );
 }
 
 async function googleLoginRedirect(code: string) {

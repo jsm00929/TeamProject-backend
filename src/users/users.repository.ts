@@ -116,7 +116,7 @@ async function updateUserAvatarUrl(
  * @description
  * REMOVE
  */
-async function removeUser({userId, tx}: PickIdsWithTx<'user'>) {
+async function deleteUserSoftly({userId, tx}: PickIdsWithTx<'user'>) {
     await tx.user.update({
         where: {id: userId},
         data: {
@@ -140,5 +140,5 @@ export default {
     updateUserAvatarUrl,
     updateUserName,
     updateUserPassword,
-    removeUser,
+    deleteUserSoftly,
 };

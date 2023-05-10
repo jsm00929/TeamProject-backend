@@ -1,9 +1,7 @@
-import {AppError} from '../core/types';
-import {ErrorMessages, HttpStatus} from '../core/constants';
 import usersRepository from './users.repository';
 import {UpdateUserPasswordBody} from './dtos/inputs/update_my_password.body';
 import {UpdateUserNameBody} from './dtos/inputs/update_my_name.body';
-import {comparePassword, hashPassword} from '../utils/hash';
+import {hashPassword} from '../utils/hash';
 import {prisma} from '../config/db';
 import {
     filenameIntoAbsoluteTempPath,
@@ -13,20 +11,15 @@ import {
 } from '../utils/static_path_resolvers';
 import {moveFile, removeFile, removeFileOrThrow} from '../utils/file_utils';
 import {log} from '../utils/logger';
-import {UserRecord} from '../core/types/tx';
 import {PickIds} from '../core/types/pick_ids';
 import {RemoveUserBody} from "./dtos/inputs/remove_user.body";
 import {UserOutput} from "./dtos/outputs/user.output";
+import {isUserValidOrThrow} from "../auth/validations/is_user_valid_or_throw";
+import {isPasswordValidOrThrow} from "../auth/validations/is_password_valid_or_throw";
 
 async function userById({userId}: PickIds<'user'>): Promise<UserOutput | null> {
     return prisma.$transaction(async (tx) => {
         return usersRepository.findUserById({userId, tx});
-    });
-}
-
-async function userByEmail({email}: Pick<UserRecord, 'email'>) {
-    return prisma.$transaction(async (tx) => {
-        return usersRepository.findUserByEmail({email, tx});
     });
 }
 
@@ -37,30 +30,10 @@ async function updatePassword(
     return prisma.$transaction(async (tx) => {
         const user = await usersRepository.findUserWithPasswordById({userId, tx});
 
-        if (!user) {
-            throw AppError.new({
-                message: ErrorMessages.USER_NOT_FOUND,
-                status: HttpStatus.UNAUTHORIZED,
-            });
-        }
+        isUserValidOrThrow(user);
+        await isPasswordValidOrThrow(oldPassword, user!.password);
 
-        if (
-            user.password !== null &&
-            oldPassword !== undefined &&
-            oldPassword !== null
-        ) {
-            const isMatchedPassword = await comparePassword(
-                oldPassword,
-                user.password,
-            );
-            if (!isMatchedPassword) {
-                throw AppError.new({
-                    message: ErrorMessages.INVALID_PASSWORD,
-                    status: HttpStatus.UNAUTHORIZED,
-                });
-            }
-        }
-
+        console.log(user)
         const password = await hashPassword(newPassword);
         await usersRepository.updateUserPassword({userId, tx}, {password});
     });
@@ -78,14 +51,9 @@ async function updateAvatar(
         return prisma.$transaction(async (tx) => {
             user = await usersRepository.findUserById({userId, tx});
 
-            if (!user) {
-                throw AppError.new({
-                    message: ErrorMessages.USER_NOT_FOUND,
-                    status: HttpStatus.NOT_FOUND,
-                });
-            }
+            isUserValidOrThrow(user);
 
-            const prevAvatarUrl = user.avatarUrl;
+            const prevAvatarUrl = user!.avatarUrl;
 
             avatarUrl =
                 filename !== null ? filenameIntoStaticUrl(filename, 'avatars') : null;
@@ -126,14 +94,9 @@ async function updateName(
     {name}: UpdateUserNameBody,
 ) {
     return prisma.$transaction(async (tx) => {
-        const exists = await usersRepository.isExistsById({userId, tx});
+        const user = await usersRepository.findUserById({userId, tx});
 
-        if (!exists) {
-            throw AppError.new({
-                message: ErrorMessages.USER_NOT_FOUND,
-                status: HttpStatus.NOT_FOUND,
-            });
-        }
+        isUserValidOrThrow(user);
 
         await usersRepository.updateUserName({userId, tx}, {name});
     });
@@ -143,29 +106,16 @@ async function withdraw({userId, password}: PickIds<'user'> & RemoveUserBody) {
     return prisma.$transaction(async (tx) => {
         const user = await usersRepository.findUserWithPasswordById({userId, tx});
 
-        if (!user) {
-            throw AppError.new({
-                message: ErrorMessages.USER_NOT_FOUND,
-                status: HttpStatus.UNAUTHORIZED,
-            });
-        }
+        // validation
+        isUserValidOrThrow(user);
+        await isPasswordValidOrThrow(password, user!.password);
 
-        if (user.password !== null) {
-            if (!password || !(await comparePassword(password, user.password))) {
-                throw AppError.new({
-                    message: ErrorMessages.INVALID_PASSWORD,
-                    status: HttpStatus.UNAUTHORIZED,
-                });
-            }
-        }
-
-        await usersRepository.removeUser({userId, tx});
+        await usersRepository.deleteUserSoftly({userId, tx});
     });
 }
 
 export default {
     userById,
-    userByEmail,
     updateAvatar,
     updateName,
     updatePassword,
