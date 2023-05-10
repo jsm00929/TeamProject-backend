@@ -31,13 +31,6 @@ async function histories(
     });
 }
 
-// movieHistoryId -> 가져온 뒤, login user id와 비교
-// (userId, movieId) -> 가져올 때부터 userId 필요하므로 비교 필요 없음 복합키므로 index 비용 2배
-// async function createOrRestore({userId, movieId}: PickIds<'user' | 'movie'>) {
-//     return prisma.$transaction(async (tx) => {
-//         await MoviesHistoryRepository.
-//     });
-// }
 
 async function updateLatestViewedAtWithMetaData(
     {
@@ -85,8 +78,6 @@ async function updateLatestViewedAtWithMetaData(
         userId,
         tx,
     });
-
-
 }
 
 async function deleteByUserIdAndMovieId({userId, movieId}: PickIds<'user' | 'movie'>) {
@@ -104,7 +95,7 @@ async function deleteByUserIdAndMovieId({userId, movieId}: PickIds<'user' | 'mov
         // 2. 삭제 가능 여부 확인 or throw not found error
         isDeletableOrThrow(history);
 
-        await MoviesMetadataService.updateLatestHistoryIfIsLatest({
+        await MoviesMetadataService.updateLatestHistoryIfLatest({
             movieHistoryId: history!.id,
             userId,
             tx,

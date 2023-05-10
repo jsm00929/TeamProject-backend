@@ -36,7 +36,6 @@ async function movies(req: RequestWith<MoviesPaginationQuery>) {
 
 
 /**
- * @deprecated
  * @description
  * 현재 로그인 된 사용자가 최근 본 영화
  */
@@ -53,6 +52,28 @@ async function histories(req: AuthRequestWith<PaginationQuery>) {
 
     const movies =
         await moviesHistoryService.histories({userId}, q);
+
+    return AppResult.new({body: movies});
+}
+
+
+/**
+ * @description
+ * 현재 로그인 된 사용자가 like 한 영화
+ */
+moviesRouter.get('/likes',
+    handle({
+        authLevel: 'must',
+        queryCls: PaginationQuery,
+        controller: likes,
+    }));
+
+async function likes(req: AuthRequestWith<PaginationQuery>) {
+    const {userId} = req;
+    const q = req.unwrap();
+
+    const movies =
+        await moviesLikeService.likeMovies({userId}, q);
 
     return AppResult.new({body: movies});
 }

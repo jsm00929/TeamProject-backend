@@ -112,7 +112,7 @@ model LikeMovie {
   movieMetaData MovieMetaData[]
 
   @@index([userId, movieId])
-  @@index([movieId])
+  @@index([userId, updatedAt])
 }
 
 model Genre {
@@ -139,7 +139,6 @@ model Review {
   movie     Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
 
   @@index([movieId], map: "Review_movieId_fkey")
-  @@index([authorId, deletedAt], map: "authorIdDeletedAt")
 }
 
 model Rating {
@@ -162,5 +161,4 @@ model Comment {
   review    Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   @@index([reviewId], map: "reviewId")
-  @@index([authorId, deletedAt], map: "authorIdDeletedAt")
 }

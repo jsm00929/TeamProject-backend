@@ -3,6 +3,7 @@ import moviesMetadataRepository from "../repositories/movies.metadata.repository
 import {PickIdsWithTx} from "../../core/types/pick_ids";
 import MoviesHistoryRepository from "../repositories/movies.history.repository";
 import {isNullOrDeleted} from "../../utils/is_null_or_deleted";
+import MoviesLikeRepository from "../repositories/movies.like.repository";
 
 
 async function createOrUpdateLatestHistory(
@@ -27,6 +28,29 @@ async function createOrUpdateLatestHistory(
     });
 }
 
+async function createOrUpdateLatestLike(
+    {
+        nextId,
+        userId,
+        tx,
+        likesCount,
+    }: PickIdsWithTx<'user'> & {
+        nextId: number,
+        likesCount: 'increment' | 'decrement' | null,
+    },
+) {
+    // 1. 최초 사용 시, MetaData 존재하지 않으므로 생성
+    await moviesMetadataRepository.createIfExists({userId, tx});
+    // 2. latest like id 갱신
+    await moviesMetadataRepository.updateLatestLike({
+        nextId,
+        likesCount,
+        userId,
+        tx,
+    });
+}
+
+
 async function updateLatestHistoryIfLatest(
     {
         movieHistoryId,
@@ -49,7 +73,7 @@ async function updateLatestHistoryIfLatest(
 
     const nextId = isNullOrDeleted(next) ? null : next!.id;
 
-    // 5. decrement histories count
+    // 4. decrement histories count
     await MoviesMetadataRepository.updateLatestHistory(
         {
             nextId,
@@ -59,7 +83,41 @@ async function updateLatestHistoryIfLatest(
         });
 }
 
+
+async function updateLatestLikeIfLatest(
+    {
+        movieLikeId,
+        userId,
+        tx,
+    }: PickIdsWithTx<'movieLike' | 'user'>,
+) {
+    // 1. 만약 latest movie like라면 history.latestLikeMovieId update
+    const metaData =
+        await moviesMetadataRepository.findByUserIdOrCreateAndReturn({userId, tx});
+    // 2. 아니면 return
+    if (metaData.latestLikeId !== movieLikeId) return;
+
+    // 3. 맞으면 next like 혹은 null 로 latest like id 대체
+    const next = await MoviesLikeRepository.findNextById({
+        movieLikeId,
+        userId,
+        tx,
+    });
+    const nextId = isNullOrDeleted(next) ? null : next!.id;
+
+    // 4. decrement histories count
+    await MoviesMetadataRepository.updateLatestLike(
+        {
+            nextId,
+            likesCount: 'decrement',
+            userId,
+            tx,
+        });
+}
+
+
 export default {
     createOrUpdateLatestHistory,
-    updateLatestHistoryIfIsLatest: updateLatestHistoryIfLatest,
+    updateLatestHistoryIfLatest,
+    updateLatestLikeIfLatest,
 }

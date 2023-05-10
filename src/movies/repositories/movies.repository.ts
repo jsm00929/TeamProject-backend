@@ -41,6 +41,7 @@ async function findMovieById(
     return MovieWithGenresOutput.nullOrFrom(entity, {isLiked, isFavorite});
 }
 
+
 async function findMovieWithGenresById(
     {
         movieId,
@@ -88,6 +89,26 @@ async function findManyMovies(
         .map((m) => MovieWithGenresOutput.from(m));
 
     return PaginationOutput.from(data, count);
+}
+
+
+async function findManyMoviesByLikeIds(
+    {movieIds, tx}: { movieIds: number[] } & { tx: Tx },
+): Promise<PaginationOutput<MovieWithGenresOutput>> {
+    const entities = await tx.movie.findMany({
+        where: {
+            OR: movieIds.map(id => ({id})),
+        },
+        include: {
+            genres: true,
+        },
+    });
+
+    const data = entities
+        .filter(m => !isDeleted(m))
+        .map((m) => MovieWithGenresOutput.from(m));
+
+    return PaginationOutput.from(data, entities.length);
 }
 
 async function findManyMoviesWithGenres(
@@ -262,6 +283,7 @@ async function upsertGenre({id, name}: GenreOutput) {
 export default {
     findMovieById,
     findMovieWithGenresById,
+    findManyMoviesByLikeIds,
     findManyMovies,
     findManyMoviesWithGenres,
     findDetailById,

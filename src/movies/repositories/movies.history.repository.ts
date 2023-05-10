@@ -37,8 +37,6 @@ async function findNextById(
         take: 1,
     });
 
-    console.log(entities)
-
     return nullOrFirst(entities);
 }
 
