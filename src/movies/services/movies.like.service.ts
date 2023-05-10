@@ -18,10 +18,11 @@ async function likeMovies(
 
         const q: PaginationQueryWithCursor = {count, after};
 
-        // after가 생략되었을 경우, latest cursor을 얻기 위해 metadata 가져옴
-        if (after === undefined) {
-            const {latestLikeId} = await MoviesMetadataRepository.findByUserIdOrCreateAndReturn({userId, tx});
+        // 없을 경우 만들어줌
+        const {latestLikeId} = await MoviesMetadataRepository.findByUserIdOrCreateAndReturn({userId, tx});
 
+        // after가 생략되었을 경우, metaData의 latest like id 사용
+        if (after === undefined) {
             // DB에서 가져온 latestLikeId 추가
             q.cursor = latestLikeId !== null ? latestLikeId : undefined;
         }
@@ -39,8 +40,6 @@ async function toggleMovieLike(
     {nextLike}: ToggleMovieLikeBody,
 ) {
     await prisma.$transaction(async (tx) => {
-
-        let nextLikesCount: 'increment' | 'decrement' = 'increment'
 
         // 1. like 찾기 or 생성 or 복구
         let like = await MoviesLikeRepository
@@ -73,8 +72,10 @@ async function toggleMovieLike(
             await MoviesLikeRepository.restore({movieLikeId: like.id, tx});
         }
 
+        // TODO:
+        await MoviesMetadataRepository.createIfNotExists({userId, tx});
         await MoviesMetadataRepository.updateLatestLike({
-            likesCount: nextLikesCount,
+            likesCount: 'increment',
             userId,
             nextId: like.id,
             tx,

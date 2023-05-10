@@ -4,6 +4,7 @@ import {PickIdsWithTx} from "../../core/types/pick_ids";
 import MoviesHistoryRepository from "../repositories/movies.history.repository";
 import {isNullOrDeleted} from "../../utils/is_null_or_deleted";
 import MoviesLikeRepository from "../repositories/movies.like.repository";
+import MoviesFavoriteRepository from "../repositories/movies.favorite.repository";
 
 
 async function createOrUpdateLatestHistory(
@@ -18,7 +19,7 @@ async function createOrUpdateLatestHistory(
     },
 ) {
     // 1. 최초 사용 시, MetaData 존재하지 않으므로 생성
-    await moviesMetadataRepository.createIfExists({userId, tx});
+    await moviesMetadataRepository.createIfNotExists({userId, tx});
     // 2. latest history id 갱신
     await moviesMetadataRepository.updateLatestHistory({
         nextId,
@@ -40,7 +41,7 @@ async function createOrUpdateLatestLike(
     },
 ) {
     // 1. 최초 사용 시, MetaData 존재하지 않으므로 생성
-    await moviesMetadataRepository.createIfExists({userId, tx});
+    await moviesMetadataRepository.createIfNotExists({userId, tx});
     // 2. latest like id 갱신
     await moviesMetadataRepository.updateLatestLike({
         nextId,
@@ -105,7 +106,6 @@ async function updateLatestLikeIfLatest(
     });
     const nextId = isNullOrDeleted(next) ? null : next!.id;
 
-    // 4. decrement histories count
     await MoviesMetadataRepository.updateLatestLike(
         {
             nextId,
@@ -116,8 +116,36 @@ async function updateLatestLikeIfLatest(
 }
 
 
+async function updateLatestFavoriteIfLatest(
+    {
+        favoriteMovieId,
+        userId,
+        tx,
+    }: PickIdsWithTx<'favoriteMovie' | 'user'>,
+) {
+    const metaData =
+        await moviesMetadataRepository.findByUserIdOrCreateAndReturn({userId, tx});
+    if (metaData.latestFavoriteId !== favoriteMovieId) return;
+
+    const next = await MoviesFavoriteRepository.findNextById({
+        favoriteMovieId,
+        userId,
+        tx,
+    });
+    const nextId = isNullOrDeleted(next) ? null : next!.id;
+
+    await MoviesMetadataRepository.updateLatestFavorite(
+        {
+            nextId,
+            favoritesCount: 'decrement',
+            userId,
+            tx,
+        });
+}
+
 export default {
     createOrUpdateLatestHistory,
     updateLatestHistoryIfLatest,
     updateLatestLikeIfLatest,
+    updateLatestFavoriteIfLatest,
 }

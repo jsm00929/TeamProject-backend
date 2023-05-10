@@ -22,7 +22,7 @@ async function findByUserIdOrCreateAndReturn(
     return metaData;
 }
 
-async function createIfExists({userId, tx}: PickIdsWithTx<'user'>) {
+async function createIfNotExists({userId, tx}: PickIdsWithTx<'user'>) {
     const metaData = await findByUserId({userId, tx});
 
     if (metaData === null) {
@@ -87,6 +87,30 @@ async function updateLatestLike(
     });
 }
 
+async function updateLatestFavorite(
+    {
+        userId,
+        nextId,
+        favoritesCount,
+        tx,
+    }: PickIdsWithTx<'user'>
+        & {
+        nextId: number | null,
+        favoritesCount: 'increment' | 'decrement' | null,
+    },
+) {
+    await tx.movieMetaData.update({
+        where: {
+            userId,
+        },
+        data: {
+            latestFavoriteId: nextId,
+            // undefined or { increment: true } or { decrement: true }
+            ...(favoritesCount !== null && {favoritesCount: {[favoritesCount]: 1}}),
+        },
+    });
+}
+
 async function softDeleteByUserId({userId, tx}: PickIdsWithTx<'user'>) {
     await tx.movieMetaData.update({
         where: {
@@ -100,8 +124,9 @@ async function softDeleteByUserId({userId, tx}: PickIdsWithTx<'user'>) {
 
 export default {
     findByUserIdOrCreateAndReturn,
-    createIfExists,
+    createIfNotExists,
     softDeleteByUserId,
     updateLatestHistory,
     updateLatestLike,
+    updateLatestFavorite,
 }

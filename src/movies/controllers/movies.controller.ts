@@ -81,6 +81,28 @@ async function likes(req: AuthRequestWith<PaginationQuery>) {
 
 /**
  * @description
+ * 현재 로그인 된 사용자가 like 한 영화
+ */
+moviesRouter.get('/favorites',
+    handle({
+        authLevel: 'must',
+        queryCls: PaginationQuery,
+        controller: favorites,
+    }));
+
+async function favorites(req: AuthRequestWith<PaginationQuery>) {
+    const {userId} = req;
+    const q = req.unwrap();
+
+    const movies =
+        await moviesFavoriteService.favoriteMovies({userId}, q);
+
+    return AppResult.new({body: movies});
+}
+
+
+/**
+ * @description
  * 영화 상세 정보 조회
  * 로그인 된 상태로 조회 시, Movie History 자동 추가
  */
