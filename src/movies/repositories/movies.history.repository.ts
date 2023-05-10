@@ -25,7 +25,7 @@ async function findNextById(
 ) {
     const entities = await tx.movieHistory.findMany({
         where: {
-            id: userId,
+            userId,
         },
         orderBy: {
             lastViewedAt: 'desc',
@@ -36,6 +36,8 @@ async function findNextById(
         skip: 1,
         take: 1,
     });
+
+    console.log(entities)
 
     return nullOrFirst(entities);
 }
