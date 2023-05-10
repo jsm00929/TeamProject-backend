@@ -55,6 +55,4 @@ export class MovieOutput {
     ): MovieOutput | null {
         return isNullOrDeleted(m) ? null : this.from(m!, {isFavorite, isLiked});
     }
-
-
 }

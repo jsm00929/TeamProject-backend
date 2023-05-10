@@ -1,13 +1,15 @@
 import {prisma} from '../../config/db';
 import MoviesHistoryRepository from '../repositories/movies.history.repository';
-import {AppError} from '../../core/types';
-import {ErrorMessages, HttpStatus} from '../../core/constants';
+import moviesHistoryRepository from '../repositories/movies.history.repository';
 import {PaginationQuery, PaginationQueryWithCursor} from '../../core/dtos/inputs';
 import {PickIds, PickIdsWithTx} from '../../core/types/pick_ids';
 import {PaginationOutput} from '../../core/dtos/outputs/pagination_output';
 import {MovieHistoryOutput} from "../dtos/outputs/movie_history.output";
 import MoviesMetadataService from "./movies.metadata.service";
+import moviesMetadataService from "./movies.metadata.service";
 import MoviesMetadataRepository from "../repositories/movies.metadata.repository";
+import {isNullOrDeleted} from "../../utils/is_null_or_deleted";
+import {isDeletableOrThrow} from "../../core/validators/is_deletable";
 
 async function histories(
     {userId}: PickIds<'user'>,
@@ -19,7 +21,7 @@ async function histories(
 
         // after가 생략되었을 경우, latest cursor을 얻기 위해 metadata 가져옴
         if (after === undefined) {
-            const {latestHistoryId} = await MoviesMetadataService.findByUserIdOrCreateAndReturn({userId, tx});
+            const {latestHistoryId} = await MoviesMetadataRepository.findByUserIdOrCreateAndReturn({userId, tx});
 
             // DB에서 가져온 latestHistoryId 추가
             q.cursor = latestHistoryId !== null ? latestHistoryId : undefined;
@@ -29,74 +31,91 @@ async function histories(
     });
 }
 
-async function createOrRestoreAndUpdate(
+// movieHistoryId -> 가져온 뒤, login user id와 비교
+// (userId, movieId) -> 가져올 때부터 userId 필요하므로 비교 필요 없음 복합키므로 index 비용 2배
+// async function createOrRestore({userId, movieId}: PickIds<'user' | 'movie'>) {
+//     return prisma.$transaction(async (tx) => {
+//         await MoviesHistoryRepository.
+//     });
+// }
+
+async function updateLatestViewedAtWithMetaData(
     {
         userId,
         movieId,
         tx,
-    }: PickIdsWithTx<'user' | 'movie'>
+    }: PickIdsWithTx<'user' | 'movie'>,
 ) {
-    let movieHistory = await MoviesHistoryRepository.findByUserIdAndMovieId({
-        userId,
+    let nextHistoriesCount: null | 'increment' = null;
+
+    // 1. history 찾기 or 생성 or 복구
+    let history = await moviesHistoryRepository.findByUserIdAndMovieId({
         movieId,
+        userId,
         tx,
     });
 
-    // 1. 없으면 만들고 return
-    if (!movieHistory) {
-        return MoviesHistoryRepository.create({userId, movieId, tx});
-    }
+    // 2. 존재하지 않는 경우, 생성 or 복구 및 metadata increment
+    if (isNullOrDeleted(history)) {
 
-    // 2. 삭제 되었으면 되돌리고
-    if (movieHistory.deletedAt !== null) {
-        await MoviesHistoryRepository.restoreById({
-            movieHistoryId: movieHistory.id,
+        if (history === null) {
+            history = await moviesHistoryRepository.create({
+                userId,
+                movieId,
+                tx,
+            });
+        } else {
+            await moviesHistoryRepository.restoreById({
+                movieHistoryId: history.id,
+                tx,
+            });
+        }
+
+        nextHistoriesCount = 'increment';
+    } else {
+        await moviesHistoryRepository.updateLastViewedAtById({
+            movieHistoryId: history!.id,
             tx,
         });
     }
-    // 3. lastViewedAt 갱신
-    await MoviesHistoryRepository.updateLastViewedAtById({
-        movieHistoryId: movieHistory.id,
+
+    await moviesMetadataService.createOrUpdateLatestHistory({
+        nextId: history!.id,
+        historiesCount: nextHistoriesCount,
+        userId,
         tx,
     });
-    return movieHistory;
+
+
 }
 
-
-// movieHistoryId -> 가져온 뒤, login user id와 비교
-// (userId, movieId) -> 가져올 때부터 userId 필요하므로 비교 필요 없음 복합키므로 index 비용 2배
 async function deleteByUserIdAndMovieId({userId, movieId}: PickIds<'user' | 'movie'>) {
     return prisma.$transaction(async (tx) => {
 
         // 1. 삭제할 movie history 가져옴
-        const movieHistory = await MoviesHistoryRepository.findByUserIdAndMovieId({
-            userId,
-            movieId,
-            tx,
-        });
+        const history =
+            await MoviesHistoryRepository.findByUserIdAndMovieId(
+                {
+                    userId,
+                    movieId,
+                    tx,
+                });
 
-        // 2. 없으면 오류
-        if (!movieHistory) {
-            throw AppError.new({
-                message: ErrorMessages.NOT_FOUND,
-                status: HttpStatus.NOT_FOUND,
-            });
-        }
+        // 2. 삭제 가능 여부 확인 or throw not found error
+        isDeletableOrThrow(history);
 
-        // 3. 만약 latest history 라면 update,
         await MoviesMetadataService.updateLatestHistoryIfIsLatest({
-            nextId: movieHistory.id,
+            movieHistoryId: history!.id,
             userId,
             tx,
         });
 
         // 4. soft delete
         await MoviesHistoryRepository.softDeleteById({
-            movieHistoryId: movieHistory.id,
+            movieHistoryId: history!.id,
             tx,
         });
-        // 5. decrement histories count
-        await MoviesMetadataRepository.decrementMovieHistoriesCount({userId, tx});
+
     });
 }
 
@@ -116,6 +135,6 @@ async function deleteByUserIdAndMovieId({userId, movieId}: PickIds<'user' | 'mov
 
 export default {
     histories,
-    createOrRestoreAndUpdate,
+    updateLatestViewedAtWithMetaData,
     deleteByUserIdAndMovieId,
 };

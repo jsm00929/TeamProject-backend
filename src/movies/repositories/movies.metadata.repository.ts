@@ -1,11 +1,33 @@
 import {PickIdsWithTx} from "../../core/types/pick_ids";
+import {MovieMetaData} from "@prisma/client";
 
 async function findByUserId({userId, tx}: PickIdsWithTx<'user'>) {
     return tx.movieMetaData.findUnique({
         where: {
             userId,
-        }
+        },
     });
+}
+
+async function findByUserIdOrCreateAndReturn(
+    {userId, tx}: PickIdsWithTx<'user'>,
+): Promise<MovieMetaData> {
+    let metaData = await findByUserId({userId, tx});
+
+    // metaData가 DB에 없는 사용자의 경우, 생성
+    if (metaData === null) {
+        metaData = await createAndReturn({userId, tx});
+    }
+
+    return metaData;
+}
+
+async function createIfExists({userId, tx}: PickIdsWithTx<'user'>) {
+    const metaData = await findByUserId({userId, tx});
+
+    if (metaData === null) {
+        await createAndReturn({userId, tx});
+    }
 }
 
 async function createAndReturn({userId, tx}: PickIdsWithTx<'user'>) {
@@ -16,9 +38,18 @@ async function createAndReturn({userId, tx}: PickIdsWithTx<'user'>) {
     });
 }
 
-async function updateLatestHistoryId(
-    {userId, nextId, tx}: PickIdsWithTx<'user'>
-        & { nextId: number | null }
+
+async function updateLatestHistory(
+    {
+        userId,
+        nextId,
+        historiesCount,
+        tx,
+    }: PickIdsWithTx<'user'>
+        & {
+        nextId: number | null,
+        historiesCount: 'increment' | 'decrement' | null,
+    },
 ) {
     await tx.movieMetaData.update({
         where: {
@@ -26,6 +57,8 @@ async function updateLatestHistoryId(
         },
         data: {
             latestHistoryId: nextId,
+            // undefined or { increment: true } or { decrement: true }
+            ...(historiesCount !== null && {historiesCount: {[historiesCount]: 1}}),
         },
     });
 }
@@ -52,70 +85,6 @@ async function updateLatestMovieLikeId({userId, movieLikeId, tx}: PickIdsWithTx<
     });
 }
 
-async function incrementMovieHistoriesCount({userId, tx}: PickIdsWithTx<'user'>) {
-    await tx.movieMetaData.update({
-        where: {
-            userId,
-        },
-        data: {
-            historiesCount: {
-                increment: 1,
-            },
-        },
-    });
-}
-
-async function incrementMovieLikesCount({userId, tx}: PickIdsWithTx<'user'>) {
-    await tx.movieMetaData.update({
-        where: {
-            userId,
-        },
-        data: {
-            likesCount: {
-                increment: 1,
-            },
-        },
-    });
-}
-
-async function incrementFavoriteMoviesCount({userId, tx}: PickIdsWithTx<'user'>) {
-    await tx.movieMetaData.update({
-        where: {
-            userId,
-        },
-        data: {
-            favoritesCount: {
-                increment: 1,
-            },
-        },
-    });
-}
-
-async function decrementMovieHistoriesCount({userId, tx}: PickIdsWithTx<'user'>) {
-    await tx.movieMetaData.update({
-        where: {
-            userId,
-        },
-        data: {
-            historiesCount: {
-                decrement: 1,
-            },
-        },
-    });
-}
-
-async function decrementMovieLikesCount({userId, tx}: PickIdsWithTx<'user'>) {
-    await tx.movieMetaData.update({
-        where: {
-            userId,
-        },
-        data: {
-            likesCount: {
-                decrement: 1,
-            },
-        },
-    });
-}
 
 async function decrementFavoriteMoviesCount({userId, tx}: PickIdsWithTx<'user'>) {
     await tx.movieMetaData.update({
@@ -142,16 +111,13 @@ async function softDeleteByUserId({userId, tx}: PickIdsWithTx<'user'>) {
 }
 
 export default {
+    findByUserIdOrCreateAndReturn,
     findByUserId,
     createAndReturn,
+    createIfExists,
     softDeleteByUserId,
-    updateLatestHistoryId,
+    updateLatestHistory,
     updateLatestMovieLikeId,
     updateLatestFavoriteMovieId,
-    incrementMovieHistoriesCount,
-    incrementMovieLikesCount,
-    incrementFavoriteMoviesCount,
-    decrementMovieHistoriesCount,
     decrementFavoriteMoviesCount,
-    decrementMovieLikesCount,
 }

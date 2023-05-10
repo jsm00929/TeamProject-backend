@@ -21,21 +21,22 @@ async function findByUserIdAndMovieId(
 }
 
 async function findNextById(
-    {movieHistoryId, tx}: PickIdsWithTx<'movieHistory'>
+    {userId, movieHistoryId, tx}: PickIdsWithTx<'user' | 'movieHistory'>
 ) {
     const entities = await tx.movieHistory.findMany({
         where: {
-            id: movieHistoryId,
-        },
-        cursor: {
-            id: movieHistoryId
+            id: userId,
         },
         orderBy: {
             lastViewedAt: 'desc',
         },
+        cursor: {
+            id: movieHistoryId
+        },
         skip: 1,
         take: 1,
     });
+
     return nullOrFirst(entities);
 }
 
@@ -96,6 +97,30 @@ async function create(
     });
 }
 
+async function createOrRestoreAndReturn(
+    {
+        userId,
+        movieId,
+        tx,
+    }: PickIdsWithTx<'user' | 'movie'>) {
+
+    const history = await tx.movieHistory.create({
+        data: {
+            movieId,
+            userId,
+        },
+    });
+
+    // 2. 삭제된 경우 복구
+    if (isDeleted(history)) {
+        await restoreById({
+            movieHistoryId: history.id,
+            tx,
+        });
+    }
+
+    return history;
+}
 
 async function softDeleteById(
     {
@@ -147,6 +172,7 @@ export default {
     findManyByUserId,
     findNextById,
     create,
+    createOrRestoreAndReturn,
     softDeleteById,
     restoreById,
     updateLastViewedAtById,
