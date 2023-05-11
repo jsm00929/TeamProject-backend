@@ -65,16 +65,4 @@ export class MovieWithGenresOutput {
         return new this(m, isFavorite, isLiked);
     }
 
-    public static fromLikeMovie(
-        m: LikedMovie,
-        {
-            isFavorite,
-            isLiked,
-        }: {
-            isFavorite?: boolean | null;
-            isLiked?: boolean | null;
-        } = {isLiked: false, isFavorite: false},
-    ): MovieWithGenresOutput {
-        return new this(m.movie, isFavorite, isLiked);
-    }
 }

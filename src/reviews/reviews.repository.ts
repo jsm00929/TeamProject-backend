@@ -22,11 +22,17 @@ async function findManyReviewsByUserId(
         take: count + 1,
         include: {
             author: true,
+            movie: {
+                select: {
+                    title: true,
+                },
+            },
         },
         orderBy: {
             createdAt: 'desc',
         },
     });
+
 
     const reviews = entities
         .filter(r => !isDeleted(r))
@@ -47,6 +53,11 @@ async function findManyReviewsByMovieId(
         take: count + 1,
         include: {
             author: true,
+            movie: {
+                select: {
+                    title: true,
+                },
+            },
         },
         orderBy: {
             createdAt: 'desc',
@@ -69,6 +80,11 @@ async function findById({reviewId, tx}: PickIdsWithTx<'review'>): Promise<Review
             },
             include: {
                 author: true,
+                movie: {
+                    select: {
+                        title: true,
+                    },
+                },
             },
         },
     );

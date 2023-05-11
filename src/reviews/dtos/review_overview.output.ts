@@ -3,7 +3,7 @@ import {Review, User} from "@prisma/client";
 import {isNullOrDeleted} from "../../utils/is_null_or_deleted";
 import {UserOutput} from "../../users/dtos/outputs/user.output";
 
-export type ReviewWithAuthor = Review & { author: User };
+export type ReviewWithAuthor = Review & { movie: { title: string }, author: User };
 
 export class ReviewOutput extends BaseOutput {
     title: string;
@@ -12,6 +12,7 @@ export class ReviewOutput extends BaseOutput {
     rating: number | null;
     author: UserOutput;
     movieId: number;
+    movieTitle: string;
 
     private constructor(r: ReviewWithAuthor) {
         super(r.id, r.createdAt, r.updatedAt);
@@ -21,6 +22,7 @@ export class ReviewOutput extends BaseOutput {
         this.content = r.content;
         this.rating = r.rating;
         this.movieId = r.movieId;
+        this.movieTitle = r.movie.title;
         this.author = UserOutput.from(r.author);
     }
 
