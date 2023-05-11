@@ -4,12 +4,12 @@ import MoviesFavoriteRepository from "../repositories/movies.favorite.repository
 import {PickIds} from "../../core/types/pick_ids";
 import {ToggleFavoriteMovieBody} from "../dtos/inputs/toggle_favorite_movie.body";
 import {isDeleted, isNullOrDeleted} from "../../utils/is_null_or_deleted";
-import {isUpdatableLike} from "../validations/is_updatable_like";
 import MoviesMetadataService from "./movies.metadata.service";
 import MoviesMetadataRepository from "../repositories/movies.metadata.repository";
 import {PaginationQuery, PaginationQueryWithCursor} from "../../core/dtos/inputs";
 import {PaginationOutput} from "../../core/dtos/outputs/pagination_output";
 import {MovieWithGenresOutput} from "../dtos/outputs/movie_with_genres.output";
+import {isUpdatableFavorite} from "../validations/is_updatable_favorite";
 
 
 async function favoriteMovies(
@@ -47,7 +47,7 @@ async function toggleFavorite(
             .findByUserIdAndMovieId({userId, movieId, tx});
 
         // prev, next가 동일한 경우, 상태 변화 x
-        if (!isUpdatableLike(nextFavorite, favorite)) return;
+        if (!isUpdatableFavorite(nextFavorite, favorite)) return;
 
         // 1. exists -> updateIfLatest
         if (favorite !== null && !isDeleted(favorite)) {

@@ -43,6 +43,15 @@ async function isExistsByEmail({email, tx}: EmailWithTx): Promise<boolean> {
     return user !== null;
 }
 
+
+// 클라이언트에서 api.get() 쏘면은 쿠키 넣어주고
+// 서버에서     api.get() 쏘면은 쿠키를 서버에서 쓰니까 안넣어주는 상태
+// api.get({ headers: { COOKIES: cookies } })
+//
+//
+//
+//
+//
 /**
  * @description
  * CREATE
