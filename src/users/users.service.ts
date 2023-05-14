@@ -33,7 +33,6 @@ async function updatePassword(
         isUserValidOrThrow(user);
         await isPasswordValidOrThrow(oldPassword, user!.password);
 
-        console.log(user)
         const password = await hashPassword(newPassword);
         await usersRepository.updateUserPassword({userId, tx}, {password});
     });
