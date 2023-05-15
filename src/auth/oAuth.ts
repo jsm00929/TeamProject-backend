@@ -1,6 +1,4 @@
-import { google } from 'googleapis';
 import axios from 'axios';
-import { AppError } from '../types/AppError';
 import process from 'process';
 
 export async function fetchToken(code, status: string) {
@@ -25,7 +23,7 @@ export async function fetchToken(code, status: string) {
     );
     return data.access_token;
   } catch (error) {
-    throw new Error(error);
+    return error;
   }
 }
 
@@ -39,8 +37,8 @@ export async function getUserInfo(access_token) {
         },
       },
     );
-    console.log(`userInfo:${userInfoApi.data.email}`);
-    return userInfoApi;
+    console.log(`get user info - userInfo:${userInfoApi.data.email}`);
+    return userInfoApi.data;
   } catch (error) {
     return error;
   }
