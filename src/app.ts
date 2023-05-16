@@ -8,7 +8,6 @@ import swaggerUi from 'swagger-ui-express';
 import cors from 'cors';
 import path from 'path';
 import logger from 'morgan';
-import { commentRouter } from './comments/comments.router';
 
 // Singleton App instance
 export class App {
@@ -72,7 +71,7 @@ export class App {
     // apiRouter.use('/users', usersRouter);
     // apiRouter.use('/movies', moviesRouter);
     // apiRouter.use('/reviews', reviewsRouter);
-    apiRouter.use('/comments', commentRouter);
+    // apiRouter.use('/comments', moviesRouter);
   }
 
   // 오류 처리 미들웨어, 404 미들웨어 로드

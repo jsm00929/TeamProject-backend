@@ -27,12 +27,12 @@ export async function verifyAccessToken(accessToken) {
     //   },
     //);
 
-    const findUser = await usersRepository.findUserByEmail(payload as string);
-    if (!findUser) {
-      throw AppError.create({
-        message: ErrorMessages.USER_NOT_FOUND,
-      });
-    }
+    // const findUser = await usersRepository.findUserByEmail(payload as string);
+    // if (!findUser) {
+    //   throw AppError.create({
+    //     message: ErrorMessages.USER_NOT_FOUND,
+    //   });
+    // }
     return payload;
   } catch (error) {
     if (error.name === 'TokenExpiredError')

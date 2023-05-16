@@ -14,61 +14,16 @@ model User {
   id        Int       @id @default(autoincrement())
   name      String    @db.VarChar(20)
   email     String    @unique @db.VarChar(255)
-  password  String?   @db.VarChar(100)
+  password  String?    @db.VarChar(100)
   avatarUrl String?   @db.VarChar(255)
   createdAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
   updatedAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
   deletedAt DateTime? @db.Timestamp()
-  reviews   Review[]
-  comments  Comment[] 
 }
 
-model Movie {
-  id          Int       @id @default(autoincrement())
-  title       String    @db.VarChar(100)
-  posterUrl   String    @db.VarChar(20)
-  releaseDate DateTime  @db.Date
-  createdAt   DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
-  updatedAt   DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
-  deletedAt   DateTime? @db.Timestamp()
-  reviews     Review[]
-  genres      Genre[]
-}
-
-model Genre {
-  id        Int       @id 
-  name      String    @unique
-  movies    Movie[]
-}
-
-model Review {
-  id        Int         @id
-  author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  title     String      @db.VarChar(100)
-  content   String      @db.Text
-  rating    Int?        @db.Int
-  comments  Comment[]
-  authorId  Int
-  movieId   Int
-  movie     Movie       @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  createdAt   DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
-  updatedAt   DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
-  deletedAt   DateTime? @db.Timestamp()
-}
-
-model Comment {
-  id        Int       @id @default(autoincrement())
-  authorId  Int       
-  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  content   String    @db.VarChar(20)
-  reviewId  Int
-  review    Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
-  updatedAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
-  deletedAt DateTime? @db.Timestamp()
-}
-
-// model RefreshToken {
-//   id          Int         @id
-//   expiresAt   DateTime    
+// model Movie {
+//   id        Int     @id @default(autoincrement())
+//   title     String  @db.VarChar(20)
+//   genre     String  @db.VarChar(20)
+//   poster    String  @db.VarChar(20)
 // }

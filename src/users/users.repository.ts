@@ -24,10 +24,8 @@ export const usersRepository = {
     return user;
   },
 
-  async findUserByEmail(email: string) {
-    const user = await prisma.user.findUnique({
-      where: { email: email },
-    });
+  async findUser(filter: SearchUserDto) {
+    const user = await prisma.user.findFirst({ where: filter });
     return user;
   },
 };
