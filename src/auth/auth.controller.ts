@@ -8,8 +8,15 @@ import {
   GOOGLE_SIGNUP_AUTH_URI,
   GOOGLE_LOGIN_AUTH_URL,
 } from '../config/constants';
-import { setAccessToken, setTokenCookies } from '../utils/aboutToken';
+import {
+  generateAccessToken,
+  setAccessTokenCookie,
+  verifyRefreshToken,
+} from '../utils/aboutToken';
 import { GoogleLoginCodeQuery } from './dtos/inputs/google_login_code.query';
+import { AppError } from '../types/AppError';
+import { ErrorMessages } from '../types/ErrorMessages';
+import { HttpStatus } from '../types/HttpStatus';
 
 export const authController = {
   async signup(
@@ -21,12 +28,12 @@ export const authController = {
       const createUser = req.body;
       const createdUser = await authService.signup(createUser);
 
-      const accessToken = setAccessToken({
+      const accessToken = generateAccessToken({
         userId: createdUser.id,
         username: createdUser.name,
       });
 
-      setTokenCookies('accessToken', accessToken, res);
+      setAccessTokenCookie('accessToken', accessToken, res);
       res.json('가입 성공');
     } catch (error) {
       next(error);
@@ -42,12 +49,12 @@ export const authController = {
       const loginUser = req.body;
 
       const loginedUser = await authService.login(loginUser);
-      const accessToken = setAccessToken({
+      const accessToken = generateAccessToken({
         userId: loginedUser.id,
         username: loginedUser.name,
       });
 
-      setTokenCookies('accessToken', accessToken, res);
+      setAccessTokenCookie('accessToken', accessToken, res);
       res.json('로그인 성공');
     } catch (error) {
       next(error);
@@ -69,12 +76,12 @@ export const authController = {
       const { code } = req.query;
       const createdUser = await authService.googleSignupRedirect(code);
 
-      const accessToken = setAccessToken({
+      const accessToken = generateAccessToken({
         userId: createdUser.id,
         username: createdUser.name,
       });
 
-      setTokenCookies('accessToken', accessToken, res);
+      setAccessTokenCookie('accessToken', accessToken, res);
       res.json('구글 회원가입 성공');
     } catch (error) {
       next(error);
@@ -91,15 +98,27 @@ export const authController = {
       const { code } = req.query;
       const loginedUser = await authService.googleLoginRedirect(code);
 
-      const accessToken = setAccessToken({
+      const accessToken = generateAccessToken({
         userId: loginedUser.id,
         username: loginedUser.name,
       });
 
-      setTokenCookies('accessToken', accessToken, res);
+      setAccessTokenCookie('accessToken', accessToken, res);
       res.json('로그인 성공');
     } catch (error) {
       next(error);
     }
+  },
+
+  async reissuanceToken(req, res, next) {
+    const { refreshToken } = req.cookie;
+
+    const payload = verifyRefreshToken(refreshToken);
+    const accessToken = generateAccessToken({
+      userId: payload.id,
+      username: payload.name,
+    });
+    setAccessTokenCookie('accessToken', accessToken, res);
+    res.json('accessToken 재발급 성공');
   },
 };
