@@ -55,7 +55,7 @@ export class Config {
     }
 
 
-    @Min(1025)
+    @Min(0)
     @Max(65536)
     private _clientPort: number;
 
