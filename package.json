@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "pm2": "pm2 start \"yarn dev\" --name app",
     "dev": "NODE_ENV=dev npx nodemon --exec ts-node src/main",
     "test": "NODE_ENV=test npx jest --config=jest.config.js",
     "swagger": "npx openapi-typescript src/config/swagger.yml -o src/types/swagger.d.ts",
@@ -27,6 +28,7 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "node-cron": "^3.0.2",
+    "pm2": "^5.3.0",
     "redis": "^4.6.6",
     "swagger-ui-express": "^4.6.2",
     "uuid": "^9.0.0",
