@@ -15,7 +15,7 @@ export const commentService = {
       );
       if (review == null) {
         throw AppError.create({
-          message: '댓글 달 리뷰 없음',
+          message: ErrorMessages.REVEIW_NOT_FOUND,
           status: HttpStatus.BAD_REQUEST,
         });
       }
@@ -31,7 +31,6 @@ export const commentService = {
         reviewId,
         lastId,
       );
-
       return comments;
     });
   },

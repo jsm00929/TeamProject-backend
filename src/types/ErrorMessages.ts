@@ -15,4 +15,5 @@ export enum ErrorMessages {
   NOT_SET_PASSWORD = '비밀번호를 설정하지 않으셨습니다. 꾸끌 로그인을 하신것 같은 대 요?^^',
   ALREADY_LOGINED = '이미 로그인됏내여',
   COMMENT_NOT_FOUND = '그런 댓글은 업내요',
+  REVEIW_NOT_FOUND = '그런 리뷰는 업내요',
 }
