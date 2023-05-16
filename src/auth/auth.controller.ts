@@ -148,10 +148,10 @@ async function googleLoginRedirect(
         // return AppResult.redirect(`${clientHost}:${clientPort}`);
     } catch (e) {
         // TODO: 구글 로그인 실패 시, REDIRECT URL
-        return AppResult.redirect(`http://${clientHost}:${clientPort}/`);
+        return AppResult.redirect(`http://${clientHost}${clientPort > 0 ? `:${clientPort}` : ''}/`);
     }
     // 성공시
-    return AppResult.redirect(`http://${clientHost}:${clientPort}/`);
+    return AppResult.redirect(`http://${clientHost}${clientPort > 0 ? `:${clientPort}` : ''}/`);
 }
 
 /**
@@ -172,15 +172,16 @@ async function googleSignupRedirect(
     res: Response,
 ) {
     const {code} = req.unwrap();
+
     try {
         const userId = await authService.googleSignupRedirect(code);
         setAuthCookies(userId, res);
     } catch (e) {
         // TODO: 구글 로그인 실패 시, REDIRECT URL
-        return AppResult.redirect(`http://${clientHost}:${clientPort}/`);
+        return AppResult.redirect(`http://${clientHost}${clientPort > 0 ? `:${clientPort}` : ''}/`);
     }
     // 성공시
-    return AppResult.redirect(`http://${clientHost}:${clientPort}/`);
+    return AppResult.redirect(`http://${clientHost}${clientPort > 0 ? `:${clientPort}` : ''}/`);
 }
 
 
