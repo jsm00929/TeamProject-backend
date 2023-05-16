@@ -3,7 +3,6 @@ import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { ErrorMessages } from '../types/ErrorMessages';
 import { AppError } from '../types/AppError';
-import { RequestWith } from '../types/RequestWith';
 import { CustomRequest } from '../types/CustomRequest';
 
 export function isValid(
@@ -17,12 +16,8 @@ export function isValid(
   ) => {
     const obj = plainToInstance(cls, req[from]);
 
-    // const errors = obj.map(async (o) => {
-    //   await validate(o, { forbidUnknownValues: true });
-    // });
-
+    console.log(obj);
     const errors = await validate(obj);
-    console.log(errors);
     if (errors.length > 0) {
       next(AppError.create({ message: ErrorMessages.INVALID_REQUEST_BODY }));
     }

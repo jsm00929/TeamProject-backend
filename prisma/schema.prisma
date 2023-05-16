@@ -11,19 +11,60 @@ datasource db {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  name      String    @db.VarChar(20)
-  email     String    @unique @db.VarChar(255)
-  password  String?    @db.VarChar(100)
-  avatarUrl String?   @db.VarChar(255)
-  createdAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp()
-  updatedAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @updatedAt @db.Timestamp()
-  deletedAt DateTime? @db.Timestamp()
+  id                   Int             @id @default(autoincrement())
+  name                 String          @db.VarChar(20)
+  email                String          @unique @db.VarChar(255)
+  password             String?         @db.VarChar(100)
+  avatarUrl            String?         @db.VarChar(255)
+  createdAt            DateTime        @default(now()) @db.Timestamp(0)
+  updatedAt            DateTime        @default(now()) @updatedAt @db.Timestamp(0)
+  deletedAt            DateTime?       @db.Timestamp(0)
+  comments             Comment[]
+  reviews              Review[]
+
+  @@index([email], map: "email")
 }
 
-// model Movie {
-//   id        Int     @id @default(autoincrement())
-//   title     String  @db.VarChar(20)
-//   genre     String  @db.VarChar(20)
-//   poster    String  @db.VarChar(20)
-// }
+
+model Movie {
+  id            Int             @id
+  title         String          @db.VarChar(100)
+  posterUrl     String?
+  releaseDate   DateTime?       @db.Date
+  reviews       Review[]
+}
+
+model Review {
+  id        Int       @id @default(autoincrement())
+  movieId   Int
+  authorId  Int
+  content   String    @db.Text
+  rating    Int?      @db.UnsignedTinyInt
+  overview  String    @db.VarChar(100)
+  title     String    @db.VarChar(100)
+  createdAt DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @updatedAt @db.Timestamp(0)
+  deletedAt DateTime? @db.Timestamp(0)
+  comments  Comment[]
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  movie     Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@index([movieId])
+  @@index([authorId])
+}
+
+model Comment {
+  id        Int       @id @default(autoincrement())
+  content   String    @db.VarChar(500)
+  reviewId  Int
+  authorId  Int
+  createdAt DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @updatedAt @db.Timestamp(0)
+  deletedAt DateTime? @db.Timestamp(0)
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  review    Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+  @@index([authorId])
+}
+

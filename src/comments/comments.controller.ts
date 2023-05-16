@@ -13,9 +13,10 @@ export const commentController = {
     next: NextFunction,
   ) {
     try {
-      const { reviewId } = req.query;
+      const { reviewId } = req.params;
       const { authorId, content } = req.body;
 
+      console.log(parseInt(reviewId as string, 10));
       const createdComment = await commentService.createComment({
         reviewId: parseInt(reviewId as string, 10),
         authorId,
