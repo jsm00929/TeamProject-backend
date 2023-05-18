@@ -2,7 +2,7 @@ import {IsEnum, IsIn, IsOptional, IsString,} from 'class-validator';
 import {PaginationQuery} from '../../../core/dtos/inputs';
 import {Genre} from '../genre.enum';
 
-enum MovieSortingCriteria {
+export enum MovieSortingCriteria {
     POPULARITY = 'popularity',
     RATING = 'voteAverage',
     RELEASE_DATE = 'releaseDate',
