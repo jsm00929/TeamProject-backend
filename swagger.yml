@@ -1468,7 +1468,10 @@ components:
         hasMore:
           type: boolean
           example: true
-
+        lastId:
+          type: number
+          nullable: true
+          example: 102432
 
     MovieHistoryOutput:
       type: object

@@ -9,6 +9,8 @@ import {PaginationQuery} from "../core/dtos/inputs";
 import {PickIds} from "../core/types/pick_ids";
 import {PaginationOutput} from "../core/dtos/outputs/pagination_output";
 import {ReviewOutput} from "./dtos/review_overview.output";
+import {predictAi} from "../api/predict.ai";
+import {Review} from "@prisma/client";
 
 async function reviewsByUserId(
     {userId}: PickIds<'user'>,
@@ -50,15 +52,17 @@ async function write(
     {userId, movieId}: PickIds<'user' | 'movie'>,
     {rating, content, title}: CreateMovieReviewBody,
 ) {
-    let reviewId: number | undefined;
 
-    await prisma.$transaction(async tx => {
-            reviewId = await reviewsRepository.create({tx, userId, movieId}, {title, content, rating});
+    const review = await prisma.$transaction(async tx => {
+            const review = await reviewsRepository.create({tx, userId, movieId}, {title, content, rating});
             await reviewsRepository.createRating({tx, movieId, rating});
+            return review;
         }
     );
 
-    return reviewId;
+    await predictAi({content: review.content, id: review.id, movie_id: review.movieId});
+
+    return review.id;
 }
 
 async function edit(

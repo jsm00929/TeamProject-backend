@@ -77,6 +77,8 @@ interface Payload extends JwtPayload {
     exp: number;
 }
 
+
 function isExpiredToken({exp}: Payload) {
     return Date.now() > exp;
 }
+

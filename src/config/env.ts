@@ -1,14 +1,14 @@
 import {
-  ArrayMinSize,
-  IsArray,
-  IsIn,
-  IsNotEmpty,
-  IsString,
-  IsUrl,
-  Max,
-  Min,
-  MinLength,
-  validateSync,
+    ArrayMinSize,
+    IsArray,
+    IsIn,
+    IsNotEmpty,
+    IsString,
+    IsUrl,
+    Max,
+    Min,
+    MinLength,
+    validateSync,
 } from 'class-validator';
 
 export class Config {
@@ -19,12 +19,18 @@ export class Config {
     @IsIn(['dev', 'prod', 'test', 'ngrok'])
     private _env: string;
 
-
     static get env() {
         if (!this.instance) {
             this.init();
         }
         return this.instance!;
+    }
+
+    @IsString()
+    private _aiSecret: string;
+
+    public get aiSecret(): string {
+        return this._aiSecret;
     }
 
     @IsString()
@@ -226,8 +232,10 @@ export class Config {
             JWT_SECRET,
             NODE_ENV,
             ALLOWED_ORIGINS,
+            AI_SECRET,
         } = process.env;
         const config = new Config();
+        config._aiSecret = AI_SECRET!;
         config._host = HOST!;
         config._port = +PORT!;
         config._clientHost = CLIENT_HOST!;

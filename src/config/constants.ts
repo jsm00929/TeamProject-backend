@@ -27,3 +27,5 @@ export const GOOGLE_USER_INFO_URL = 'https://www.googleapis.com/userinfo/v2/me';
 
 export const REDIS_BLACKLIST_PREFIX = 'blacklist:';
 export const REDIS_REFRESH_TOKEN_PREFIX = 'refreshToken:';
+
+export const AI_PREDICT_BASE_URL = `http://localhost:8000`;

@@ -7,6 +7,16 @@ datasource db {
   url      = env("DB_URL")
 }
 
+model AiAdmin {
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(20)
+  email     String    @unique @db.VarChar(255)
+  password  String?   @db.VarChar(100)
+  createdAt DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @updatedAt @db.Timestamp(0)
+  deletedAt DateTime? @db.Timestamp(0)
+}
+
 model User {
   id                   Int             @id @default(autoincrement())
   name                 String          @db.VarChar(20)
@@ -165,4 +175,13 @@ model Comment {
 
   @@index([reviewId])
   @@index([authorId])
+}
+
+model ReviewResponse {
+  id       Int     @id @default(autoincrement())
+  movieId  Int
+  reviewId Int     @unique
+  result   Boolean
+
+  @@index([movieId, reviewId])
 }

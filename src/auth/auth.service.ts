@@ -6,6 +6,7 @@ import {LoginBody} from './dtos/inputs/login.body';
 import {SignupBody} from './dtos/inputs/signup.body';
 import {fetchGoogleToken, fetchGoogleUserInfo,} from '../pkg/oauth/google/fetchers';
 import {prisma} from "../config/db";
+import {isPasswordValidOrThrow} from "./validations/is_password_valid_or_throw";
 
 async function signUp({email, name, password}: SignupBody) {
 

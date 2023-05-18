@@ -5,6 +5,8 @@ import {PaginationQuery} from "../core/dtos/inputs";
 import {ReviewOutput, ReviewWithAuthor} from "./dtos/review_overview.output";
 import {PaginationOutput} from "../core/dtos/outputs/pagination_output";
 import {isDeleted} from "../utils/is_null_or_deleted";
+import {prisma} from "../config/db";
+import {FindPredictAiResultDto, PredictAiDto, PredictAiResultDto} from "../api/predict.ai";
 
 /**
  * 조회(Fetch)
@@ -115,7 +117,7 @@ async function create(
     {userId, movieId, tx}: PickIdsWithTx<'user' | 'movie'>,
     {title, content, rating}: CreateMovieReviewBody,
 ) {
-    const {id} = await tx.review.create({
+    return tx.review.create({
         data: {
             title,
             content,
@@ -124,11 +126,7 @@ async function create(
             movieId,
             authorId: userId,
         },
-        select: {
-            id: true,
-        },
     });
-    return id;
 }
 
 
@@ -195,6 +193,30 @@ async function totalRatingByMovieId({movieId, tx}: PickIdsWithTx<'movie'>) {
     return ratings.reduce((acc, cur) => acc + cur.rating, 0);
 }
 
+// async function findReviewResult({after, reviewId, movieId}: FindPredictAiResultDto) {
+//     return prisma.reviewResponse.findMany({
+//         where: {
+//             movieId,
+//             reviewId,
+//         },
+//         orderBy: {
+//             id,
+//         },
+//     });
+// }
+
+async function createReviewResult({result, id, movie_id}: PredictAiResultDto) {
+    await prisma.reviewResponse.create({
+        data: {
+            id,
+            reviewId: id,
+            movieId: movie_id,
+            result,
+        },
+    });
+}
+
+
 export default {
     findById,
     findManyReviewsByUserId,
@@ -206,4 +228,5 @@ export default {
     create,
     update,
     remove,
+    createReviewResult,
 };
