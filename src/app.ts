@@ -14,6 +14,7 @@ import { authRouter } from "./auth/auth.controller";
 import { moviesReviewsRouter } from "./movies/controllers/movies.reviews.controller";
 import { usersMovieReviewsRouter } from "./users/controllers/users.reviews.controller";
 import { reviewsRouter } from "./reviews/reviews.controller";
+import { commentRouter } from "./comments/comments.contoroller";
 
 // Singleton App instance
 export class App {
@@ -92,6 +93,7 @@ export class App {
     api.use("/movies", moviesRouter);
     api.use("/movies", moviesReviewsRouter);
     api.use("/reviews", reviewsRouter);
+    api.use("/comments", commentRouter);
   }
 
   // 오류 처리 미들웨어, 404 미들웨어 로드
