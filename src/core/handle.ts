@@ -1,17 +1,17 @@
-import { ClassConstructor } from 'class-transformer';
-import { NextFunction } from 'express';
-import { isAuth } from '../auth/middlewares/is_auth';
-import { mustAuth } from '../auth/middlewares/must_auth';
-import { HttpStatus, ErrorMessages } from './constants';
+import { ClassConstructor } from "class-transformer";
+import { NextFunction } from "express";
+import { isAuth } from "../auth/middlewares/is_auth";
+import { mustAuth } from "../auth/middlewares/must_auth";
+import { HttpStatus, ErrorMessages } from "./constants";
 import {
   mustValidBody,
   mustValidQuery,
   mustValidParams,
   handleResponse,
-} from './middlewares';
-import { AppError } from './types';
-import { AuthLevel, ExtendedRequest } from './types/extended_request';
-import { Handler } from './types/handler';
+} from "./middlewares";
+import { AppError } from "./types";
+import { AuthLevel, ExtendedRequest } from "./types/extended_request";
+import { Handler } from "./types/handler";
 
 type HandleArgs<A extends AuthLevel, I, P> = {
   authLevel?: AuthLevel;
@@ -22,7 +22,7 @@ type HandleArgs<A extends AuthLevel, I, P> = {
   controller: Handler<ExtendedRequest<A, I, P>>;
 };
 
-export function handle<A extends AuthLevel = 'none', I = never, P = never>({
+export function handle<A extends AuthLevel = "none", I = never, P = never>({
   authLevel,
   controller,
   bodyCls,
@@ -40,7 +40,7 @@ export function handle<A extends AuthLevel = 'none', I = never, P = never>({
         AppError.new({
           status: HttpStatus.BAD_REQUEST,
           message: ErrorMessages.INVALID_REQUEST_INPUT,
-        }),
+        })
       );
     });
     return handlers;
@@ -58,9 +58,9 @@ export function handle<A extends AuthLevel = 'none', I = never, P = never>({
     handlers.push(mustValidParams(paramsCls) as Handler<Request>);
   }
 
-  if (authLevel === 'must') {
+  if (authLevel === "must") {
     handlers.push(mustAuth as Handler<Request>);
-  } else if (authLevel === 'optional') {
+  } else if (authLevel === "optional") {
     handlers.push(isAuth as Handler<Request>);
   }
 

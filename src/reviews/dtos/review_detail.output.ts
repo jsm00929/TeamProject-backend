@@ -1,4 +1,4 @@
-import { ReviewOverviewOutput } from './review_overview.output';
+import { ReviewOverviewOutput } from "./review_overview.output";
 
 export interface ReviewDetailOutput
-  extends Omit<ReviewOverviewOutput, 'overview'> {}
+  extends Omit<ReviewOverviewOutput, "overview"> {}

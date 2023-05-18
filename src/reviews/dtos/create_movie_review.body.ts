@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, Max, MaxLength, Min } from 'class-validator';
+import { IsNotEmpty, IsNumber, Max, MaxLength, Min } from "class-validator";
 
 export class CreateMovieReviewBody {
   @IsNotEmpty()

@@ -1,9 +1,9 @@
-import {redisClient} from "../config/redis";
-import {REDIS_BLACKLIST_PREFIX} from "../config/constants";
+import { redisClient } from "../config/redis";
+import { REDIS_BLACKLIST_PREFIX } from "../config/constants";
 
 async function isBlackListed(accessToken: string) {
-    const key = REDIS_BLACKLIST_PREFIX + accessToken;
-    return (await redisClient.get(key)) !== null;
+  const key = REDIS_BLACKLIST_PREFIX + accessToken;
+  return (await redisClient.get(key)) !== null;
 }
 
 // async function addToBlackList(accessToken: string, exp: number) {

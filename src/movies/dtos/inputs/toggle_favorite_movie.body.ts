@@ -1,11 +1,11 @@
-import {IsBoolean, IsNotEmpty} from "class-validator";
+import { IsBoolean, IsNotEmpty } from "class-validator";
 
 export class ToggleFavoriteMovieBody {
-    @IsNotEmpty()
-    @IsBoolean()
-    nextFavorite: boolean;
+  @IsNotEmpty()
+  @IsBoolean()
+  nextFavorite: boolean;
 
-    public constructor(nextFavorite: boolean) {
-        this.nextFavorite = nextFavorite;
-    }
+  public constructor(nextFavorite: boolean) {
+    this.nextFavorite = nextFavorite;
+  }
 }

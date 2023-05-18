@@ -1,4 +1,4 @@
-import { MaxLength, MinLength, IsOptional } from 'class-validator';
+import { MaxLength, MinLength, IsOptional } from "class-validator";
 
 export class UpdateUserNameBody {
   @MinLength(4)

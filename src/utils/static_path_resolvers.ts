@@ -1,11 +1,11 @@
-import { join } from 'path';
+import { join } from "path";
 import {
   STATIC_AVATARS_PATH,
   STATIC_AVATARS_URL,
   UPLOADS_TEMP_PATH,
-} from '../config/constants';
+} from "../config/constants";
 
-export type StaticDirectoryKind = 'avatars';
+export type StaticDirectoryKind = "avatars";
 
 // TODO
 // export function resolveTrashDirPath(filepath: string) {
@@ -14,34 +14,34 @@ export type StaticDirectoryKind = 'avatars';
 
 export function staticPathIntoUrl(path: string, kind: StaticDirectoryKind) {
   let staticUrl;
-  if (kind === 'avatars') {
+  if (kind === "avatars") {
     staticUrl = STATIC_AVATARS_URL;
   }
-  return `${staticUrl}/${path.split('/').reverse()[0]}`;
+  return `${staticUrl}/${path.split("/").reverse()[0]}`;
 }
 
 export function staticUrlIntoPath(
   url: string,
   kind: StaticDirectoryKind,
-  isAbsolutePath: boolean = false,
+  isAbsolutePath: boolean = false
 ) {
   let staticPath;
-  if (kind === 'avatars') {
+  if (kind === "avatars") {
     staticPath = STATIC_AVATARS_PATH;
   }
   if (isAbsolutePath) {
     staticPath = intoAbsolutePath(staticPath);
   }
-  return `${staticPath}/${url.split('/').reverse()[0]}`;
+  return `${staticPath}/${url.split("/").reverse()[0]}`;
 }
 
 export function filenameIntoStaticPath(
   filename: string,
   kind: StaticDirectoryKind,
-  isAbsolutePath: boolean = false,
+  isAbsolutePath: boolean = false
 ) {
   let staticPath;
-  if (kind === 'avatars') {
+  if (kind === "avatars") {
     staticPath = STATIC_AVATARS_PATH;
   }
 
@@ -53,10 +53,10 @@ export function filenameIntoStaticPath(
 
 export function filenameIntoStaticUrl(
   filename: string,
-  kind: StaticDirectoryKind,
+  kind: StaticDirectoryKind
 ) {
   let staticUrl;
-  if (kind === 'avatars') {
+  if (kind === "avatars") {
     staticUrl = STATIC_AVATARS_URL;
   }
   return `${staticUrl}/${filename}`;

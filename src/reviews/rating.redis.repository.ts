@@ -1,9 +1,9 @@
-import {redisClient} from "../config/redis";
-import {REDIS_RATING_PREFIX} from "../config/constants";
+import { redisClient } from "../config/redis";
+import { REDIS_RATING_PREFIX } from "../config/constants";
 
 async function getRatingByMovieId(movieId: number) {
-    const key = REDIS_RATING_PREFIX + movieId;
-    return (await redisClient.get(key)) !== null;
+  const key = REDIS_RATING_PREFIX + movieId;
+  return (await redisClient.get(key)) !== null;
 }
 
 // async function setRatingByMovieId(movieId: number) {

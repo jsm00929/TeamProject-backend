@@ -1,9 +1,17 @@
-import {Tx} from "./tx";
+import { Tx } from "./tx";
 
-type Key = 'user' | 'movie' | 'comment' | 'movieHistory' | 'movieLike' | 'favoriteMovie' | 'review' | 'author';
+type Key =
+  | "user"
+  | "movie"
+  | "comment"
+  | "movieHistory"
+  | "movieLike"
+  | "favoriteMovie"
+  | "review"
+  | "author";
 
 export type PickIds<T extends Key> = {
-    [K in `${T}Id`]: number;
+  [K in `${T}Id`]: number;
 };
 
 export type PickIdsWithTx<T extends Key> = PickIds<T> & { tx: Tx };

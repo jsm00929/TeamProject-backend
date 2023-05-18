@@ -1,4 +1,4 @@
-const allowedChars = 'abcdefghijklmnopqrstuvwxyz1234567890';
+const allowedChars = "abcdefghijklmnopqrstuvwxyz1234567890";
 
 export function randomChar() {
   return allowedChars[Math.floor(Math.random() * allowedChars.length)];
@@ -8,10 +8,10 @@ export function randomString(len = 8) {
   return new Array(len)
     .fill(null)
     .map(() => randomChar())
-    .join('');
+    .join("");
 }
 
-export function randomEmail(len = 8, domain = 'gmail', tld = 'com') {
+export function randomEmail(len = 8, domain = "gmail", tld = "com") {
   return `${randomString(len)}@${domain}.${tld}`;
 }
 

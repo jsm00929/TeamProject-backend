@@ -1,5 +1,5 @@
-import { createLogger, format, transports } from 'winston';
-import { Config } from '../config/env';
+import { createLogger, format, transports } from "winston";
+import { Config } from "../config/env";
 
 const { combine, printf, colorize, timestamp } = format;
 
@@ -13,7 +13,7 @@ const { combine, printf, colorize, timestamp } = format;
 export const log = (() => {
   return createLogger({
     format: combine(
-      timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+      timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
       printf((info) => {
         if (info.stack) {
           return `[🦑${info.timestamp}🍜] ${info.level.toUpperCase()}: ${
@@ -23,14 +23,14 @@ export const log = (() => {
         return `[🦑${info.timestamp}🍜] ${info.level.toUpperCase()}: ${
           info.message
         }\n`;
-      }),
+      })
     ),
     transports: [
       new transports.Console({
-        level: Config.env.env === 'dev' ? 'debug' : 'error',
+        level: Config.env.env === "dev" ? "debug" : "error",
         format: combine(
           colorize({ all: true }),
-          timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+          timestamp({ format: "YYYY-MM-DD HH:mm:ss" })
         ),
         handleExceptions: true,
       }),

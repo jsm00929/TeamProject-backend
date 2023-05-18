@@ -4,7 +4,7 @@ import {
   OptionalAuthRequest,
   OptionalAuthRequestWith,
   RequestWith,
-} from './request_with';
+} from "./request_with";
 
 /**
  * handle의 authLevel 필드의 타입으로,
@@ -30,11 +30,11 @@ import {
  *      controller: controller,
  * });
  */
-export type AuthLevel = 'none' | 'optional' | 'must';
+export type AuthLevel = "none" | "optional" | "must";
 
-export type ExtendedRequest<A, I, P> = A extends 'must'
+export type ExtendedRequest<A, I, P> = A extends "must"
   ? ConditionalAuthRequest<I, P>
-  : A extends 'optional'
+  : A extends "optional"
   ? ConditionalOptionalAuthRequest<I, P>
   : ConditionalRequest<I, P>;
 

@@ -1,196 +1,191 @@
-import {CreateMovieReviewBody} from './dtos/create_movie_review.body';
-import {EditMovieReviewBody} from './dtos/edit_review.body';
-import {PickIdsWithTx} from "../core/types/pick_ids";
-import {PaginationQuery} from "../core/dtos/inputs";
-import {ReviewOutput, ReviewWithAuthor} from "./dtos/review_overview.output";
-import {PaginationOutput} from "../core/dtos/outputs/pagination_output";
-import {isDeleted} from "../utils/is_null_or_deleted";
-import {prisma} from "../config/db";
-import {FindPredictAiResultDto, PredictAiDto, PredictAiResultDto} from "../api/predict.ai";
+import { CreateMovieReviewBody } from "./dtos/create_movie_review.body";
+import { EditMovieReviewBody } from "./dtos/edit_review.body";
+import { PickIdsWithTx } from "../core/types/pick_ids";
+import { PaginationQuery } from "../core/dtos/inputs";
+import { ReviewOutput, ReviewWithAuthor } from "./dtos/review_overview.output";
+import { PaginationOutput } from "../core/dtos/outputs/pagination_output";
+import { isDeleted } from "../utils/is_null_or_deleted";
+import { prisma } from "../config/db";
+import {
+  FindPredictAiResultDto,
+  PredictAiDto,
+  PredictAiResultDto,
+} from "../api/predict.ai";
 
 /**
  * 조회(Fetch)
  */
 async function findManyReviewsByUserId(
-    {userId, tx}: PickIdsWithTx<'user'>,
-    {count, after}: PaginationQuery,
+  { userId, tx }: PickIdsWithTx<"user">,
+  { count, after }: PaginationQuery
 ): Promise<PaginationOutput<ReviewOutput>> {
-    const entities = await tx.review.findMany({
-        where: {
-            authorId: userId,
+  const entities = await tx.review.findMany({
+    where: {
+      authorId: userId,
+    },
+    ...(after !== undefined && { cursor: { id: after } }),
+    skip: after ? 1 : 0,
+    take: count + 1,
+    include: {
+      author: true,
+      movie: {
+        select: {
+          title: true,
         },
-        ...(after !== undefined && {cursor: {id: after}}),
-        skip: after ? 1 : 0,
-        take: count + 1,
-        include: {
-            author: true,
-            movie: {
-                select: {
-                    title: true,
-                },
-            },
-        },
-        orderBy: {
-            createdAt: 'desc',
-        },
-    });
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
-
-    const reviews = entities
-        .filter(r => !isDeleted(r))
-        .map(r => ReviewOutput.from(r));
-    return PaginationOutput.from(reviews, count);
+  const reviews = entities
+    .filter((r) => !isDeleted(r))
+    .map((r) => ReviewOutput.from(r));
+  return PaginationOutput.from(reviews, count);
 }
 
 async function findManyReviewsByMovieId(
-    {movieId, tx}: PickIdsWithTx<'movie'>,
-    {count, after}: PaginationQuery,
+  { movieId, tx }: PickIdsWithTx<"movie">,
+  { count, after }: PaginationQuery
 ): Promise<PaginationOutput<ReviewOutput>> {
-    const entities = await tx.review.findMany({
-        where: {
-            movieId,
+  const entities = await tx.review.findMany({
+    where: {
+      movieId,
+    },
+    ...(after !== undefined && { cursor: { id: after } }),
+    skip: after ? 1 : 0,
+    take: count + 1,
+    include: {
+      author: true,
+      movie: {
+        select: {
+          title: true,
         },
-        ...(after !== undefined && {cursor: {id: after}}),
-        skip: after ? 1 : 0,
-        take: count + 1,
-        include: {
-            author: true,
-            movie: {
-                select: {
-                    title: true,
-                },
-            },
-        },
-        orderBy: {
-            createdAt: 'desc',
-        },
-    });
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
-    const reviews = entities
-        .filter(r => !isDeleted(r))
-        .map(r => ReviewOutput.from(r));
+  const reviews = entities
+    .filter((r) => !isDeleted(r))
+    .map((r) => ReviewOutput.from(r));
 
-    return PaginationOutput.from(reviews, count);
+  return PaginationOutput.from(reviews, count);
 }
 
-async function findById({reviewId, tx}: PickIdsWithTx<'review'>): Promise<ReviewOutput | null> {
-
-    const review: ReviewWithAuthor | null = await tx.review.findUnique(
-        {
-            where: {
-                id: reviewId,
-            },
-            include: {
-                author: true,
-                movie: {
-                    select: {
-                        title: true,
-                    },
-                },
-            },
+async function findById({
+  reviewId,
+  tx,
+}: PickIdsWithTx<"review">): Promise<ReviewOutput | null> {
+  const review: ReviewWithAuthor | null = await tx.review.findUnique({
+    where: {
+      id: reviewId,
+    },
+    include: {
+      author: true,
+      movie: {
+        select: {
+          title: true,
         },
-    );
-    return ReviewOutput.nullOrFrom(review);
+      },
+    },
+  });
+  return ReviewOutput.nullOrFrom(review);
 }
 
-async function isExists({reviewId, tx}: PickIdsWithTx<'review'>) {
-    const isReviewExists = await findById({reviewId, tx});
-    return isReviewExists;
+async function isExists({ reviewId, tx }: PickIdsWithTx<"review">) {
+  const isReviewExists = await findById({ reviewId, tx });
+  return isReviewExists;
 }
 
-async function isAuthor(
-    {
-        userId,
-        reviewId,
-        tx
-    }: PickIdsWithTx<'user' | 'review'>,
-) {
-    const review = await findById({reviewId, tx});
-    return review !== null && review.author.id === userId;
+async function isAuthor({
+  userId,
+  reviewId,
+  tx,
+}: PickIdsWithTx<"user" | "review">) {
+  const review = await findById({ reviewId, tx });
+  return review !== null && review.author.id === userId;
 }
-
 
 /**
  * 생성 및 수정(Mutation)
  */
 async function create(
-    {userId, movieId, tx}: PickIdsWithTx<'user' | 'movie'>,
-    {title, content, rating}: CreateMovieReviewBody,
+  { userId, movieId, tx }: PickIdsWithTx<"user" | "movie">,
+  { title, content, rating }: CreateMovieReviewBody
 ) {
-    return tx.review.create({
-        data: {
-            title,
-            content,
-            overview: content.slice(0, 100),
-            rating,
-            movieId,
-            authorId: userId,
-        },
-    });
+  return tx.review.create({
+    data: {
+      title,
+      content,
+      overview: content.slice(0, 100),
+      rating,
+      movieId,
+      authorId: userId,
+    },
+  });
 }
-
 
 async function update(
-    {reviewId, tx}: PickIdsWithTx<'review'>,
-    data: EditMovieReviewBody) {
-
-    await tx.review.update({
-        where: {
-            id: reviewId,
-        },
-        data: {
-            ...data,
-            // content가 존재할 경우에만 overview를 재생성
-            ...(data.content && {
-                overview: data.content.slice(0, 100),
-            }),
-        },
-        select: {id: true},
-    });
+  { reviewId, tx }: PickIdsWithTx<"review">,
+  data: EditMovieReviewBody
+) {
+  await tx.review.update({
+    where: {
+      id: reviewId,
+    },
+    data: {
+      ...data,
+      // content가 존재할 경우에만 overview를 재생성
+      ...(data.content && {
+        overview: data.content.slice(0, 100),
+      }),
+    },
+    select: { id: true },
+  });
 }
 
-async function remove(
-    {tx, reviewId}: PickIdsWithTx<'review'>,
-) {
-    await tx.review.update({
-        where: {
-            id: reviewId,
-        },
-        data: {
-            deletedAt: new Date(),
-        },
-    });
+async function remove({ tx, reviewId }: PickIdsWithTx<"review">) {
+  await tx.review.update({
+    where: {
+      id: reviewId,
+    },
+    data: {
+      deletedAt: new Date(),
+    },
+  });
 }
 
 /**
  * RATING
  */
-async function createRating(
-    {
-        tx,
-        movieId,
-        rating
-    }: PickIdsWithTx<'movie'> & { rating: number }) {
-    await tx.rating.create({
-        data: {
-            rating,
-            movieId,
-        }
-    });
+async function createRating({
+  tx,
+  movieId,
+  rating,
+}: PickIdsWithTx<"movie"> & { rating: number }) {
+  await tx.rating.create({
+    data: {
+      rating,
+      movieId,
+    },
+  });
 }
 
+async function totalRatingByMovieId({ movieId, tx }: PickIdsWithTx<"movie">) {
+  const ratings = await tx.rating.findMany({
+    where: {
+      movieId,
+    },
+    select: {
+      rating: true,
+    },
+  });
 
-async function totalRatingByMovieId({movieId, tx}: PickIdsWithTx<'movie'>) {
-    const ratings = await tx.rating.findMany({
-        where: {
-            movieId,
-        },
-        select: {
-            rating: true,
-        }
-    });
-
-    return ratings.reduce((acc, cur) => acc + cur.rating, 0);
+  return ratings.reduce((acc, cur) => acc + cur.rating, 0);
 }
 
 // async function findReviewResult({after, reviewId, movieId}: FindPredictAiResultDto) {
@@ -205,28 +200,31 @@ async function totalRatingByMovieId({movieId, tx}: PickIdsWithTx<'movie'>) {
 //     });
 // }
 
-async function createReviewResult({result, id, movie_id}: PredictAiResultDto) {
-    await prisma.reviewResponse.create({
-        data: {
-            id,
-            reviewId: id,
-            movieId: movie_id,
-            result,
-        },
-    });
+async function createReviewResult({
+  result,
+  id,
+  movie_id,
+}: PredictAiResultDto) {
+  await prisma.reviewResponse.create({
+    data: {
+      id,
+      reviewId: id,
+      movieId: movie_id,
+      result,
+    },
+  });
 }
 
-
 export default {
-    findById,
-    findManyReviewsByUserId,
-    findManyReviewsByMovieId,
-    createRating,
-    totalRatingByMovieId,
-    isExists,
-    isAuthor,
-    create,
-    update,
-    remove,
-    createReviewResult,
+  findById,
+  findManyReviewsByUserId,
+  findManyReviewsByMovieId,
+  createRating,
+  totalRatingByMovieId,
+  isExists,
+  isAuthor,
+  create,
+  update,
+  remove,
+  createReviewResult,
 };

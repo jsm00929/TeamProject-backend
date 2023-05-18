@@ -1,5 +1,5 @@
-import { NextFunction, Response } from 'express';
-import { AppResult } from './app_result';
+import { NextFunction, Response } from "express";
+import { AppResult } from "./app_result";
 
 /**
  * @description
@@ -31,5 +31,5 @@ import { AppResult } from './app_result';
 export type Handler<R, B = unknown> = (
   req: R,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => Promise<AppResult<B> | void>;

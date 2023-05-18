@@ -1,5 +1,5 @@
-import { unlink, rename, stat, writeFile } from 'fs/promises';
-import { log } from './logger';
+import { unlink, rename, stat, writeFile } from "fs/promises";
+import { log } from "./logger";
 
 export async function persistFile(filepath: string, data: string) {
   await existsFileOrThrow(filepath);
@@ -14,7 +14,7 @@ export async function existsFileOrThrow(filepath: string) {
   try {
     await stat(filepath);
   } catch (error) {
-    if (error.code !== 'ENOENT') {
+    if (error.code !== "ENOENT") {
       throw error;
     }
   }
