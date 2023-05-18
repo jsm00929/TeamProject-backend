@@ -5,6 +5,7 @@ import { AppError, AuthRequestWith, RequestWith } from '../core/types';
 import { AppResult } from '../core/types/app_result';
 import { ReviewIdParams } from '../reviews/dtos/review_id.params';
 import commentsService from './comments.service';
+import { CommentsPaginationQuery } from './dtos/inputs/comments_pagination.query';
 import { CommentIdParams } from './dtos/inputs/comment_id.params';
 import { CreateReviewCommentBody } from './dtos/inputs/create_movie_review_comment.body';
 import { UpdateReviewCommentBody } from './dtos/inputs/update_movie_review_comment.body';
@@ -51,15 +52,19 @@ async function writeComment(
 commentRouter.get(
   '/:reviewId/comment',
   handle({
-    paramsCls: ReviewPaginationQuery,
+    paramsCls: ReviewIdParams,
+    queryCls: CommentsPaginationQuery,
     controller: reviewComments,
   }),
 );
 
-async function reviewComments(req: RequestWith<ReviewPaginationQuery>) {
+async function reviewComments(
+  req: RequestWith<CommentsPaginationQuery, ReviewIdParams>,
+) {
   try {
-    const q = req.unwrapParams();
-    const comments = await commentsService.Comments(q);
+    const q = req.unwrap();
+    const { reviewId } = req.unwrapParams();
+    const comments = await commentsService.Comments({ reviewId }, q);
 
     return AppResult.new({
       body: comments,
