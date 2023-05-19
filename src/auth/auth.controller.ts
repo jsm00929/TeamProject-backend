@@ -160,14 +160,10 @@ async function googleLoginRedirect(
     // return AppResult.redirect(`${clientHost}:${clientPort}`);
   } catch (e) {
     // TODO: 구글 로그인 실패 시, REDIRECT URL
-    return AppResult.redirect(
-      `http://${clientHost}${clientPort > 0 ? `:${clientPort}` : "/"}`
-    );
+    return AppResult.redirect("/");
   }
   // 성공시
-  return AppResult.redirect(
-    `http://${clientHost}${clientPort > 0 ? `:${clientPort}` : "/"}`
-  );
+  return AppResult.redirect("/");
 }
 
 /**
@@ -192,14 +188,10 @@ async function googleSignupRedirect(
     setAuthCookies(userId, res);
   } catch (e) {
     // TODO: 구글 로그인 실패 시, REDIRECT URL
-    return AppResult.redirect(
-      `http://${clientHost}${clientPort > 0 ? `:${clientPort}` : "/"}`
-    );
+    return AppResult.redirect("/");
   }
   // 성공시
-  return AppResult.redirect(
-    `http://${clientHost}${clientPort > 0 ? `:${clientPort}` : "/"}`
-  );
+  return AppResult.redirect("/");
 }
 
 // RTR 1회용 리프레시 토큰
