@@ -10,6 +10,8 @@ import { PickIdsWithTx } from "../../core/types/pick_ids";
 import { MovieWithGenres } from "../dtos/movie_with_genres";
 import { MovieWithGenresOutput } from "../dtos/outputs/movie_with_genres.output";
 import { isDeleted } from "../../utils/is_null_or_deleted";
+import reviewsRepository from "../../reviews/reviews.repository";
+import { MovieWithIsPositiveOutput } from "../dtos/outputs/movie_with_is_positive.output";
 
 // FETCH
 async function findMovieById({
@@ -58,7 +60,7 @@ async function findMovieWithGenresById({
 async function findManyMovies(
   { tx }: { tx: Tx },
   { criteria, genre, count, order, after, include }: MoviesPaginationQuery
-): Promise<PaginationOutput<MovieWithGenresOutput>> {
+): Promise<PaginationOutput<MovieWithIsPositiveOutput>> {
   const entities = await tx.movie.findMany({
     orderBy: {
       [criteria]: order,
@@ -81,9 +83,18 @@ async function findManyMovies(
     },
   });
 
-  const data = entities
+  const outputs = entities
     .filter((m) => !isDeleted(m))
     .map((m) => MovieWithGenresOutput.from(m));
+
+  const data: MovieWithIsPositiveOutput[] = [];
+  for (const m of outputs) {
+    const isPositive = await reviewsRepository.findReviewResultByMovieId({
+      movieId: m.id,
+      tx,
+    });
+    data.push(MovieWithIsPositiveOutput.from(m, isPositive));
+  }
 
   return PaginationOutput.from(data, count);
 }

@@ -231,7 +231,7 @@ export class Config {
     config._host = HOST!;
     config._port = +PORT!;
     config._clientHost = CLIENT_HOST!;
-    config._clientPort = +CLIENT_PORT!;
+    config._clientPort = CLIENT_PORT ? +CLIENT_PORT : -1;
     config._dbUrl = DB_URL!;
     config._r2Url = R2_URL!;
     config._redisUrl = REDIS_URL!;

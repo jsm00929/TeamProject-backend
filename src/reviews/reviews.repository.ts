@@ -11,6 +11,7 @@ import {
   PredictAiDto,
   PredictAiResultDto,
 } from "../api/predict.ai";
+import { Tx } from "../core/types/tx";
 
 /**
  * 조회(Fetch)
@@ -188,17 +189,33 @@ async function totalRatingByMovieId({ movieId, tx }: PickIdsWithTx<"movie">) {
   return ratings.reduce((acc, cur) => acc + cur.rating, 0);
 }
 
-// async function findReviewResult({after, reviewId, movieId}: FindPredictAiResultDto) {
-//     return prisma.reviewResponse.findMany({
-//         where: {
-//             movieId,
-//             reviewId,
-//         },
-//         orderBy: {
-//             id,
-//         },
-//     });
-// }
+async function findReviewResultByMovieId({
+  movieId,
+  tx,
+}: {
+  movieId: number;
+  tx: Tx;
+}) {
+  const entities = await tx.reviewResponse.findMany({
+    where: {
+      movieId,
+    },
+  });
+
+  const r = entities.reduce(
+    (p, c) => {
+      if (c.result) {
+        ++p.positive;
+      } else {
+        ++p.negative;
+      }
+      return p;
+    },
+    { positive: 0, negative: 0 }
+  );
+
+  return r.positive >= r.negative;
+}
 
 async function createReviewResult({
   result,
@@ -227,4 +244,5 @@ export default {
   update,
   remove,
   createReviewResult,
+  findReviewResultByMovieId,
 };

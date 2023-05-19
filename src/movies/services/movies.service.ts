@@ -6,15 +6,18 @@ import { MovieOutput } from "../dtos/outputs/movie.output";
 import { PickIds } from "../../core/types/pick_ids";
 import { MovieWithGenresOutput } from "../dtos/outputs/movie_with_genres.output";
 import moviesHistoryService from "./movies.history.service";
+import reviewsRepository from "../../reviews/reviews.repository";
+import { MovieWithIsPositiveOutput } from "../dtos/outputs/movie_with_is_positive.output";
 
 /**
  * FETCH
  */
 async function movies(
   q: MoviesPaginationQuery
-): Promise<PaginationOutput<MovieWithGenresOutput>> {
+): Promise<PaginationOutput<MovieWithIsPositiveOutput>> {
   return prisma.$transaction(async (tx) => {
     return moviesRepository.findManyMovies({ tx }, q);
+    // MovieWithIsPositiveOutput.from(movieOutputs, isPositive);
   });
 }
 

@@ -1,5 +1,6 @@
 import { Movie } from "@prisma/client";
 import { isNullOrDeleted } from "../../../utils/is_null_or_deleted";
+import { isPositive } from "class-validator";
 
 export class MovieOutput {
   id: number;
