@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "pm2": "npx pm2 start \"npm run dev\" --name app",
     "prettier": "prettier --write 'src/**/*.ts'",
     "dev": "NODE_ENV=dev npx nodemon --exec ts-node src/main",
     "test": "NODE_ENV=test npx jest --config=jest.config.js",
