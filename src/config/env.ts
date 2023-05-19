@@ -55,7 +55,6 @@ export class Config {
     return this._clientHost;
   }
 
-  @Min(1025)
   @Max(65536)
   private _clientPort: number;
 
